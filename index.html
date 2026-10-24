@@ -1713,6 +1713,8 @@ try { const t = localStorage.getItem("bible-theme"); if (t) document.documentEle
 
 setPlan(planId);
 showPage(now.getMonth() < 6 ? 1 : 2);
+/* 처음 열면 오늘 읽을 곳을 바로 보여 줌 (이미 읽음 표시한 날은 열지 않음) */
+if (!done.has(todayKey)) $("todayBtn").click();
 </script>
 </body>
 </html>
