@@ -94,6 +94,14 @@ dialog::backdrop{background:rgba(30,10,25,.45)}
 /* 좁은 화면: 세로로 스크롤 */
 @media (max-width:900px){
   body{height:auto;overflow:auto}
+  header{position:sticky;top:0;z-index:10;background:var(--bg);box-shadow:0 1px 0 var(--line)}
+  .month{overflow:visible}
+  .month h2{position:sticky;top:var(--hh,0px);z-index:5;border-radius:10px 10px 0 0}
+  header{gap:6px;padding:6px 12px}
+  h1{font-size:18px;width:100%}
+  .tabs button{padding:4px 10px;font-size:13px}
+  .iconbtn{padding:4px 8px}
+  .prog{margin-left:0}
   .page{grid-template-columns:repeat(2,minmax(0,1fr));height:auto}
   .days{grid-template-rows:none}
   .day{padding:5px 6px;font-size:14px}
@@ -1713,6 +1721,16 @@ try { const t = localStorage.getItem("bible-theme"); if (t) document.documentEle
 
 setPlan(planId);
 showPage(now.getMonth() < 6 ? 1 : 2);
+/* 휴대폰(좁은 화면): 오늘 날짜가 화면 가운데 오도록 스크롤 */
+function centerToday(){
+  if (!matchMedia("(max-width:900px)").matches) return;
+  document.documentElement.style.setProperty("--hh", document.querySelector("header").offsetHeight + "px");
+  const row = document.querySelector(`.page:not([hidden]) .day[data-k="${todayKey}"]`);
+  if (row) row.scrollIntoView({ block: "center" });
+}
+centerToday();
+dlg.addEventListener("close", centerToday);
+$("pSU").addEventListener("click", centerToday); $("pMC").addEventListener("click", centerToday);
 /* 처음 열면 오늘 읽을 곳을 바로 보여 줌 (이미 읽음 표시한 날은 열지 않음) */
 if (!done.has(todayKey)) $("todayBtn").click();
 </script>
