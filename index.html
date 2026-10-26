@@ -38,6 +38,10 @@ h1{margin:0;font-size:22px;letter-spacing:.02em;color:var(--accent)}
 .tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px}
 .tabs button{border:0;background:transparent;color:var(--ink);font:inherit;font-size:14px;font-weight:600;padding:5px 14px;border-radius:999px;cursor:pointer}
 .tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+#todayBtn,#guideBtn{font-size:14px;font-weight:600;padding:6px 14px;border-radius:999px}
+#todayBtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#guideBtn{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+#todayBtn:hover,#guideBtn:hover{filter:brightness(1.07)}
 .prog{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-left:auto}
 .bar{width:140px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);width:0}
@@ -111,6 +115,7 @@ dialog::backdrop{background:rgba(30,10,25,.45)}
   header{gap:6px;padding:6px 12px}
   h1{font-size:18px;width:100%}
   .tabs button{padding:4px 10px;font-size:13px}
+  #todayBtn,#guideBtn{padding:4px 10px;font-size:13px}
   .iconbtn{padding:4px 8px}
   .prog{margin-left:0}
   .page{grid-template-columns:repeat(2,minmax(0,1fr));height:auto}
