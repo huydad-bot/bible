@@ -41,7 +41,7 @@ h1{margin:0;font-size:22px;letter-spacing:.02em;color:var(--accent)}
 .prog{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-left:auto}
 .bar{width:140px;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);width:0}
-.iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;font:inherit;font-size:13px;padding:5px 9px;cursor:pointer}
+.iconbtn{display:inline-block;text-decoration:none;white-space:nowrap;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;font:inherit;font-size:13px;padding:5px 9px;cursor:pointer}
 main{flex:1;min-height:0;padding:0 16px 8px}
 .page{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;height:100%}
 .page[hidden]{display:none}
@@ -130,7 +130,7 @@ dialog::backdrop{background:rgba(30,10,25,.45)}
 <header>
   <h1>📖 일년일독 통독표</h1>
   <div class="tabs" role="tablist" aria-label="통독표 종류">
-    <button role="tab" id="pSU" aria-selected="true" title="창세기부터 계시록까지 순서대로, 하루 3~4장">성서유니온 통독</button>
+    <button role="tab" id="pSU" aria-selected="true" title="창세기부터 계시록까지 순서대로, 하루 3~4장 (성서유니온 통독)">성서유니온</button>
     <button role="tab" id="pMC" aria-selected="false" title="하루 네 곳: 1년에 구약 1독, 신약·시편 2독">맥체인</button>
   </div>
   <div class="tabs" role="tablist" aria-label="기간">
@@ -160,7 +160,8 @@ dialog::backdrop{background:rgba(30,10,25,.45)}
       </ul>
     </div>
   </details>
-  <button class="iconbtn" id="todayBtn" title="오늘 읽을 곳 열기">오늘</button>
+  <button class="iconbtn" id="todayBtn" title="오늘 읽을 곳 열기">오늘 말씀</button>
+  <a class="iconbtn" id="guideBtn" href="summary/index.html" target="_blank" rel="noopener" title="성경 각 권 해설을 새 탭에서 엽니다">성경 각 권 해설</a>
   <div class="prog"><span id="progTxt">0 / 365일</span><div class="bar"><i id="progBar"></i></div></div>
   <button class="iconbtn" id="themeBtn" title="밝게 / 어둡게">◐</button>
 </header>
