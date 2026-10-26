@@ -168,7 +168,7 @@ dialog::backdrop{background:rgba(30,10,25,.45)}
   <button class="iconbtn" id="todayBtn" title="오늘 읽을 곳 열기">오늘 말씀</button>
   <a class="iconbtn" id="guideBtn" href="summary/index.html" target="_blank" rel="noopener" title="성경 각 권 해설을 새 탭에서 엽니다">성경 각 권 해설</a>
   <div class="prog"><span id="progTxt">0 / 365일</span><div class="bar"><i id="progBar"></i></div></div>
-  <button class="iconbtn" id="themeBtn" title="밝게 / 어둡게">◐</button>
+  <button class="iconbtn" id="themeBtn" title="밝게 / 어둡게 (저녁 7시~아침 7시는 자동으로 어둡게)">◐</button>
 </header>
 <main>
   <section class="page" id="p1"></section>
@@ -1735,14 +1735,26 @@ $("todayBtn").onclick = () => {
   showPage(DAYS[i].m < 6 ? 1 : 2); openDay(i);
 };
 
-/* 테마 */
+/* 테마: 저녁 7시~아침 7시는 어둡게, 낮에는 밝게 자동 전환.
+   ◐로 고른 밝기는 지금 시간대(오늘 밤 또는 오늘 낮)에만 유지되고, 다음 시간대가 되면 다시 자동으로 돌아간다. */
+const NIGHT_FROM = 19, NIGHT_TO = 7;
+const THEME_KEY = "bible-theme2";
+const isNight = d => { const h = d.getHours(); return h >= NIGHT_FROM || h < NIGHT_TO; };
+const periodId = d => { const b = new Date(d); if (b.getHours() < NIGHT_TO) b.setDate(b.getDate() - 1); return b.toDateString() + (isNight(d) ? "-N" : "-D"); };
+function applyTheme(){
+  const now = new Date();
+  let t = isNight(now) ? "dark" : "light";
+  try { const o = JSON.parse(localStorage.getItem(THEME_KEY) || "null"); if (o && o.p === periodId(now)) t = o.t; } catch(e){}
+  document.documentElement.dataset.theme = t;
+}
 $("themeBtn").onclick = () => {
-  const r = document.documentElement;
-  const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-  r.dataset.theme = dark ? "light" : "dark";
-  try { localStorage.setItem("bible-theme", r.dataset.theme); } catch(e){}
+  const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem(THEME_KEY, JSON.stringify({ t, p: periodId(new Date()) })); } catch(e){}
 };
-try { const t = localStorage.getItem("bible-theme"); if (t) document.documentElement.dataset.theme = t; } catch(e){}
+applyTheme();
+setInterval(applyTheme, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) applyTheme(); });
 
 setPlan(planId);
 showPage(now.getMonth() < 6 ? 1 : 2);
