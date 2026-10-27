@@ -85,6 +85,29 @@ article p{margin:0 0 12px;font-size:16.5px;word-break:keep-all}
 .key{background:var(--key);border-left:4px solid var(--key-line);border-radius:6px;padding:10px 14px;font-size:15.5px;margin-top:6px}
 .points{margin:0;padding-left:20px;font-size:15.5px}
 .points li{margin:4px 0}
+.pray textarea{width:100%;box-sizing:border-box;min-height:110px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;font-size:15.5px;line-height:1.7;padding:10px 12px}
+.pray textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.praybar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:var(--muted)}
+.praywhere{display:block;font-size:12px;opacity:.85}
+.pray-print{display:none;white-space:pre-wrap;font-size:15.5px;line-height:1.7}
+.plist .pitem{border-top:1px solid var(--line);padding:12px 0}
+.plist .pitem h5{margin:0 0 2px;font-size:15.5px}
+.plist .pitem h5 a{color:var(--ink);text-decoration:none}
+.plist .pitem .pdate{font-size:12.5px;color:var(--muted)}
+.plist .pitem .ptext{white-space:pre-wrap;margin-top:6px;font-size:15.5px;line-height:1.75}
+.plist .pbook{margin:22px 0 4px;font-size:17px;color:var(--accent)}
+.praytools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 6px}
+.praytools select{font:inherit;font-size:14px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+#bakDlg{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:20px 22px;width:min(440px,92vw);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#bakDlg::backdrop{background:rgba(0,0,0,.35)}
+#bakDlg h4{margin:0 0 4px}
+#bakDlg .bakfile{margin:0 0 12px;font-size:13px;color:var(--muted)}
+#bakDlg .bakopt{display:block;width:100%;text-align:left;margin:8px 0;padding:10px 14px;font-weight:600}
+#bakDlg .bakopt small{display:block;font-weight:400;font-size:12.5px;opacity:.85;margin-top:2px}
+#bakDlg .bakerr{font-size:13px;color:#b3261e;margin:8px 0 0}
+#bakDlg .baknote{font-size:13px;color:var(--muted);margin:10px 0 0}
+#bakDlg .bakfoot{text-align:right;margin-top:12px}
+#prayHdr{display:inline-flex;align-items:center;justify-content:center;width:38px;height:34px;padding:0;flex:none;font-size:17px;text-decoration:none}
 .facts{display:grid;grid-template-columns:110px 1fr;gap:0;border-top:1px solid var(--line);margin-top:10px}
 .facts dt,.facts dd{border-bottom:1px solid var(--line);padding:10px 8px;margin:0;font-size:15.5px}
 .facts dt{color:var(--accent);font-weight:700;padding-left:0}
@@ -92,7 +115,8 @@ article p{margin:0 0 12px;font-size:16.5px;word-break:keep-all}
 .refs li{margin:3px 0}
 .refs a{color:var(--accent);word-break:break-all}
 .refnote{font-size:13.5px !important;color:var(--muted);margin-top:8px !important}
-.pager{display:flex;justify-content:space-between;gap:8px;margin-top:24px;padding-top:14px;border-top:1px solid var(--line)}
+.pager{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+.praybar:has(#praySaved:empty){display:none}
 .empty{color:var(--muted);font-size:16px;padding:30px 4px}
 footer{color:var(--muted);font-size:12.5px;max-width:820px;margin-top:16px}
 @media (max-width:860px){
@@ -113,13 +137,17 @@ footer{color:var(--muted);font-size:12.5px;max-width:820px;margin-top:16px}
   .wrap{display:block} body{background:#fff}
   article{border:0;box-shadow:none;max-width:none;padding:0;background:#fff}
   .hright{display:none}
+  .pray textarea,.praybar,.praytools,.praynote{display:none}
+  .pray-print{display:block}
+  .pray.pempty{display:none}
+  .plist .pitem{break-inside:avoid}
 }
 </style>
 </head>
 <body>
 <header><div class="hin">
   <h1><button class="btn" id="menuBtn" aria-label="목차">☰</button><a href="#" id="homeLink">📜 성경 각 권 해설</a></h1>
-  <div class="hright"><button class="btn" id="printBtn" title="인쇄" aria-label="인쇄"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></button><button class="btn" id="themeBtn" title="밝게 / 어둡게 (저녁 7시~아침 7시는 자동으로 어둡게)" aria-label="밝게 / 어둡게"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
+  <div class="hright"><a class="btn" id="prayHdr" href="#기도" title="기도문 모음" aria-label="기도문 모음">🙏</a><button class="btn" id="printBtn" title="인쇄" aria-label="인쇄"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></button><button class="btn" id="themeBtn" title="밝게 / 어둡게 (저녁 7시~아침 7시는 자동으로 어둡게)" aria-label="밝게 / 어둡게"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
 </div></div>
 </header>
 <div class="wrap">
@@ -287,7 +315,136 @@ function chapterHTML(book, ch, c){
     <h4>내용 정리</h4>${c.s.map(p => `<p>${p}</p>`).join("")}
     <h4>핵심 구절</h4><div class="key">${c.k}</div>
     <h4>묵상과 적용</h4><ul class="points">${c.p.map(p => `<li>${p}</li>`).join("")}</ul>
+    ${prayHTML(book, ch)}
     ${pager(book, ch)}</article>`;
+}
+
+/* 기도: 각 장 아래에 직접 적고, 이 기기(브라우저)에 자동 저장 */
+const PRAY_KEY = "study-prayers";
+const loadPrayers = () => { try { return JSON.parse(localStorage.getItem(PRAY_KEY) || "{}"); } catch(e){ return {}; } };
+const savePrayers = o => { try { localStorage.setItem(PRAY_KEY, JSON.stringify(o)); return true; } catch(e){ return false; } };
+const escH = t => String(t).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+const fmtDate = ms => { const d = new Date(ms); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`; };
+function prayHTML(book, ch){
+  const p = loadPrayers()[book + "/" + ch];
+  const t = p ? p.text : "";
+  return `<section class="pray${t ? "" : " pempty"}" data-k="${book}/${ch}">
+    <h4>기도</h4>
+    <textarea id="prayBox" placeholder="오늘 말씀을 읽고 드리는 기도를 적어 보세요. 적는 대로 자동으로 저장됩니다.">${escH(t)}</textarea>
+    <div class="pray-print">${escH(t)}</div>
+    <div class="praybar"><span><span id="praySaved">${p ? "저장됨 · " + fmtDate(p.at) : ""}</span></span></div>
+  </section>`;
+}
+function bindPray(){
+  const box = $("prayBox"); if (!box) return;
+  const sec = box.closest(".pray"), k = sec.dataset.k;
+  const fit = () => { box.style.height = "auto"; box.style.height = Math.max(110, box.scrollHeight + 2) + "px"; };
+  fit();
+  let timer;
+  box.addEventListener("input", () => {
+    fit();
+    sec.querySelector(".pray-print").textContent = box.value;
+    sec.classList.toggle("pempty", !box.value.trim());
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const all = loadPrayers(), v = box.value.replace(/\s+$/, "");
+      if (v.trim()) all[k] = { text: v, at: Date.now() }; else delete all[k];
+      $("praySaved").textContent = savePrayers(all) ? (v.trim() ? "저장됨 · " + fmtDate(Date.now()) : "") : "저장할 수 없습니다 (브라우저 저장 공간이 막혀 있음)";
+    }, 400);
+  });
+}
+const prayOrder = () => { const keys = Object.keys(INFO); const all = loadPrayers();
+  return Object.keys(all).map(k => { const [b, c] = k.split("/"); return { k, b, c: +c, ...all[k] }; })
+    .filter(x => INFO[x.b]).sort((a, z) => keys.indexOf(a.b) - keys.indexOf(z.b) || a.c - z.c); };
+function prayersPage(){
+  curBook = null; drawNav(null, -1);
+  const list = prayOrder();
+  const books = [...new Set(list.map(x => x.b))];
+  const sel = sessionStorage.getItem("pray-filter") || "";
+  const shown = list.filter(x => !sel || x.b === sel);
+  let h = "", prev = "";
+  shown.forEach(x => {
+    if (x.b !== prev) { h += `<div class="pbook">${INFO[x.b].name}</div>`; prev = x.b; }
+    const c = DATA[x.b] && DATA[x.b].chapters[x.c - 1];
+    h += `<div class="pitem"><h5><a href="#${x.k}">${INFO[x.b].name} ${x.c ? x.c + U(x.b) : "서문"}${c ? " · " + c.t : ""}</a></h5><div class="pdate">${fmtDate(x.at)}</div><div class="ptext">${escH(x.text)}</div></div>`;
+  });
+  $("main").innerHTML = `<article class="home">
+    <div class="ref">나의 기도</div><h3>기도문 모음${sel ? " · " + INFO[sel].name : ""}</h3>
+    <p class="praynote">각 장 해설의 <b>기도</b> 칸에 적은 기도가 성경 순서대로 모입니다.<br>
+    ⚠️ 기도는 <b>이 기기의 이 브라우저</b>에만 저장됩니다. <b>PC·맥·아이패드·휴대폰에서 적은 기도는 서로 합쳐지지 않으므로</b>, 여기에는 이 기기에서 적은 기도만 보입니다. 여러 기기의 기도를 모으려면 각 기기에서 <b>백업 저장</b> → 주로 쓰는 기기에서 <b>백업 불러오기</b>를 하세요(겹치면 최근 것이 남음). 기도를 잃지 않도록 가끔 백업 파일을 받아 두시기 바랍니다.</p>
+    <div class="praytools">
+      <select id="prayFilter"><option value="">전체 (${list.length}개)</option>${books.map(b => `<option value="${b}"${b === sel ? " selected" : ""}>${INFO[b].name} (${list.filter(x => x.b === b).length}개)</option>`).join("")}</select>
+      <button class="btn pri" id="prayPrint">🖨 기도문 인쇄</button>
+      <button class="btn" id="prayTxt">텍스트 파일로 저장</button>
+      <button class="btn" id="prayBak">☁️ 백업 저장</button>
+      <button class="btn" id="prayLoad">📂 백업 불러오기</button><input type="file" id="prayFile" accept=".json,.txt,application/json,text/plain" hidden>
+    </div>
+    <div class="plist">${h || `<p class="empty">아직 적은 기도가 없습니다. 각 장 해설 맨 아래의 <b>기도</b> 칸에 적어 보세요.</p>`}</div>
+  </article>`;
+  document.title = "기도문 모음 · 성경 각 권 해설";
+  window.scrollTo(0, 0);
+  const stamp = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`; };
+  const download = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); };
+  $("prayFilter").onchange = e => { sessionStorage.setItem("pray-filter", e.target.value); prayersPage(); };
+  $("prayPrint").onclick = () => window.print();
+  $("prayTxt").onclick = () => {
+    let t = "기도문 모음" + (sel ? " · " + INFO[sel].name : "") + "\n\n", prev = "";
+    shown.forEach(x => { if (x.b !== prev) { t += "■ " + INFO[x.b].name + "\n\n"; prev = x.b; }
+      const c = DATA[x.b] && DATA[x.b].chapters[x.c - 1];
+      t += `[${INFO[x.b].name} ${x.c ? x.c + U(x.b) : "서문"}${c ? " · " + c.t : ""}] ${fmtDate(x.at)}\n${x.text}\n\n`; });
+    download(`prayers_${stamp()}.txt`, t, "text/plain;charset=utf-8");
+  };
+  $("prayBak").onclick = () => openBackup(`prayers_backup_${stamp()}.json`, JSON.stringify({ app: "study-prayers", v: 1, prayers: loadPrayers() }, null, 1), download);
+  $("prayLoad").onclick = () => $("prayFile").click();
+  $("prayFile").onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(txt => {
+      let data; try { data = JSON.parse(txt); data = data.prayers || data; } catch(err){ alert("백업 파일을 읽을 수 없습니다."); return; }
+      const all = loadPrayers(); let add = 0;
+      for (const k in data) { const v = data[k]; if (!v || typeof v.text !== "string") continue;
+        if (!all[k] || (v.at || 0) > (all[k].at || 0)) { all[k] = { text: v.text, at: v.at || Date.now() }; add++; } }
+      savePrayers(all); alert(`기도 ${add}개를 불러왔습니다.`); prayersPage();
+    });
+  };
+}
+
+/* 백업 저장: 기기에 맞는 방법(공유 창 / 저장 위치 선택 / 다운로드)을 고르게 함 */
+function openBackup(name, text, download){
+  const blob = new Blob([text], { type: "application/json" });
+  /* 공유는 휴대폰·태블릿에서만 (PC 브라우저는 공유가 제한되거나 다운로드로 처리됨). 
+     안드로이드 크롬은 .json 공유를 막으므로 공유용 파일은 .txt로 만든다 */
+  const mobile = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let file = null; try { file = new File([text], name.replace(/\.json$/, ".txt"), { type: "text/plain" }); } catch(e){}
+  const canShare = !!(mobile && file && navigator.canShare && navigator.canShare({ files: [file] }));
+  const canPick = typeof window.showSaveFilePicker === "function";
+  let dlg = $("bakDlg");
+  if (!dlg) { dlg = document.createElement("dialog"); dlg.id = "bakDlg"; document.body.appendChild(dlg);
+    dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); }); }
+  dlg.innerHTML = `<h4>백업 파일을 어디에 저장할까요?</h4>
+    <p class="bakfile">${name}</p>
+    ${canShare ? `<button class="btn pri bakopt" data-m="share">☁️ 공유하기<small>구글 드라이브 · 원드라이브 · iCloud · 메일 · 카카오톡 등으로 보내기</small></button>` : ""}
+    ${canPick ? `<button class="btn ${canShare ? "" : "pri "}bakopt" data-m="pick">📁 저장 위치 선택<small>PC의 구글 드라이브 · 원드라이브 · 원하는 폴더를 직접 고르기</small></button>` : ""}
+    <button class="btn bakopt" data-m="dl">⬇️ 다운로드 폴더에 저장<small>기기의 '다운로드' 폴더에 바로 저장</small></button>
+    <p class="baknote">${canShare || canPick ? "" : "이 브라우저는 저장 위치 선택을 지원하지 않아 다운로드 폴더에 저장됩니다. 받은 파일을 구글 드라이브나 원드라이브에 올려 두세요. "}구글 드라이브·원드라이브에 보관해 두면 다른 기기에서 <b>백업 불러오기</b>로 바로 가져올 수 있습니다.</p>
+    <p class="bakerr" hidden></p>
+    <div class="bakfoot"><button class="btn" data-m="close">닫기</button></div>`;
+  dlg.querySelectorAll("button").forEach(b => b.onclick = async () => {
+    const m = b.dataset.m;
+    if (m === "close") return dlg.close();
+    try {
+      if (m === "share") await navigator.share({ files: [file], title: "기도문 백업", text: "성경 각 권 해설 – 기도문 백업 파일" });
+      else if (m === "pick") {
+        const h = await window.showSaveFilePicker({ suggestedName: name, types: [{ description: "기도문 백업 (JSON)", accept: { "application/json": [".json"] } }] });
+        const w = await h.createWritable(); await w.write(blob); await w.close();
+      } else download(name, text, "application/json");
+      dlg.close();
+    } catch(err){
+      if (err && err.name === "AbortError") return;
+      const e = dlg.querySelector(".bakerr"); e.hidden = false;
+      e.textContent = m === "share" ? "이 기기에서는 공유하기가 되지 않습니다. 다른 방법을 골라 주세요." : "저장하지 못했습니다. 다른 방법을 골라 주세요.";
+    }
+  });
+  dlg.showModal();
 }
 
 /* 첫 화면: 구성과 사용법 */
@@ -307,14 +464,15 @@ function home(){
       <li><b>새 책을 시작할 때</b>는 그 책의 <b>서문</b>을 먼저 읽어 기록자·연대·배경·전체 흐름을 잡습니다.</li>
       <li><b>매일 통독 전</b>에 오늘 읽을 장의 해설을 읽습니다. 3–5분이면 충분합니다.</li>
       <li>성경 본문을 읽습니다. 해설의 '구조' 표를 옆에 두고 읽으면 단락이 눈에 들어옵니다.</li>
-      <li>읽은 뒤 '핵심 구절'과 '묵상과 적용' 두 줄로 하루를 정리합니다.</li>
+      <li>읽은 뒤 '핵심 구절'과 '묵상과 적용' 두 줄로 하루를 정리하고, 맨 아래 <b>기도</b> 칸에 오늘의 기도를 적습니다.</li>
     </ol>
 
     <h4>화면 구성</h4>
     <dl class="facts">
       <dt>왼쪽 목차</dt><dd>위쪽의 <b>구약 39권 · 신약 27권</b> 버튼으로 목록을 바꿉니다. 책 이름을 누르면 그 아래에 <b>서문</b>과 장 번호가 펼쳐집니다.</dd>
       <dt>서문</dt><dd>기록한 사람 · 기록 연대 · 기록 배경 · 주제 · 주요 인물 · 전체 줄거리 · 구조 · 핵심 구절 · 그리스도와의 연결 · 참고 자료</dd>
-      <dt>각 장 해설</dt><dd><b>구조</b>(절 단위 단락 표) → <b>내용 정리</b>(세 문단) → <b>핵심 구절</b> → <b>묵상과 적용</b>(두 가지)</dd>
+      <dt>각 장 해설</dt><dd><b>구조</b>(절 단위 단락 표) → <b>내용 정리</b>(세 문단) → <b>핵심 구절</b> → <b>묵상과 적용</b>(두 가지) → <b>기도</b>(직접 적는 칸)</dd>
+      <dt>기도문 모음</dt><dd>오른쪽 위 <b>🙏</b>를 누르면 그동안 적은 기도가 성경 순서대로 모입니다. 책별로 골라 <b>인쇄</b>하거나 <b>텍스트 파일</b>로 저장할 수 있습니다.</dd>
     </dl>
 
     <h4>사용법</h4>
@@ -322,6 +480,14 @@ function home(){
       <li>글 아래의 <b>◀ 이전 · 다음 ▶</b> 버튼, 또는 키보드 <kbd>←</kbd> <kbd>→</kbd>로 장을 넘깁니다.</li>
       <li>휴대폰에서는 왼쪽 위 <b>☰</b>를 눌러 목차를 엽니다.</li>
       <li>화면은 <b>저녁 7시~아침 7시에는 어둡게</b>, 낮에는 밝게 자동으로 바뀝니다. 오른쪽 위 <b>◐</b>를 누르면 지금 시간대에만 밝기를 바꿀 수 있고, 다음 시간대가 되면 다시 자동으로 돌아갑니다.</li>
+      <li><b>기도의 저장 위치:</b> 기도는 인터넷 서버가 아니라 <b>지금 쓰고 있는 기기의 브라우저 안</b>에만 저장됩니다. 그래서
+        <ul>
+          <li><b>PC, 맥, 아이패드, 휴대폰에서 적은 기도는 서로 합쳐지지 않습니다.</b> 같은 기기라도 브라우저가 다르면(예: Chrome과 Safari) 따로 저장됩니다.</li>
+          <li>전체 기도를 한곳에서 보려면 <b>한 기기·한 브라우저를 정해 계속 쓰시는 것</b>이 가장 간편합니다.</li>
+          <li>여러 기기에서 쓰셨다면, 각 기기에서 <b>🙏 기도문 모음 → 백업 저장</b>으로 파일을 받은 뒤 주로 쓰는 기기에서 <b>백업 불러오기</b>를 하면 하나로 합쳐집니다(같은 장의 기도가 겹치면 더 최근 것이 남습니다). <b>백업 저장</b>을 누르면 구글 드라이브·원드라이브·iCloud·메일 등 저장할 곳을 고를 수 있고, <b>백업 불러오기</b>에서도 그곳의 파일을 바로 고를 수 있습니다.</li>
+          <li>브라우저의 '인터넷 기록·사이트 데이터 삭제', 기기 교체, 시크릿 창 사용 시 기도가 사라질 수 있습니다. 아이폰·아이패드·맥의 Safari는 약 7일 동안 방문하지 않으면 저장 내용을 지울 수 있으니, <b>홈 화면에 추가</b>해서 열거나 가끔 <b>백업 저장</b>을 해 두세요.</li>
+        </ul>
+      </li>
       <li>마지막으로 읽은 곳은 자동으로 기억되어 이 첫 화면의 <b>이어 읽기</b> 버튼에 나타납니다. 맨 위 제목을 누르면 언제든 이 화면으로 돌아옵니다.</li>
       <li>오른쪽 위 <b>🖨</b> 버튼(또는 <kbd>Ctrl</kbd>+<kbd>P</kbd>)을 누르면 지금 보고 있는 서문이나 장 해설을 인쇄합니다. 목차와 버튼은 빼고 해설만 깔끔하게 출력됩니다.</li>
     </ul>
@@ -335,7 +501,8 @@ function home(){
 /* 이동 */
 function route(){
   const m = decodeURIComponent(location.hash.slice(1)).split("/");
-  if (m[0] && INFO[m[0]]) return show(m[0], +m[1] || 0);
+  if (m[0] === "기도") return prayersPage();
+  if (m[0] && INFO[m[0]]) { show(m[0], +m[1] || 0); return bindPray(); }
   home();
 }
 window.addEventListener("hashchange", route);
