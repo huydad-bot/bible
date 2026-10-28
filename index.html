@@ -156,10 +156,6 @@ dialog::backdrop{background:rgba(30,10,25,.45)}
     <button role="tab" id="pSU" aria-selected="true" title="창세기부터 계시록까지 순서대로, 매일 비슷한 분량으로">창→계 순서</button>
     <button role="tab" id="pMC" aria-selected="false" title="하루 네 곳: 1년에 구약 1독, 신약·시편 2독">맥체인</button>
   </div>
-  <div class="tabs" role="tablist" aria-label="기간">
-    <button role="tab" id="t1" aria-selected="true">1 ~ 6월</button>
-    <button role="tab" id="t2" aria-selected="false">7 ~ 12월</button>
-  </div>
   <details class="mchelp" id="mcHelp" hidden>
     <summary>ⓘ 맥체인 사용법</summary>
     <div class="mcpanel">
@@ -183,6 +179,10 @@ dialog::backdrop{background:rgba(30,10,25,.45)}
       </ul>
     </div>
   </details>
+  <div class="tabs" role="tablist" aria-label="기간">
+    <button role="tab" id="t1" aria-selected="true">1 ~ 6월</button>
+    <button role="tab" id="t2" aria-selected="false">7 ~ 12월</button>
+  </div>
   <button class="iconbtn" id="todayBtn" title="오늘 읽을 곳 열기">오늘 말씀</button>
   <a class="iconbtn" id="guideBtn" href="summary/index.html" target="_blank" rel="noopener" title="성경 각 권 해설을 새 탭에서 엽니다">성경 각 권 해설</a>
   <div class="prog"><span id="progTxt">0 / 365일</span><div class="bar"><i id="progBar"></i></div></div>
