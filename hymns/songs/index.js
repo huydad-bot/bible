@@ -8,6 +8,8 @@ window.SONG_LIST = [
   { n: 6,   title: '목소리 높여서',       key: 'D',  tune: 'ST. JOHN' },
   { n: 7,   title: '거룩 거룩 거룩 전능하신 주님', key: 'D', tune: 'NICAEA' },
   { n: 8,   title: '하늘에 가득 찬 영광의 하나님', key: 'D', tune: '구원의 하나님' },
+  { n: 9,   title: '주 우리 하나님',       key: 'Fm', tune: 'YIGDAL (LEONI)' },
+  { n: 10,  title: '하나님의 크신 사랑',   key: 'Bb', tune: 'BEECHER' },
   { n: 29,  title: '내게 있는 모든 것을',   key: 'D',  tune: 'SURRENDER' },
   { n: 143, title: '변찮는 주님의 사랑과', key: 'G',  tune: 'SWEET BY AND BY' },
   { n: 144, title: '고통의 멍에 벗으려고', key: 'Ab', tune: 'JESUS, I COME' },
