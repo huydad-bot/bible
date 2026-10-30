@@ -650,18 +650,35 @@ function curBeat(){return playing?Ginv(T(fromBeat)+(ctx.currentTime-startAt)):fr
 function clearHL(){lit.forEach(([el,c])=>el.classList.remove(c));lit=[];}
 /* ===== 연주 중 화면 자동 따라가기 ===== */
 let curLine=-1;
-function followLine(li){
-  if(li===curLine)return;curLine=li;
-  if(!$('follow').checked)return;
+/* 화면 미리 넘기기: (1) 줄의 마지막 음이 시작되는 순간, 또는 (2) 다음 줄까지 2.5초 이내가 되면
+   다음 줄(전주 중에는 1절 첫 줄)을 미리 보여 준다 */
+const LOOKAHEAD_SEC=2.5;
+const lineOf=ib=>LINE_BREAKS.filter(x=>ib>=x-1e-6).length;
+function aheadLine(g,ib){
+  let ahead=Ginv(T(g)+LOOKAHEAD_SEC);                       // 2.5초 뒤의 위치
+  const S=VOICES[0].tokens.find(n=>ib>=n.t-1e-6&&ib<n.t+n.dur-1e-6);
+  if(S)ahead=Math.max(ahead,g+(S.t+S.dur-ib)+1e-3);           // 지금 음이 끝나는 위치
+  if(ahead>=totalBeats)return lineOf(ib);
+  if(ahead<introLen){const sb=introSrc(ahead);return sb===null?lineOf(ib):lineOf(sb);}
+  return lineOf((ahead-introLen)%SONG_LEN);
+}
+function lineBox(li){
   const els=document.querySelectorAll('#score svg .abcjs-l'+li);
-  if(!els.length)return;
   let top=Infinity,bot=-Infinity;
   els.forEach(e=>{const r=e.getBoundingClientRect();if(r.height||r.width){top=Math.min(top,r.top);bot=Math.max(bot,r.bottom);}});
-  if(!isFinite(top))return;
+  return isFinite(top)?{top,bot}:null;
+}
+function followLine(li,nowLi){
+  if(li===curLine)return;curLine=li;
+  if(!$('follow').checked)return;
+  const nb=lineBox(li);if(!nb)return;
   const panelBot=document.querySelector('.panel').getBoundingClientRect().bottom;
   const viewTop=Math.max(0,panelBot)+8, viewBot=window.innerHeight-8;
-  if(top>=viewTop&&bot<=viewBot)return;            // 이미 다 보이면 그대로
-  window.scrollTo({top:window.scrollY+top-viewTop-6,behavior:'smooth'});
+  if(nb.top>=viewTop&&nb.bot<=viewBot)return;              // 이미 다 보이면 그대로
+  let target=nb.top-viewTop-6;                               // 기본: 다음 줄을 맨 위로
+  const cb=(nowLi!==undefined&&nowLi!==li&&nb.top>0)?lineBox(nowLi):null;
+  if(cb&&cb.top<nb.top&&nb.bot-cb.top<=viewBot-viewTop) target=cb.top-viewTop-6;   // 지금 줄과 다음 줄이 함께 들어가면 둘 다 보이게
+  window.scrollTo({top:window.scrollY+target,behavior:'auto'});
 }
 function tick(){
   if(playing){
@@ -693,7 +710,7 @@ function tick(){
           });
         }
       });
-      followLine(LINE_BREAKS.filter(x=>ib>=x).length);
+      followLine(aheadLine(g,ib),LINE_BREAKS.filter(x=>ib>=x).length);
       const v=Math.floor(b/SONG_LEN)+1;
       const bar=ib<PICKUP?'못갖춘마디':barNum(ib)+'마디';
       const who=mode==='ALL'?'4성부':VOICES.find(x=>x.k===mode).name;
