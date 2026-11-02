@@ -11,6 +11,7 @@ window.SONG_LIST = [
   { n: 9,   title: '주 우리 하나님',       key: 'Fm', tune: 'YIGDAL (LEONI)' },
   { n: 10,  title: '하나님의 크신 사랑',   key: 'Bb', tune: 'BEECHER' },
   { n: 29,  title: '내게 있는 모든 것을',   key: 'D',  tune: 'SURRENDER' },
+  { n: 92,  title: '하나님의 나팔 소리',   key: 'G',  tune: 'ROLL CALL' },
   { n: 143, title: '변찮는 주님의 사랑과', key: 'G',  tune: 'SWEET BY AND BY' },
   { n: 144, title: '고통의 멍에 벗으려고', key: 'Ab', tune: 'JESUS, I COME' },
   { n: 145, title: '나 주를 멀리 떠났다',   key: 'Ab', tune: 'COMING HOME' },
