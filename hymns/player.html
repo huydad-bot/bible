@@ -102,6 +102,15 @@ body.playing .wrap{padding:4px 8px 24px;max-width:none}
 body.playing .card{padding:4px 12px 12px}
 body.playing #score{display:block!important;margin:0 auto;transition:opacity .18s ease-in}
 body.playing #score.fading{opacity:0;transition:opacity .12s ease-out}
+/* 연주 중 정지 버튼 옆 곡 번호·제목 */
+.ptitle{display:none;align-items:baseline;gap:10px;margin-left:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:"Noto Serif KR",serif}
+.ptitle b{font-weight:900;font-size:24px;line-height:1}
+.ptitle span{font-weight:700;font-size:19px;overflow:hidden;text-overflow:ellipsis}
+body.playing .ptitle{display:inline-flex;flex:1 1 auto}
+body.playing .parts{flex-wrap:nowrap}
+body.playing .status{flex:0 0 auto;white-space:nowrap}
+@media (max-width:560px){.ptitle b{font-size:19px}.ptitle span{font-size:15px}body.playing .status{width:auto;margin-left:auto;font-size:12px}}
+@media (max-height:500px){.ptitle b{font-size:18px}.ptitle span{font-size:15px}}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -142,6 +151,7 @@ body.playing .parts{margin-bottom:0}
         <label class="keybtn" title="이조 (조 바꾸기)">이조<select id="trans"></select></label>
         <span class="sp"></span>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button>
+        <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
         <span class="status" id="pos">파트를 고르고 ▶ 시작을 누르세요</span>
       </div>
       <div class="ctrl">
@@ -251,6 +261,7 @@ const KEY_SIG=keySig(SONG.key);
 document.title='찬송가 '+SONG.n+'장 '+SONG.title+' · 파트 연습';
 document.getElementById('hNum').textContent=SONG.n;
 document.getElementById('hTitle').textContent=SONG.title;
+document.getElementById('pNum').textContent=SONG.n;document.getElementById('pName').textContent=SONG.title;
 document.getElementById('hSub').textContent=[SONG.tune,SONG.composer&&(SONG.composer+(SONG.year?' ('+SONG.year+')':'')),koKeyName(SONG.key),SONG.meter,SONG.tempoText].filter(Boolean).join(' · ');
 if(SONG.tempo){['tempo','tempoN'].forEach(id=>document.getElementById(id).value=SONG.tempo);}
 (function buildKeyMenu(){
@@ -374,6 +385,18 @@ const SYL_IDX=new Map();                     // 소프라노 음 → 가사 글�
 [false,true].forEach(ref=>{let k=0;SL.flat().filter(n=>(n.t>=REFRAIN_AT)===ref).forEach(n=>{SYL_IDX.set(n,isMel(n)?-1:k++);});});
 const VERSE_N=SL.flat().filter(n=>n.t<REFRAIN_AT&&!isMel(n)).length;
 const REF_N=SL.flat().filter(n=>n.t>=REFRAIN_AT&&!isMel(n)).length;
+/* 절마다 다른 슬러: SONG.verseMelisma = {절번호:[소프라노 음 시작박,…]}
+   그 절에서만 해당 음이 앞 글자를 이어 부름 → 입력 가사에 '_'(또는 '-')가 없으면 자동으로 넣어 가사가 당겨지지 않게 함 */
+const VMEL=SONG.verseMelisma||{};
+function lyrSy(k){
+  const sy=sylls(LYR[k]);const m=/^v(\d+)$/.exec(k);if(!m||!sy.length)return sy;
+  const ts=(VMEL[m[1]]||[]).map(Number).sort((a,b)=>a-b);
+  ts.forEach(t=>{
+    const n=SL.flat().find(x=>Math.abs(x.t-t)<1e-6);const i=n?SYL_IDX.get(n):undefined;
+    if(i!==undefined&&i>=0&&i<=sy.length&&sy[i]!=='_')sy.splice(i,0,'_');
+  });
+  return sy;
+}
 function wLine(arr){return 'w: '+arr.map(x=>x===undefined?'*':x).join(' ');}
 function sylFor(n,sy){                        // 붙임줄로 나뉜 뒷조각에는 '_'(이어 부름)를 채워 다음 글자가 밀리지 않게 함
   const k=SYL_IDX.get(n);const x=k<0?'_':sy[k];
@@ -389,7 +412,7 @@ function lyricLinesFor(i){
     out+=wLine(line.flatMap(n=>sylFor(n,sy)))+'\n';
   }else{
     VKEYS.forEach((k,vi)=>{
-      const sy=sylls(LYR[k]);if(!sy.length)return;
+      const sy=lyrSy(k);if(!sy.length)return;
       const arr=line.flatMap(n=>sylFor(n,sy));
       if(SYL_IDX.get(line[0])===0&&arr[0]!==undefined)arr[0]=(vi+1)+'.~'+arr[0];
       out+=wLine(arr)+'\n';
@@ -868,7 +891,7 @@ function buildLyricUI(){
   if(Object.values(LYR).some(x=>x))$('lyrBox').open=true;
 }
 function updCount(k){
-  const need=k==='e'?(ECHO_SAME?ECHO_SPAN_N:ECHO_TOTAL):k==='r'?REF_N:VERSE_N, n=sylls(LYR[k]).length, el=$('cnt_'+k);
+  const need=k==='e'?(ECHO_SAME?ECHO_SPAN_N:ECHO_TOTAL):k==='r'?REF_N:VERSE_N, n=lyrSy(k).length, el=$('cnt_'+k);
   el.textContent=n+' / '+need+(k==='e'&&ECHO_SAME&&ECHO&&ECHO.spans.length>1?' ×'+ECHO.spans.length:'');
   el.className='cnt'+((n===need||(k==='e'&&ECHO_SAME&&n===need*(ECHO?ECHO.spans.length:1)))?' ok':n>need?' over':'');
 }
@@ -938,6 +961,7 @@ $('lyrHtml').onclick=async()=>{
   doc.querySelector('#abcjsLib').setAttribute('src','https://cdn.jsdelivr.net/npm/abcjs@6.7.2/dist/abcjs-basic-min.js');
   doc.querySelectorAll('script[src^="songs/"]').forEach(x=>x.remove());
   doc.querySelector('#back').remove();
+  doc.querySelector('#pNum').textContent='';doc.querySelector('#pName').textContent='';
   doc.querySelector('#hNum').textContent='';doc.querySelector('#hTitle').textContent='';doc.querySelector('#hSub').textContent='';
   doc.querySelector('#trans').innerHTML='';doc.querySelector('#verses').innerHTML='';
   doc.querySelectorAll('style').forEach(st=>{if(st.textContent.includes('abcjs-')&&!st.textContent.includes('--bg'))st.remove();});
