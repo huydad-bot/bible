@@ -95,6 +95,12 @@ header{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:1
 .toast.show{opacity:1}
 .lbtns button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font:14px "Noto Sans KR";cursor:pointer}
 .note{font-size:12.5px;color:var(--mute);line-height:1.7;margin-top:10px}
+/* 연주 중에는 제목·설정을 숨기고 악보만 (정지 버튼과 위치 표시는 남김) */
+body.playing .back,body.playing header,body.playing .ctrl,body.playing .timbre,
+body.playing .parts .pbtn,body.playing .parts .keybtn,body.playing .parts .sp,body.playing .lyr,body.playing .note{display:none}
+body.playing .wrap{padding-top:6px}
+body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
+body.playing .parts{margin-bottom:0}
 @media (max-width:560px){
   .panel{position:static}
   .num{font-size:42px}.ttl h1{font-size:21px}
@@ -135,6 +141,7 @@ header{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:1
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
         <label title="연주 중 악보 화면이 자동으로 따라갑니다"><i class="dot"></i>따라가기 <input id="follow" type="checkbox" checked></label>
+        <label title="▶ 시작을 누르면 제목과 설정을 숨기고 악보만 보여 줍니다 (정지하면 다시 나타남)"><i class="dot"></i>악보만 보기 <input id="scoreOnly" type="checkbox" checked></label>
         <label title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)"><i class="dot"></i>조표색 적용 <input id="accChk" type="checkbox"></label>
       </div>
       <div class="timbre" id="timbre">
@@ -601,6 +608,9 @@ function getIntro(){let v='none';try{v=$('intro').value;}catch(e){}return INTRO_
 function introSrc(g){                     // 전주 구간의 전체박 → 원곡 박
   let off=0;for(const [a,b] of curIntro){if(g<off+(b-a))return a+(g-off);off+=b-a;}return null;
 }
+try{const v=localStorage.getItem('hymn_scoreOnly');if(v!==null)$('scoreOnly').checked=v==='1';}catch(e){}
+$('scoreOnly').addEventListener('change',e=>{try{localStorage.setItem('hymn_scoreOnly',e.target.checked?'1':'0');}catch(_){}
+  if(playing)document.body.classList.toggle('playing',e.target.checked);});
 function start(m,beat=0,intro=curIntro){
   stop(true);
   if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -635,12 +645,13 @@ function start(m,beat=0,intro=curIntro){
     });
   });
   playing=true;curLine=-1;applyMix();
+  if($('scoreOnly').checked)document.body.classList.add('playing');
   endTimer=setTimeout(()=>{stop();fromBeat=0;},(T(totalBeats)-base+.6)*1000);
 }
 function stop(silent){
   clearTimeout(endTimer);
   if(master){const m=master;m.gain.setTargetAtTime(0,ctx.currentTime,.03);setTimeout(()=>m.disconnect(),200);master=null;}
-  playing=false;clearHL();
+  playing=false;clearHL();document.body.classList.remove('playing');
   if(!silent){$('pos').textContent='정지됨';}
   applyMix();
 }
@@ -838,6 +849,7 @@ $('lyrHtml').onclick=async()=>{
   doc.querySelector('#lyrRows').innerHTML='';
   doc.querySelectorAll('#timbre select').forEach(sel=>{[...sel.options].forEach((o,i)=>{if(!(sel.id==='tAll'&&i===0))o.remove();});});
   doc.querySelectorAll('.toast').forEach(x=>x.remove());
+  doc.querySelector('body').classList.remove('playing');
   doc.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on',b.dataset.v==='ALL'));
   doc.querySelector('#play').classList.remove('on');doc.querySelector('#play').textContent='▶ 시작';
   doc.querySelector('#pos').textContent='파트를 고르고 ▶ 시작을 누르세요';
