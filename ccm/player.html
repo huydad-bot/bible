@@ -139,8 +139,8 @@ body.playing #midiLive.show{display:inline-block}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
 /* 카운트 숫자 */
-.count{position:fixed;left:50%;top:8px;z-index:20;width:54px;height:54px;margin-left:-27px;border-radius:50%;
-  background:var(--ALL);color:#fff;font:900 34px/54px "Noto Sans KR",sans-serif;text-align:center;
+.count{position:fixed;left:50%;top:8px;z-index:20;width:44px;height:44px;margin-left:-22px;border-radius:50%;
+  background:var(--ALL);color:#fff;font:900 28px/44px "Noto Sans KR",sans-serif;text-align:center;
   box-shadow:0 6px 24px rgba(60,30,120,.3);opacity:0;pointer-events:none;transition:opacity .15s}
 .count.show{opacity:1}
 .count.beat{animation:cbeat .45s ease-out}
@@ -1086,14 +1086,21 @@ function pageFade(y){
 }
 /* 전주 끝 카운트 (4·3·2·1) — 1절 첫 음 직전 4박 */
 const COUNT_N=4;let lastCount=0;
+function placeCount(el){                        // 1절 첫 음 바로 위 빈칸에 표시
+  const pb=Math.max(0,document.querySelector('.panel').getBoundingClientRect().bottom);
+  const first=noteMap.filter(n=>n.k==='S'&&n.els&&n.els[0]).sort((a,b)=>a.start-b.start)[0];
+  let x=window.innerWidth/2,y=pb+10;
+  if(first){const r=first.els[0].getBoundingClientRect();
+    if(r.width||r.height){x=r.left+r.width/2;y=r.top-44-4;}}
+  x=Math.min(Math.max(x,26),window.innerWidth-26);
+  el.style.left=x+'px';el.style.top=Math.max(pb+2,y)+'px';
+}
 function showCount(n){
   if(!(n>=1&&n<=COUNT_N))n=0;
   if(n===lastCount)return;lastCount=n;
   const el=$('count');
   if(!n){el.classList.remove('show');return;}
-  const pr=document.querySelector('.panel').getBoundingClientRect();   // 정지 버튼 줄 가운데에 표시
-  const bar=document.querySelector('.parts').getBoundingClientRect();
-  el.style.top=Math.max(4,(pr.bottom>0?bar.top+bar.height/2:30)-27)+'px';
+  placeCount(el);
   el.textContent=n;el.classList.remove('beat');void el.offsetWidth;el.classList.add('show','beat');
 }
 function tick(){
