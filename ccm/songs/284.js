@@ -10,6 +10,7 @@ registerSong({
   tempo: 72,
   tempoText: '',
   verses: 2,
+  chorusAt: 31,          // '주의 뜻대로 주의 뜻대로…' 반복 부분
   lineBreaks: [16, 32],
   melisma: [40.5],                                   // '항-' (A–G# 슬러)
   // 1절: '너-', '심-', '은-' 은 두 음을 한 글자로 / 2절: '빛-' 만 붙임줄로 이어 부름
