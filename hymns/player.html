@@ -406,6 +406,13 @@ VOICES.forEach(v=>{
   const len=v.tokens.reduce((a,n)=>a+n.dur,0);
   if(Math.abs(len-SONG_LEN)>1e-6)console.warn(v.k,'박 수가 소프라노와 다름',len,SONG_LEN);
 });
+/* 음 뒤에 오는 쉼표 길이(박) — 쉼표에서 소리를 뚝 끊지 않고 그 길이 동안 서서히 줄이기 위해 */
+VOICES.forEach(v=>{
+  const byT=new Map();v.tokens.forEach((x,i)=>byT.set(Math.round(x.t*1000),i));
+  v.notes.forEach(n=>{let i=byT.get(Math.round((n.t+n.dur)*1000)),r=0;
+    while(i!==undefined&&i<v.tokens.length&&v.tokens[i].p==='r'){r+=v.tokens[i].dur;i++;}n.restAfter=r;});
+});
+let NOTE_TAIL=0;                              // 다음에 만드는 음의 여운(초)
 
 /* ===== ABC 악보 생성 ===== */
 function abcPitch(p,state){
@@ -753,6 +760,7 @@ function sfNoteOn(c,bank,prog,dest,key,t0,dur,vel){
   env.gain.setValueAtTime(0,t0);env.gain.setValueAtTime(0,a0);env.gain.linearRampToValueAtTime(1,a1);env.gain.setValueAtTime(1,h1);
   env.gain.setTargetAtTime(sus,h1,Math.max(.005,Math.min(dc,20)/4));
   env.gain.setTargetAtTime(0,Math.max(t1,a1),Math.max(.008,Math.min(3,tc(g[38]))/4));
+  if(NOTE_TAIL>0){env.gain.cancelScheduledValues(t1);env.gain.setTargetAtTime(0,t1,NOTE_TAIL/3);stopAt=Math.max(stopAt,t1+NOTE_TAIL+.1);}
   oscs.forEach(o=>o.stop(stopAt));
   return {env,oscs};
 }
@@ -863,6 +871,7 @@ function noteOn(c,ins,v,dest,lfo,midi,t0,dur,vel=1){
     const o=osc(c,'sawtooth',f);o.connect(flt);oscs.push(o);
     A(.05,.85,.06);
   }
+  if(NOTE_TAIL>0){env.gain.cancelScheduledValues(t1);env.gain.setTargetAtTime(0,t1,NOTE_TAIL/3);stopAt=Math.max(stopAt,t1+NOTE_TAIL+.1);}
   oscs.forEach(o=>{o.start(t0);o.stop(stopAt);});
   return {env,oscs};
 }
@@ -1096,19 +1105,20 @@ function start(m,beat=0,intro=curIntro){
     if(ctx.createStereoPanner){const pn=ctx.createStereoPanner();pn.pan.value=v.pan;g.connect(pn);pn.connect(master);}
     else g.connect(master);
     vGain[v.k]=g;
-    const play=(t,e,midi)=>{
+    const play=(t,e,midi,rb)=>{
       if(e<=beat+0.05)return;
       const t0=Math.max(t,beat);
       const w=T(t0)-base,L=T(e)-T(t0),ins=TIMBRE[v.k],m=midi+tr;
-      EVQ.push({w,f:()=>noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L)});
+      const tl=rb>0?Math.min(2.5,T(e+rb)-T(e)):0;
+      EVQ.push({w,f:()=>{NOTE_TAIL=tl;try{noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L);}finally{NOTE_TAIL=0;}}});
     };
     let off=0;                                 // 전주: 구간 경계에서 음을 잘라 붙임
     curIntro.forEach(([a,b])=>{
-      v.notes.forEach(n=>{const s0=Math.max(n.t,a),e0=Math.min(n.t+n.dur,b);if(e0>s0)play(off+s0-a,off+e0-a,n.midi);});
+      v.notes.forEach(n=>{const s0=Math.max(n.t,a),e0=Math.min(n.t+n.dur,b);if(e0>s0)play(off+s0-a,off+e0-a,n.midi,e0===n.t+n.dur?n.restAfter:0);});
       off+=b-a;
     });
     for(let r=0;r<nv;r++)v.notes.forEach(n=>{   // 다른 파트가 길게 끄는 음은 남은 길이만큼 연주
-      const t=introLen+n.t+r*SONG_LEN;play(t,t+n.dur,n.midi);
+      const t=introLen+n.t+r*SONG_LEN;play(t,t+n.dur,n.midi,n.restAfter);
     });
   });
   playing=true;curLine=-1;applyMix();
