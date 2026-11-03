@@ -151,6 +151,18 @@ body:not(.playing) .parts .play{display:none}
 .dcol{display:flex;flex-direction:column;gap:3px}
 .timbre .dcol label[title^="줄"]{font:400 12.5px "Noto Sans KR";color:var(--mute);padding-left:58px;gap:4px}
 #ferm{width:96px}.fermi{font-weight:400;margin-left:2px}.fermi span{font-family:'Bravura','Noto Music','Segoe UI Symbol','Apple Symbols',serif;font-size:1.25em;line-height:1;position:relative;top:2px}
+.parts .accopt{display:flex;align-items:center;gap:5px;font:600 14px "Noto Sans KR";color:var(--ink);white-space:nowrap;margin-left:4px;cursor:pointer}
+body.playing .parts .accopt,body.playing .parts .keybtn{display:none}
+/* 사용법 창 */
+.help{position:fixed;inset:0;z-index:50;background:rgba(30,25,20,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
+.help[hidden]{display:none}
+.hbox{position:relative;background:var(--card);border-radius:14px;max-width:760px;width:100%;padding:20px 24px 24px;box-shadow:0 10px 40px rgba(0,0,0,.25);font-size:14.5px;line-height:1.75;color:var(--ink)}
+.hbox h2{font-family:"Noto Serif KR",serif;font-size:22px;margin:0 0 6px}
+.hbox h3{font-size:15.5px;margin:16px 0 4px;padding-top:10px;border-top:1px solid var(--line)}
+.hbox ol,.hbox ul{margin:0;padding-left:20px}.hbox li{margin:2px 0}
+.hclose{position:absolute;top:12px;right:12px;border:none;background:#efe9df;border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
+body.playing .hbtns #helpBtn{display:none}
+@media (max-width:560px){.hbtns{flex-wrap:wrap}.hbox{padding:16px 16px 20px;font-size:14px}}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -170,6 +182,44 @@ body.playing .parts{margin-bottom:0}
 </head>
 <body>
 <div class="count" id="count" aria-live="polite"></div>
+<div class="help" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
+<ol>
+<li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 다시 누르면(■ 정지) 멈춥니다.</li>
+<li>악보의 <b>음표나 가사를 누르면</b> 그 음부터 바로 연주합니다.</li>
+<li>연주 중에는 화면이 두 줄씩 자동으로 넘어갑니다(다음 줄 약 1초 전). 휴대폰은 안드로이드에서 가로 화면으로 바뀝니다(아이폰은 직접 돌려 주세요).</li>
+<li><b>✎ 가사 입력</b>: 가지고 계신 악보의 가사를 절별로 붙여넣으면 음표 아래에 자동 배치됩니다. 글자 수가 맞으면 숫자가 초록색이 됩니다. 가사는 이 브라우저에만 저장되며, 파일로 내보내기/불러오기·가사 포함 HTML 저장으로 다른 기기에 옮길 수 있습니다.</li>
+<li><b>⚙ 설정 펼치기</b>: 아래의 모든 설정이 들어 있습니다. 고른 설정은 브라우저에 기억됩니다.</li>
+</ol><h3>연주 설정</h3>
+<ul>
+<li><b>멜로디 악기</b>: 악보의 멜로디(주선율)를 자동 연주하는 악기.</li>
+<li><b>이조</b>: 조를 반음 단위로 올리고 내립니다. <b>조표색 적용</b>: ♯ 음은 빨강, ♭ 음은 파랑으로 표시합니다.</li>
+<li><b>템포</b>: 빠르기(BPM). <b>전주</b>: 시작 전 전주(<b>rit.</b>를 켜면 점점 느려짐). 전주 끝에 <b>4·3·2·1</b> 카운트가 첫 음 위에 표시됩니다.</li>
+<li><b>선택</b>: 몇 절까지 연주할지. 되돌이표·D.C.·D.S. 곡은 '전곡 (악보 순서)'로 정해진 순서대로 연주합니다.</li>
+</ul>
+<h3>반주 · 드럼</h3>
+<ul>
+<li><b>반주</b>: 악보의 코드(E, A, B7, C#m7…)로 자동 반주 — 화음 / 아르페지오 / 리듬.</li>
+<li><b>반주 악기 · 베이스</b>: 반주 소리와 낮은 근음 소리. 'A/B'처럼 분수 코드는 / 뒤의 음을 베이스로 칩니다.</li>
+<li><b>드럼</b>: 발라드 · 8비트 · 16비트 · 셔플 · 6/8 발라드 · 하프타임. 고르면 아래에 비트 설명이 나옵니다. <b>필인·마무리</b>: 줄 끝 필인과 곡 끝 심벌.</li>
+<li><b>음량</b>: 멜로디 · 반주 · 베이스 · 드럼을 따로 조절. <b>멜로디를 0</b>으로 내리면 반주만 남는 MR이 됩니다.</li>
+</ul><h3>MIDI 악기로 직접 연주</h3>
+<ul>
+<li><b>🎹 MIDI 연결</b>: USB(유선) 또는 블루투스 MIDI 악기를 연결합니다. 한 번 허용하면 다른 곡을 열어도 자동 연결됩니다.</li>
+<li>블루투스 MIDI는 먼저 기기에서 페어링하세요(맥: Audio MIDI 설정 → 블루투스 / 안드로이드: 블루투스·MIDI 앱).</li>
+<li><b>장치</b>: 쓸 장치 선택. <b>미디악기</b>: 내 연주에 낼 소리(악기 자체 소리를 쓰려면 '소리 끔'). <b>내 연주</b>: 내 연주 음량.</li>
+<li>연주한 음이 지금 악보 음과 맞으면 <span style="color:#1f7a4c;font-weight:700">초록</span>, 틀리면 <span style="color:#c0392b;font-weight:700">빨강</span>(맞는 음 함께 표시)으로 보여 줍니다. 멜로디를 기준으로 판정합니다.</li>
+<li>PC·안드로이드의 크롬/엣지에서만 됩니다(아이폰·아이패드 사파리는 미지원). 새 곡을 연 뒤 소리가 안 나면 화면을 한 번 눌러 주세요.</li>
+</ul>
+<h3>음원 (SF2 사운드폰트)</h3>
+<ul>
+<li><b>음원</b>: 합성음 / GeneralUser GS / 직접 불러온 SF2 중 선택. SF2를 쓰면 실제 녹음된 악기 소리가 납니다.</li>
+<li><b>📂 SF2 불러오기</b>: .sf2 파일을 고르면 브라우저에 보관되어 다음부터 바로 쓰입니다. PC에서 파일을 직접 열었다면 처음 한 번 <b>sf2 폴더의 GeneralUser-GS.sf2</b>를 골라 주세요.</li>
+<li>악기 선택 칸 아래쪽에 SF2의 전체 악기 목록이 추가됩니다. SF3(압축형)은 지원하지 않습니다.</li>
+</ul>
+<h3>알아두기</h3>
+<ul>
+<li>가사·악보는 개인 연습용입니다. 가사가 들어간 파일은 공개 웹에 올리지 마세요.</li>
+</ul></div></div>
 <div class="wrap">
   <a class="back" id="back" href="index.html">← CCM 목록</a>
   <header>
@@ -182,14 +232,16 @@ body.playing .parts{margin-bottom:0}
       <button class="hplay" id="hPlay" title="시작 / 정지">▶ 시작</button>
       <button class="setbtn" id="lyrBtn" title="가사 입력·저장·내보내기">✎ 가사 입력</button>
       <button class="setbtn" id="setBtn" title="악기·이조·템포·반주·MIDI 설정">⚙ 설정 펼치기</button>
+      <button class="setbtn" id="helpBtn" title="프로그램 사용법">? 사용법</button>
     </div>
   </header>
 
   <div class="card">
     <div class="panel">
       <div class="parts">
-        <label class="inst"><i class="dot"></i>악기 <select data-k="S"></select></label>
+        <label class="inst" title="악보의 멜로디(주선율)를 자동 연주할 악기"><i class="dot"></i>멜로디 악기 <select data-k="S"></select></label>
         <label class="keybtn" title="이조 (조 바꾸기)">이조<select id="trans"></select></label>
+        <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
         <span id="midiLive"></span>
@@ -206,7 +258,6 @@ body.playing .parts{margin-bottom:0}
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
         <label title="연주 중 악보 화면이 자동으로 따라갑니다"><i class="dot"></i>따라가기 <input id="follow" type="checkbox" checked></label>
         <input id="scoreOnly" type="checkbox" checked hidden>
-        <label title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)"><i class="dot"></i>조표색 적용 <input id="accChk" type="checkbox"></label>
       </div>
       <div class="timbre" id="timbre">
         <label title="곡에 적힌 코드로 자동 반주"><i class="dot"></i>반주 <select id="accPat">
@@ -223,10 +274,10 @@ body.playing .parts{margin-bottom:0}
         <label title="베이스 음량">베이스 <input class="vol" data-vk="AB" type="range" min="0" max="100" value="60"><b class="vv"></b></label>
         <label title="드럼 음량">드럼 <input class="vol" data-vk="DR" type="range" min="0" max="100" value="60"><b class="vv"></b></label>
       </div>
-      <div class="timbre midi" id="midiRow">
+      <div class="timbre midi" id="midiRow" style="border-top:1px dashed #cfc3ae;padding-top:12px;margin-top:12px">
         <button class="midibtn" id="midiBtn" title="유선(USB)·무선(블루투스) MIDI 악기를 연결해 멜로디를 직접 연주">🎹 MIDI 연결</button>
         <label title="연주에 쓸 MIDI 장치">장치 <select id="midiDev"><option value="all">모든 장치</option></select></label>
-        <label title="MIDI 연주 소리 — 악기 자체에서 소리가 나면 '소리 끔'">소리 <select id="midiIns"><option value="off">소리 끔 (악기 소리 사용)</option></select></label>
+        <label title="MIDI로 연주할 때 나는 악기 소리 — 악기 자체에서 소리가 나면 '소리 끔'">미디악기 <select id="midiIns"><option value="off">소리 끔 (악기 소리 사용)</option></select></label>
         <label title="MIDI 연주 음량">내 연주 <input class="vol" data-vk="LIVE" type="range" min="0" max="100" value="80"><b class="vv"></b></label>
         <span class="midinote" id="midiNote"></span>
       </div>
@@ -1271,6 +1322,11 @@ function setPanel(open){document.body.classList.toggle('collapsed',!open);
 (function(){let o=false;try{o=localStorage.getItem('ccm_panelOpen')==='1';}catch(e){}setPanel(o);})();
 $('setBtn').onclick=()=>setPanel(document.body.classList.contains('collapsed'));
 $('hPlay').onclick=()=>$('play').click();
+/* 사용법 */
+$('helpBtn').onclick=()=>{$('help').hidden=false;$('help').scrollTop=0;};
+$('helpClose').onclick=()=>{$('help').hidden=true;};
+$('help').onclick=e=>{if(e.target===$('help'))$('help').hidden=true;};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('help').hidden=true;});
 /* 가사 입력 창 열기/닫기 (기본: 닫힘) */
 function setLyr(open){document.body.classList.toggle('lyrOpen',open);
   $('lyrBtn').textContent=open?'✎ 가사 닫기':'✎ 가사 입력';$('lyrBtn').classList.toggle('open',open);
