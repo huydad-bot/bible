@@ -129,6 +129,10 @@ body:not(.playing) .parts .play{display:none}
 .midinote:empty{display:none}
 .midinote.ok{background:#e3f4ea;color:#1f7a4c}.midinote.no{background:#fdecea;color:#c0392b}
 .timbre select{max-width:190px;text-overflow:ellipsis}
+.midibtn.on{background:#1f7a4c;border-color:#1f7a4c;color:#fff}
+#midiLive{display:none;font:700 13px "Noto Sans KR";padding:2px 10px;border-radius:999px;margin-left:8px}
+body.playing #midiLive.show{display:inline-block}
+#midiLive.ok{background:#e3f4ea;color:#1f7a4c}#midiLive.no{background:#fdecea;color:#c0392b}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -174,6 +178,7 @@ body.playing .parts{margin-bottom:0}
         <span class="sp"></span>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
+        <span id="midiLive"></span>
         <span class="status" id="pos">파트를 고르고 ▶ 시작을 누르세요</span>
       </div>
       <div class="ctrl">
@@ -204,6 +209,13 @@ body.playing .parts{margin-bottom:0}
         <button class="midibtn" id="sfDel" title="이 브라우저에 보관한 SF2 지우기" style="display:none">삭제</button>
         <input type="file" id="sfFile" accept=".sf2,.SF2" hidden>
         <span class="midinote" id="sfStat"></span>
+      </div>
+      <div class="timbre midi" id="midiRow">
+        <button class="midibtn" id="midiBtn" title="유선(USB)·무선(블루투스) MIDI 악기를 연결해 직접 연주 (한 번 허용하면 곡이 바뀌어도 자동 연결)">🎹 MIDI 연결</button>
+        <label title="연주에 쓸 MIDI 장치">장치 <select id="midiDev"><option value="all">모든 장치</option></select></label>
+        <label title="MIDI 연주 소리 — 악기 자체에서 소리가 나면 '소리 끔'">소리 <select id="midiIns"><option value="off">소리 끔 (악기 소리 사용)</option></select></label>
+        <label title="MIDI 연주 음량">내 연주 <input id="liveVol" type="range" min="0" max="100" value="80" style="width:84px;vertical-align:middle"><b class="vv" id="liveVolV" style="font:400 12px 'Noto Sans KR';color:var(--mute)"></b></label>
+        <span class="midinote" id="midiNote"></span>
       </div>
     </div>
     <div id="score"></div>
@@ -569,7 +581,7 @@ function organWave(c){
 function osc(c,type,f,det){
   const o=c.createOscillator();
   if(type==='organ')o.setPeriodicWave(organWave(c));else o.type=type;
-  o.frequency.value=f;if(det)o.detune.value=det;return o;
+  o.frequency.value=f;o._d=det||0;if(det)o.detune.value=det;return o;
 }
 /* ===== SF2 사운드폰트 음원 =====
    GeneralUser GS(기본, sf2 폴더) 또는 직접 고른 .sf2 파일의 실제 악기 소리로 연주.
@@ -697,7 +709,7 @@ async function sfMenu(){
   sel.value=SF_SRC;$('sfDel').style.display=(SF_SRC!=='synth'&&keys.includes(SF_SRC))?'':'none';
 }
 function sfFillMenus(){                         // 각 파트 악기 선택 칸에 SF2 악기 목록 추가
-  const sels=[...document.querySelectorAll('#timbre select[data-k]'),$('tAll')];
+  const sels=[...document.querySelectorAll('#timbre select[data-k]'),$('tAll'),$('midiIns')];
   sels.forEach(sel=>{sel.querySelectorAll('optgroup.sfg').forEach(x=>x.remove());
     if(!SF)return;
     const og=document.createElement('optgroup');og.className='sfg';og.label='SF2 악기 — '+SF.title;
@@ -706,6 +718,7 @@ function sfFillMenus(){                         // 각 파트 악기 선택 칸�
     sel.appendChild(og);});
   document.querySelectorAll('#timbre select[data-k]').forEach(sel=>{const v=TIMBRE[sel.dataset.k];sel.value=v;if(sel.value!==v)sel.value='basic';});
   $('tAll').value='';
+  {const m=$('midiIns');m.value=MIDI_INS;if(m.value!==MIDI_INS)m.value='S';}
 }
 async function sfUse(key,buf){                  // 사운드폰트 적용
   if(key==='synth'){SF=null;sfStat('');sfFillMenus();return true;}
@@ -781,6 +794,7 @@ function noteOn(c,ins,v,dest,lfo,midi,t0,dur,vel=1){
     A(.05,.85,.06);
   }
   oscs.forEach(o=>{o.start(t0);o.stop(stopAt);});
+  return {env,oscs};
 }
 /* ===== 전주 ===== */
 // 구간 [시작박, 끝박) — 못갖춘마디(1박)를 포함해 자연스럽게 1절로 이어지도록 잘랐다
@@ -874,6 +888,103 @@ function exitLandscape(){
   try{if(document.fullscreenElement)document.exitFullscreen();}catch(e){}
 }
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)weFS=false;});
+let LIVE_VOL=80;try{const v=localStorage.getItem('hymn_liveVol');if(v!==null)LIVE_VOL=+v;}catch(e){}
+/* ===== MIDI 연주 (유선 USB · 무선 블루투스 MIDI) =====
+   Web MIDI — PC·안드로이드의 크롬/엣지에서 동작 (아이폰 사파리는 미지원).
+   블루투스 MIDI는 먼저 컴퓨터(맥: Audio MIDI 설정 / 윈도: 장치 앱)나 안드로이드에서 페어링한 뒤 연결. */
+let midiAccess=null,liveBus=null,liveExpr=null,MIDI_DEV='all',MIDI_INS='S',bendCents=0;
+const liveNotes=new Map();
+try{MIDI_DEV=localStorage.getItem('hymn_midiDev')||'all';MIDI_INS=localStorage.getItem('hymn_midiIns')||'S';}catch(e){}
+function ensureCtx(){
+  if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
+  if(ctx.state!=='running')ctx.resume();
+  if(!liveBus){liveBus=ctx.createGain();liveExpr=ctx.createGain();liveExpr.connect(liveBus);
+    const comp=ctx.createDynamicsCompressor();liveBus.connect(comp);comp.connect(ctx.destination);setLiveVol();}
+}
+function setLiveVol(){if(liveBus)liveBus.gain.setTargetAtTime(.32*LIVE_VOL/80,ctx.currentTime,.03);}
+const NN=['도','도#','레','레#','미','파','파#','솔','솔#','라','라#','시'];
+const nName=m=>NN[m%12]+(Math.floor(m/12)-1);
+function expectedMidi(){                     // 지금 연주 위치의 멜로디 음 (이조 반영)
+  if(!playing)return null;const g=curBeat();if(g<introLen)return null;
+  const b=(g-introLen)%SONG_LEN;const V=VOICES.find(x=>x.k===mode)||VOICES[0];   // 고른 파트(All이면 소프라노)
+  const n=V.tokens.find(x=>b>=x.t-1e-6&&b<x.t+x.dur-1e-6);
+  return n&&n.p!=='r'?toMidi(n.p)+(+$('trans').value):null;
+}
+function showMidi(m){
+  const exp=expectedMidi(),el=$('midiNote'),lv=$('midiLive');
+  const cls=exp==null?'':(exp===m?'ok':(exp%12===m%12?'ok':'no'));
+  const txt='♪ '+nName(m)+(exp!=null&&cls==='no'?' (→ '+nName(exp)+')':'');
+  el.textContent=txt;el.className='midinote '+cls;lv.textContent=txt;lv.className='show '+cls;
+}
+function midiNoteOn(m,velo){
+  ensureCtx();showMidi(m);
+  if(MIDI_INS==='off')return;
+  midiNoteOff(m,true);
+  const ins=MIDI_INS==='S'?(TIMBRE[mode]||TIMBRE.S):MIDI_INS;
+  const h=noteOn(ctx,ins,{k:'S',wave:'triangle',cut:3400},liveExpr,null,m,ctx.currentTime+.003,60,.35+.65*velo/127);
+  if(h){h.oscs.forEach(o=>o.detune.value=o._d+bendCents);liveNotes.set(m,h);}
+}
+function midiNoteOff(m,quick){
+  const h=liveNotes.get(m);if(!h)return;liveNotes.delete(m);
+  const now=ctx.currentTime,g=h.env.gain;
+  try{g.cancelScheduledValues(now);g.setValueAtTime(g.value,now);g.setTargetAtTime(0,now,quick?.01:.07);}catch(e){}
+  h.oscs.forEach(o=>{try{o.stop(now+(quick?.08:.6));}catch(e){}});
+}
+function onMidiMsg(e){
+  if(MIDI_DEV!=='all'&&e.currentTarget&&e.currentTarget.id!==MIDI_DEV)return;
+  const [st,d1,d2]=e.data,cmd=st&0xf0;
+  if(cmd===0x90&&d2>0)midiNoteOn(d1,d2);
+  else if(cmd===0x80||(cmd===0x90&&d2===0))midiNoteOff(d1);
+  else if(cmd===0xB0&&(d1===2||d1===11||d1===7)){ensureCtx();liveExpr.gain.setTargetAtTime(Math.pow(d2/127,1.5),ctx.currentTime,.015);}   // 브레스·익스프레션
+  else if(cmd===0xB0&&(d1===123||d1===120))[...liveNotes.keys()].forEach(k=>midiNoteOff(k,true));
+  else if(cmd===0xE0){bendCents=(((d2<<7)|d1)-8192)/8192*200;                                                   // 피치벤드 ±2반음
+    liveNotes.forEach(h=>h.oscs.forEach(o=>o.detune.setTargetAtTime(o._d+bendCents,ctx.currentTime,.01)));}
+}
+function refreshMidiDevices(){
+  const sel=$('midiDev');const cur=MIDI_DEV;sel.innerHTML='<option value="all">모든 장치</option>';
+  if(!midiAccess)return;
+  midiAccess.inputs.forEach(inp=>{sel.add(new Option(inp.name||'MIDI 장치',inp.id));inp.onmidimessage=onMidiMsg;});
+  sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all';
+  const n=midiAccess.inputs.size;
+  $('midiBtn').textContent=n?'🎹 MIDI 연결됨 ('+n+')':'🎹 MIDI 장치 없음';
+  $('midiBtn').classList.toggle('on',n>0);
+}
+$('midiBtn').onclick=async()=>{
+  ensureCtx();
+  if(!navigator.requestMIDIAccess){toast('이 브라우저는 MIDI를 지원하지 않습니다 (PC·안드로이드의 크롬/엣지를 쓰세요)');return;}
+  try{
+    midiAccess=midiAccess||await navigator.requestMIDIAccess({sysex:false});
+    midiAccess.onstatechange=onMidiState;refreshMidiDevices();
+    try{localStorage.setItem('hymn_midiOn','1');}catch(_){}
+    toast(midiAccess.inputs.size?'MIDI 악기를 연주해 보세요':'연결된 MIDI 장치가 없습니다 — 케이블·블루투스 페어링을 확인하세요');
+  }catch(err){toast('MIDI 사용이 허용되지 않았습니다 (주소창의 권한 설정 확인)');}
+};
+/* 자동 다시 연결: 한 번 연결을 허용한 뒤에는 곡·화면이 바뀌어도 페이지가 열릴 때 저절로 연결 */
+let midiNames='';
+function onMidiState(){
+  const before=midiNames;refreshMidiDevices();
+  midiNames=midiAccess?[...midiAccess.inputs.values()].map(i=>i.name).sort().join('|'):'';
+  if(before&&midiNames!==before)toast(midiNames.length>before.length?'MIDI 장치가 다시 연결되었습니다':'MIDI 장치 연결이 끊겼습니다 — 다시 연결되면 자동으로 이어집니다');
+}
+(async function autoMidi(){
+  if(!navigator.requestMIDIAccess)return;
+  let want=false;try{want=localStorage.getItem('hymn_midiOn')==='1';}catch(e){}
+  let st='prompt';try{st=(await navigator.permissions.query({name:'midi'})).state;}catch(e){}
+  if(st==='denied'||(st!=='granted'&&!want))return;
+  try{midiAccess=await navigator.requestMIDIAccess({sysex:false});midiAccess.onstatechange=onMidiState;
+    refreshMidiDevices();midiNames=[...midiAccess.inputs.values()].map(i=>i.name).sort().join('|');}catch(e){}
+})();
+/* 브라우저는 화면을 한 번 누르기 전에는 소리를 막아 두므로, 첫 터치·클릭·키 입력 때 소리 장치를 깨움 */
+['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,function wake(){ensureCtx();
+  ['pointerdown','keydown','touchstart'].forEach(x=>document.removeEventListener(x,wake,true));},true));
+$('midiDev').onchange=()=>{MIDI_DEV=$('midiDev').value;try{localStorage.setItem('hymn_midiDev',MIDI_DEV);}catch(e){}};
+(function(){const sel=$('midiIns');sel.add(new Option('고른 파트 악기와 같게','S'),sel.options[0]);
+  Object.entries(INSTR).forEach(([id,o])=>sel.add(new Option(o.name,id)));
+  sel.value=[...sel.options].some(o=>o.value===MIDI_INS)?MIDI_INS:'S';
+  sel.onchange=()=>{MIDI_INS=sel.value;try{localStorage.setItem('hymn_midiIns',MIDI_INS);}catch(e){}};})();
+if(!navigator.requestMIDIAccess){$('midiBtn').title='이 브라우저는 Web MIDI를 지원하지 않습니다 (PC·안드로이드 크롬/엣지 필요)';}
+$('liveVol').value=LIVE_VOL;$('liveVolV').textContent=LIVE_VOL;
+$('liveVol').oninput=()=>{LIVE_VOL=+$('liveVol').value;$('liveVolV').textContent=LIVE_VOL;setLiveVol();try{localStorage.setItem('hymn_liveVol',LIVE_VOL);}catch(e){}};
 /* 설정 접기/펼치기 (기본: 접힘) */
 function setPanel(open){document.body.classList.toggle('collapsed',!open);
   $('setBtn').textContent=open?'⚙ 설정 접기':'⚙ 설정 펼치기';$('setBtn').classList.toggle('open',open);
@@ -928,7 +1039,7 @@ function start(m,beat=0,intro=curIntro){
 function stop(silent){
   clearTimeout(endTimer);clearInterval(schedTimer);
   if(master){const m=master;m.gain.setTargetAtTime(0,ctx.currentTime,.03);setTimeout(()=>m.disconnect(),200);master=null;}
-  playing=false;clearHL();showCount(0);fadeTok++;$('score').classList.remove('fading');document.body.classList.remove('playing');fitTwoLines();exitLandscape();
+  playing=false;clearHL();showCount(0);$('midiLive').className='';fadeTok++;$('score').classList.remove('fading');document.body.classList.remove('playing');fitTwoLines();exitLandscape();
   if(!silent){$('pos').textContent='정지됨';}
   applyMix();
 }
@@ -1176,6 +1287,9 @@ $('lyrHtml').onclick=async()=>{
   doc.querySelector('#score').innerHTML='';
   doc.querySelector('#lyrRows').innerHTML='';
   doc.querySelectorAll('optgroup.sfg').forEach(o=>o.remove());
+  doc.querySelectorAll('#midiIns option').forEach(o=>{if(o.value!=='off')o.remove();});
+  doc.querySelectorAll('#midiDev option').forEach(o=>{if(o.value!=='all')o.remove();});
+  {const b=doc.querySelector('#midiBtn');if(b){b.textContent='🎹 MIDI 연결';b.className='midibtn';}const n=doc.querySelector('#midiNote');if(n){n.textContent='';n.className='midinote';}}
   {const ss=doc.querySelector('#sfSel');if(ss)ss.innerHTML='<option value="synth">합성음 (기본 내장)</option>';const st=doc.querySelector('#sfStat');if(st){st.textContent='';st.className='midinote';}}
   doc.querySelectorAll('#timbre select[data-k], #tAll').forEach(sel=>{[...sel.options].forEach((o,i)=>{if(!(sel.id==='tAll'&&i===0))o.remove();});});   // 늘임표 선택지는 남김
   doc.querySelectorAll('.toast').forEach(x=>x.remove());
