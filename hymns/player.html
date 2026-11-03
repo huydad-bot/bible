@@ -198,7 +198,7 @@ body.playing .parts{margin-bottom:0}
 <li><b>이조</b>: 조를 반음 단위로 올리고 내립니다. <b>조표색 적용</b>: ♯ 음은 빨강, ♭ 음은 파랑으로 표시합니다.</li>
 <li><b>템포</b>: 빠르기(BPM). <b>늘임표(𝄐)</b>: 늘임표 음을 몇 배로 늘일지.</li>
 <li><b>전주</b>: 시작 전 전주(앞2+뒤2 / 끝4마디 / 후렴). <b>rit.</b>를 켜면 전주 끝이 점점 느려집니다. 전주 끝에 <b>4·3·2·1</b> 카운트가 첫 음 위에 표시됩니다.</li>
-<li><b>선택</b>: 몇 절까지 연주할지. <b>따라가기</b>: 연주 위치를 따라 화면 이동.</li>
+<li><b>선택</b>: 몇 절까지 연주할지.</li>
 </ul><h3>MIDI 악기로 직접 연주</h3>
 <ul>
 <li><b>🎹 MIDI 연결</b>: USB(유선) 또는 블루투스 MIDI 악기를 연결합니다. 한 번 허용하면 다른 곡을 열어도 자동 연결됩니다.</li>
@@ -259,7 +259,7 @@ body.playing .parts{margin-bottom:0}
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
-        <label title="연주 중 악보 화면이 자동으로 따라갑니다"><i class="dot"></i>따라가기 <input id="follow" type="checkbox" checked></label>
+        <input id="follow" type="checkbox" checked hidden>
         <input id="scoreOnly" type="checkbox" checked hidden>
       </div>
       <div class="timbre" id="timbre">
