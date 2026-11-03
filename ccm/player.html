@@ -148,6 +148,8 @@ body:not(.playing) .parts .play{display:none}
 .timbre select,.parts .inst select{max-width:190px;text-overflow:ellipsis}
 .drumdesc{flex-basis:100%;font:400 12.5px 'Noto Sans KR';color:var(--mute);padding-left:14px;margin-top:-4px}
 .drumdesc:empty{display:none}
+.dcol{display:flex;flex-direction:column;gap:3px}
+.timbre .dcol label[title^="줄"]{font:400 12.5px "Noto Sans KR";color:var(--mute);padding-left:58px;gap:4px}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -210,8 +212,7 @@ body.playing .parts{margin-bottom:0}
           <option value="none">없음</option><option value="block">화음</option><option value="arp" selected>아르페지오</option><option value="rhythm">리듬</option></select></label>
         <label title="반주 소리"><i class="dot"></i>반주 악기 <select id="accIns"></select></label>
         <label title="낮은 음(근음)을 연주할 악기"><i class="dot"></i>베이스 <select id="bassIns"><option value="same">반주 악기와 같게</option><option value="none">없음</option></select></label>
-        <label title="드럼 리듬 — 고른 비트의 설명이 옆에 나옵니다"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option><option value="shuffle">셔플</option><option value="ballad68">6/8 발라드</option><option value="halftime">하프타임</option></select></label>
-        <label title="줄(악구) 끝마다 탐 필인, 곡 끝은 심벌로 마무리">필인·마무리 <input id="drumFill" type="checkbox" checked></label>
+        <div class="dcol"><label title="드럼 리듬 — 고른 비트의 설명이 옆에 나옵니다"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option><option value="shuffle">셔플</option><option value="ballad68">6/8 발라드</option><option value="halftime">하프타임</option></select></label><label title="줄(악구) 끝마다 탐 필인, 곡 끝은 심벌로 마무리"><input id="drumFill" type="checkbox" checked> 필인·마무리</label></div>
         <span class="drumdesc" id="drumDesc"></span>
       </div>
       <div class="timbre mix" id="mixRow">
