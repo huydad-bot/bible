@@ -192,13 +192,15 @@ body.playing .parts{margin-bottom:0}
       </div>
       <div class="ctrl">
         <label title="템포 (BPM)"><i class="dot"></i>템포 <input id="tempo" type="range" min="40" max="160" value="84"> <input id="tempoN" title="BPM (40–160)" type="number" min="40" max="160" value="84" inputmode="numeric"></label>
+        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표 <select id="ferm">
+          <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label title="▶ 시작을 누르면 곡 앞에 연주할 전주"><i class="dot"></i>전주 <select id="intro">
           <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디">끝4마디</option>
           <option value="ref">후렴</option><option value="none" selected>없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
         <label title="연주 중 악보 화면이 자동으로 따라갑니다"><i class="dot"></i>따라가기 <input id="follow" type="checkbox" checked></label>
-        <label title="▶ 시작을 누르면 제목과 설정을 숨기고 악보만 보여 줍니다 (정지하면 다시 나타남)"><i class="dot"></i>악보만 보기 <input id="scoreOnly" type="checkbox" checked></label>
+        <input id="scoreOnly" type="checkbox" checked hidden>
         <label title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)"><i class="dot"></i>조표색 적용 <input id="accChk" type="checkbox"></label>
       </div>
       <div class="timbre" id="timbre">
@@ -207,8 +209,6 @@ body.playing .parts{margin-bottom:0}
         <label title="반주 소리"><i class="dot"></i>반주 악기 <select id="accIns"></select></label>
         <label title="낮은 음(근음)을 연주할 악기"><i class="dot"></i>베이스 <select id="bassIns"><option value="same">반주 악기와 같게</option><option value="none">없음</option></select></label>
         <label title="드럼 리듬"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option></select></label>
-        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표 <select id="ferm">
-          <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
       </div>
       <div class="timbre sfrow" id="sfRow">
         <label title="악기 소리의 출처 — SF2 사운드폰트를 고르면 실제 녹음된 악기 소리로 연주"><i class="dot"></i>음원 <select id="sfSel"><option value="synth">합성음 (기본 내장)</option></select></label>
@@ -971,7 +971,7 @@ function getIntro(){let v='none';try{v=$('intro').value;}catch(e){}return INTRO_
 function introSrc(g){                     // 전주 구간의 전체박 → 원곡 박
   let off=0;for(const [a,b] of curIntro){if(g<off+(b-a))return a+(g-off);off+=b-a;}return null;
 }
-try{const v=localStorage.getItem('ccm_scoreOnly');if(v!==null)$('scoreOnly').checked=v==='1';}catch(e){}
+/* 연주 중에는 항상 악보만 보기 (설정·가사는 각 버튼으로 열기) */
 $('scoreOnly').addEventListener('change',e=>{try{localStorage.setItem('ccm_scoreOnly',e.target.checked?'1':'0');}catch(_){}
   if(playing){document.body.classList.toggle('playing',e.target.checked);fitTwoLines();curLine=-1;}});
 /* 연주 중 악보 크기: 두 줄이 화면에 꼭 들어가도록 */
