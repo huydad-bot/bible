@@ -210,13 +210,6 @@ body.playing .parts{margin-bottom:0}
         <label title="낮은 음(근음)을 연주할 악기"><i class="dot"></i>베이스 <select id="bassIns"><option value="same">반주 악기와 같게</option><option value="none">없음</option></select></label>
         <label title="드럼 리듬"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option></select></label>
       </div>
-      <div class="timbre sfrow" id="sfRow">
-        <label title="악기 소리의 출처 — SF2 사운드폰트를 고르면 실제 녹음된 악기 소리로 연주"><i class="dot"></i>음원 <select id="sfSel"><option value="synth">합성음 (기본 내장)</option></select></label>
-        <button class="midibtn" id="sfLoad" title="가지고 있는 .sf2 파일 불러오기 (한 번 불러오면 이 브라우저에 보관)">📂 SF2 불러오기</button>
-        <button class="midibtn" id="sfDel" title="이 브라우저에 보관한 SF2 지우기" style="display:none">삭제</button>
-        <input type="file" id="sfFile" accept=".sf2,.SF2" hidden>
-        <span class="midinote" id="sfStat"></span>
-      </div>
       <div class="timbre mix" id="mixRow">
         <span class="tl"><i class="dot"></i>음량</span>
         <label title="멜로디(주선율) 음량 — 0으로 내리면 멜로디 없이 반주만 (MR)">멜로디 <input class="vol" data-vk="S" type="range" min="0" max="100" value="80"><b class="vv"></b></label>
@@ -230,6 +223,13 @@ body.playing .parts{margin-bottom:0}
         <label title="MIDI 연주 소리 — 악기 자체에서 소리가 나면 '소리 끔'">소리 <select id="midiIns"><option value="off">소리 끔 (악기 소리 사용)</option></select></label>
         <label title="MIDI 연주 음량">내 연주 <input class="vol" data-vk="LIVE" type="range" min="0" max="100" value="80"><b class="vv"></b></label>
         <span class="midinote" id="midiNote"></span>
+      </div>
+      <div class="timbre sfrow" id="sfRow">
+        <label title="악기 소리의 출처 — SF2 사운드폰트를 고르면 실제 녹음된 악기 소리로 연주"><i class="dot"></i>음원 <select id="sfSel"><option value="synth">합성음 (기본 내장)</option></select></label>
+        <button class="midibtn" id="sfLoad" title="가지고 있는 .sf2 파일 불러오기 (한 번 불러오면 이 브라우저에 보관)">📂 SF2 불러오기</button>
+        <button class="midibtn" id="sfDel" title="이 브라우저에 보관한 SF2 지우기" style="display:none">삭제</button>
+        <input type="file" id="sfFile" accept=".sf2,.SF2" hidden>
+        <span class="midinote" id="sfStat"></span>
       </div>
     </div>
     <div id="score"></div>
