@@ -146,8 +146,8 @@ body.playing .parts .accopt{display:none}
 #ferm{width:84px}#verses{width:84px}.ctrl{column-gap:10px}#tAll{width:130px}.timbre:has(.pcol){column-gap:10px}.fermi{font-weight:400;margin-left:2px}.fermi span{font-family:'Bravura','Noto Music','Segoe UI Symbol','Apple Symbols',serif;font-size:1.25em;line-height:1;position:relative;top:2px}
 .pk{font:800 16px 'Noto Sans KR';min-width:14px;text-align:center}
 /* 사용법 창 */
-.help{position:fixed;inset:0;z-index:50;background:rgba(30,25,20,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
-.help[hidden]{display:none}
+.helpdlg{position:fixed;inset:0;z-index:50;background:rgba(30,25,20,.45);display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
+.helpdlg[hidden]{display:none}
 .hbox{position:relative;background:var(--card);border-radius:14px;max-width:760px;width:100%;padding:20px 24px 24px;box-shadow:0 10px 40px rgba(0,0,0,.25);font-size:14.5px;line-height:1.75;color:var(--ink)}
 .hbox h2{font-family:"Noto Serif KR",serif;font-size:22px;margin:0 0 6px}
 .hbox h3{font-size:15.5px;margin:16px 0 4px;padding-top:10px;border-top:1px solid var(--line)}
@@ -180,7 +180,7 @@ body.playing .parts{margin-bottom:0}
 <body>
 <div class="count" id="count" aria-live="polite"></div>
 <div id="curtain"></div>
-<div class="help" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
+<div class="helpdlg" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 다시 누르면(■ 정지) 멈춥니다.</li>
 <li>악보의 <b>음표나 가사를 누르면</b> 그 음부터 바로 연주합니다.</li>
