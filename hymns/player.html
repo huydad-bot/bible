@@ -158,6 +158,8 @@ body.playing .hbtns #helpBtn{display:none}
 body.playing .wrap{padding-bottom:100vh!important}   /* 마지막 페이지도 첫 줄을 맨 위로 올릴 수 있게 */
 #curtain{display:none;position:fixed;bottom:0;z-index:4;background:var(--card);pointer-events:none}
 body:not(.playing) #curtain{display:none!important}
+.timbre:has(.pcol){align-items:flex-start}
+.timbre:has(.pcol)>.tl,.timbre:has(.pcol)>label.tall{height:var(--selh,30px);display:flex;align-items:center}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -266,7 +268,7 @@ body.playing .parts{margin-bottom:0}
         <div class="pcol"><label data-v="A" title="앨토"><b class="pk" style="color:var(--A)">A</b><select data-k="A"></select></label><span class="pvl">음량</span><div class="pvol" title="앨토 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="A"><b></b></div></div>
         <div class="pcol"><label data-v="T" title="테너"><b class="pk" style="color:var(--T)">T</b><select data-k="T"></select></label><span class="pvl">음량</span><div class="pvol" title="테너 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="T"><b></b></div></div>
         <div class="pcol"><label data-v="B" title="베이스"><b class="pk" style="color:var(--B)">B</b><select data-k="B"></select></label><span class="pvl">음량</span><div class="pvol" title="베이스 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="B"><b></b></div></div>
-        <label class="tall">전체 <select id="tAll"><option value="">— 한번에 바꾸기 —</option></select></label>
+        <label class="tall" title="네 파트 악기를 한 번에 바꾸기"><b class="pk" style="color:var(--ALL)">All</b><select id="tAll"><option value="">— 한번에 바꾸기 —</option></select></label>
       </div>
       <div class="timbre midi" id="midiRow" style="border-top:1px dashed #cfc3ae;padding-top:12px;margin-top:12px">
         <button class="midibtn" id="midiBtn" title="유선(USB)·무선(블루투스) MIDI 악기를 연결해 직접 연주 (한 번 허용하면 곡이 바뀌어도 자동 연결)">🎹 MIDI 연결</button>
@@ -1055,6 +1057,7 @@ document.querySelectorAll('input[data-pv]').forEach(r=>{const k=r.dataset.pv,sho
   r.value=PV[k];show();
   r.oninput=()=>{PV[k]=+r.value;show();applyMix();};
   r.onchange=()=>{try{localStorage.setItem('hymn_partVol',JSON.stringify(PV));}catch(e){}};});
+{const sh=document.querySelector('.pcol select');if(sh)document.documentElement.style.setProperty('--selh',sh.offsetHeight+'px');}
 $('liveVol').value=LIVE_VOL;$('liveVolV').textContent=LIVE_VOL;
 $('liveVol').oninput=()=>{LIVE_VOL=+$('liveVol').value;$('liveVolV').textContent=LIVE_VOL;setLiveVol();try{localStorage.setItem('hymn_liveVol',LIVE_VOL);}catch(e){}};
 /* 설정 접기/펼치기 (기본: 접힘) */
