@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>찬송가 파트 연습</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script id="abcjsLib" src="abcjs-basic-min.js"></script>
 <script id="loader">
 /* 곡 데이터 불러오기: player.html?n=143 → songs/143.js (번호 없으면 목록으로) */
@@ -160,6 +160,8 @@ body.playing .wrap{padding-bottom:100vh!important}   /* 마지막 페이지도 �
 body:not(.playing) #curtain{display:none!important}
 .timbre:has(.pcol){align-items:flex-start}
 .timbre:has(.pcol)>.tl,.timbre:has(.pcol)>label.tall{height:var(--selh,30px);display:flex;align-items:center}
+/* 가사: 곡 제목과 같은 명조체 */
+#score text.abcjs-lyric,#score text.abcjs-lyric tspan{font-family:'Noto Serif KR',serif!important;font-weight:600}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -576,7 +578,7 @@ function renderScore(){
   const vis=window._vis=ABCJS.renderAbc('score',buildABC(),{
     responsive:'resize',add_classes:true,visualTranspose:+$('trans').value,staffwidth:880,scale:1,
     paddingtop:0,paddingbottom:10,paddingleft:10,paddingright:10,
-    format:{vocalfont:'Noto Sans KR 14',gchordfont:'Noto Sans KR 13',annotationfont:'Noto Sans KR 13 bold'},
+    format:{vocalfont:'Noto Serif KR 15',gchordfont:'Noto Sans KR 13',annotationfont:'Noto Sans KR 13 bold'},
     clickListener:(el)=>{
       const b=elemStart.get(el);if(b===undefined)return;
       start(mode,b,[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
