@@ -163,6 +163,9 @@ body.playing .parts .accopt,body.playing .parts .keybtn{display:none}
 .hclose{position:absolute;top:12px;right:12px;border:none;background:#efe9df;border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer}
 body.playing .hbtns #helpBtn{display:none}
 @media (max-width:560px){.hbtns{flex-wrap:wrap}.hbox{padding:16px 16px 20px;font-size:14px}}
+body.playing .wrap{padding-bottom:100vh!important}   /* 마지막 페이지도 첫 줄을 맨 위로 올릴 수 있게 */
+#curtain{display:none;position:fixed;bottom:0;z-index:4;background:var(--card);pointer-events:none}
+body:not(.playing) #curtain{display:none!important}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -182,6 +185,7 @@ body.playing .parts{margin-bottom:0}
 </head>
 <body>
 <div class="count" id="count" aria-live="polite"></div>
+<div id="curtain"></div>
 <div class="help" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 다시 누르면(■ 정지) 멈춥니다.</li>
@@ -1039,7 +1043,7 @@ $('scoreOnly').addEventListener('change',e=>{try{localStorage.setItem('ccm_score
   if(playing){document.body.classList.toggle('playing',e.target.checked);fitTwoLines();curLine=-1;}});
 /* 연주 중 악보 크기: 두 줄이 화면에 꼭 들어가도록 */
 function fitTwoLines(){
-  const sc=$('score');sc.style.width='';
+  PAGES=null;const sc=$('score');sc.style.width='';
   if(sc._pb===undefined)sc._pb=parseFloat(sc.style.paddingBottom)||0;   // abcjs 비율 상자(부모 폭 기준 %)
   if(sc._pb)sc.style.paddingBottom=sc._pb+'%';
   if(!document.body.classList.contains('playing')){sc._pb=undefined;return;}
@@ -1055,7 +1059,7 @@ function fitTwoLines(){
     if(sc._pb)sc.style.paddingBottom=(sc._pb*w/W)+'%';}
 }
 let refitT=null;
-window.addEventListener('resize',()=>{clearTimeout(refitT);refitT=setTimeout(()=>{if(playing){fitTwoLines();curLine=-1;}},200);});
+window.addEventListener('resize',()=>{clearTimeout(refitT);refitT=setTimeout(()=>{if(playing){fitTwoLines();PAGES=null;curLine=-1;}},200);});
 /* 휴대폰: 연주 시작 시 전체 화면 + 가로 모드 (지원하지 않는 기기는 안내만) */
 const IS_PHONE=matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<600;
 let weFS=false;
@@ -1413,6 +1417,9 @@ function followLine(li,nowLi){
   if(li===curLine)return;curLine=li;
   if(!$('follow').checked)return;
   const nb=lineBox(li);if(!nb)return;
+  if(document.body.classList.contains('playing')){              // 연주 화면: 페이지 첫 줄을 맨 위로, 페이지 밖은 가림막
+    const pb=Math.max(0,document.querySelector('.panel').getBoundingClientRect().bottom)+6;
+    pageFade(window.scrollY+nb.top-pb,li);return;}
   const panelBot=document.querySelector('.panel').getBoundingClientRect().bottom;
   const viewTop=Math.max(0,panelBot)+8, viewBot=window.innerHeight-8;
   if(nb.top>=viewTop&&nb.bot<=viewBot)return;              // 이미 다 보이면 그대로
@@ -1424,11 +1431,30 @@ function followLine(li,nowLi){
   else window.scrollTo({top:y,behavior:'auto'});
 }
 let fadeTok=0;
-function pageFade(y){
+/* 페이지 나누기: 화면에 온전히 들어가는 줄만 한 페이지로 (보통 2~3줄), 다음 페이지는 그다음 줄부터 — 겹치지 않음 */
+let PAGES=null;
+function buildPages(){
+  const n=LINE_BREAKS.length+1,bx=[];for(let i=0;i<n;i++)bx.push(lineBox(i));
+  const pb=Math.max(0,document.querySelector('.panel').getBoundingClientRect().bottom)+6;
+  const avail=window.innerHeight-pb-10;PAGES=[];
+  for(let i=0;i<n;){let j=i;while(j+1<n&&bx[j+1]&&bx[i]&&bx[j+1].bot-bx[i].top<=avail)j++;PAGES.push([i,j]);i=j+1;}
+  return PAGES;
+}
+function pageOf(li){const P=PAGES||buildPages();return P.find(([a,b])=>li>=a&&li<=b)||[li,li];}
+function pageStart(li){return pageOf(li)[0];}
+function setCurtain(li){                         // 페이지 아래로 잘려 보이는 줄을 가림
+  const c=$('curtain');if(!c)return;
+  if(!document.body.classList.contains('playing')||li==null){c.style.display='none';return;}
+  const last=lineBox(pageOf(li)[1]),card=document.querySelector('.card').getBoundingClientRect();
+  if(!last){c.style.display='none';return;}
+  c.style.display='block';c.style.left=card.left+'px';c.style.width=card.width+'px';
+  c.style.top=Math.max(0,Math.min(window.innerHeight,last.bot+6))+'px';
+}
+function pageFade(y,li){
   const sc=$('score'),tok=++fadeTok;
   sc.classList.add('fading');                                         // 0.12초 사라짐
   setTimeout(()=>{if(tok!==fadeTok)return;
-    window.scrollTo({top:y,behavior:'auto'});
+    window.scrollTo({top:y,behavior:'auto'});setCurtain(li);
     requestAnimationFrame(()=>{if(tok===fadeTok)sc.classList.remove('fading');});   // 0.18초 나타남
   },120);
 }
@@ -1482,7 +1508,7 @@ function tick(){
         }
       });
       if(inIntro)followLine(0);                                   // 전주 동안은 1절 첫 줄을 보여 줌
-      else if(document.body.classList.contains('playing'))followLine(Math.floor(aheadLine(g,ib,true)/2)*2);   // 두 줄씩: 0·2·4… 줄만 맨 위로
+      else if(document.body.classList.contains('playing'))followLine(pageStart(aheadLine(g,ib,true)));   // 화면 페이지 단위(2~3줄)로 넘김
       else followLine(aheadLine(g,ib),LINE_BREAKS.filter(x=>ib>=x).length);
       showCount(inIntro?Math.ceil(introLen-g-1e-6):0);
       const v=inIntro?0:PP.v+1,seg=inIntro?'':(PP.sg.label||v+'절');
