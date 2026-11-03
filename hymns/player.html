@@ -134,6 +134,10 @@ body:not(.playing) .parts .play{display:none}
 #midiLive{display:none;font:700 13px "Noto Sans KR";padding:2px 10px;border-radius:999px;margin-left:8px}
 body.playing #midiLive.show{display:inline-block}
 #midiLive.ok{background:#e3f4ea;color:#1f7a4c}#midiLive.no{background:#fdecea;color:#c0392b}
+.pcol{display:flex;flex-direction:column;gap:2px}
+.pvol{display:flex;align-items:center;gap:6px;font:400 12px "Noto Sans KR";color:var(--mute);padding-left:2px}
+.pvol input{flex:1;min-width:90px}
+.pvol b{min-width:24px;text-align:right;font-weight:400}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -197,10 +201,10 @@ body.playing .parts{margin-bottom:0}
       </div>
       <div class="timbre" id="timbre">
         <span class="tl"><i class="dot"></i>악기선택</span>
-        <label data-v="S">소프라노 <select data-k="S"></select></label>
-        <label data-v="A">앨토 <select data-k="A"></select></label>
-        <label data-v="T">테너 <select data-k="T"></select></label>
-        <label data-v="B">베이스 <select data-k="B"></select></label>
+        <div class="pcol"><label data-v="S">소프라노 <select data-k="S"></select></label><div class="pvol" title="소프라노 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="S"><b></b></div></div>
+        <div class="pcol"><label data-v="A">앨토 <select data-k="A"></select></label><div class="pvol" title="앨토 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="A"><b></b></div></div>
+        <div class="pcol"><label data-v="T">테너 <select data-k="T"></select></label><div class="pvol" title="테너 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="T"><b></b></div></div>
+        <div class="pcol"><label data-v="B">베이스 <select data-k="B"></select></label><div class="pvol" title="베이스 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="B"><b></b></div></div>
         <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표 <select id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label>전체 <select id="tAll"><option value="">— 한번에 바꾸기 —</option></select></label>
@@ -551,7 +555,10 @@ const $=id=>document.getElementById(id);
   }
   if(!HAS_REFRAIN){const o=document.querySelector('#intro option[value=ref]');if(o)o.remove();}
 })();
-function mixFor(k){if(mode==='ALL'||k===mode)return 1;return $('practice').checked?0.16:0;}
+/* 파트별 음량 (0~100, 기본 100) */
+const PV={S:100,A:100,T:100,B:100};
+try{const o=JSON.parse(localStorage.getItem('hymn_partVol')||'null');if(o)Object.keys(PV).forEach(k=>{if(typeof o[k]==='number')PV[k]=o[k];});}catch(e){}
+function mixFor(k){const pv=(PV[k]??100)/100;if(mode==='ALL'||k===mode)return pv;return ($('practice').checked?0.16:0)*pv;}
 function applyMix(){
   if(ctx&&master)VOICES.forEach(v=>vGain[v.k].gain.setTargetAtTime(v.vol*mixFor(v.k),ctx.currentTime,.05));
   document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on',b.dataset.v===mode));
@@ -985,6 +992,10 @@ $('midiDev').onchange=()=>{MIDI_DEV=$('midiDev').value;try{localStorage.setItem(
   sel.value=[...sel.options].some(o=>o.value===MIDI_INS)?MIDI_INS:'S';
   sel.onchange=()=>{MIDI_INS=sel.value;try{localStorage.setItem('hymn_midiIns',MIDI_INS);}catch(e){}};})();
 if(!navigator.requestMIDIAccess){$('midiBtn').title='이 브라우저는 Web MIDI를 지원하지 않습니다 (PC·안드로이드 크롬/엣지 필요)';}
+document.querySelectorAll('input[data-pv]').forEach(r=>{const k=r.dataset.pv,show=()=>{r.nextElementSibling.textContent=r.value;};
+  r.value=PV[k];show();
+  r.oninput=()=>{PV[k]=+r.value;show();applyMix();};
+  r.onchange=()=>{try{localStorage.setItem('hymn_partVol',JSON.stringify(PV));}catch(e){}};});
 $('liveVol').value=LIVE_VOL;$('liveVolV').textContent=LIVE_VOL;
 $('liveVol').oninput=()=>{LIVE_VOL=+$('liveVol').value;$('liveVolV').textContent=LIVE_VOL;setLiveVol();try{localStorage.setItem('hymn_liveVol',LIVE_VOL);}catch(e){}};
 /* 설정 접기/펼치기 (기본: 접힘) */
