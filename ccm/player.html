@@ -146,6 +146,8 @@ body:not(.lyrOpen) #lyrBox{display:none}
 body:not(.playing) .parts .play{display:none}
 @media (max-width:560px){.hbtns{margin-left:0;width:100%}.hplay{flex:1}}
 .timbre select,.parts .inst select{max-width:190px;text-overflow:ellipsis}
+.drumdesc{flex-basis:100%;font:400 12.5px 'Noto Sans KR';color:var(--mute);padding-left:14px;margin-top:-4px}
+.drumdesc:empty{display:none}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -208,7 +210,9 @@ body.playing .parts{margin-bottom:0}
           <option value="none">없음</option><option value="block">화음</option><option value="arp" selected>아르페지오</option><option value="rhythm">리듬</option></select></label>
         <label title="반주 소리"><i class="dot"></i>반주 악기 <select id="accIns"></select></label>
         <label title="낮은 음(근음)을 연주할 악기"><i class="dot"></i>베이스 <select id="bassIns"><option value="same">반주 악기와 같게</option><option value="none">없음</option></select></label>
-        <label title="드럼 리듬"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option></select></label>
+        <label title="드럼 리듬 — 고른 비트의 설명이 옆에 나옵니다"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option><option value="shuffle">셔플</option><option value="ballad68">6/8 발라드</option><option value="halftime">하프타임</option></select></label>
+        <label title="줄(악구) 끝마다 탐 필인, 곡 끝은 심벌로 마무리">필인·마무리 <input id="drumFill" type="checkbox" checked></label>
+        <span class="drumdesc" id="drumDesc"></span>
       </div>
       <div class="timbre mix" id="mixRow">
         <span class="tl"><i class="dot"></i>음량</span>
@@ -649,6 +653,12 @@ function drumHit(c,dest,code,t0,vel){
   }else if(code===42)noise(.12,'highpass',7500,.7,.35,.025);   // 닫힌 하이햇
   else if(code===46)noise(.5,'highpass',7000,.7,.35,.14);      // 열린 하이햇
   else if(code===49)noise(1.5,'highpass',5000,.5,.45,.5);      // 심벌
+  else if(code===41||code===45||code===48||code===50){         // 탐 (낮은→높은)
+    const f0={41:90,45:120,48:160,50:200}[code],o=c.createOscillator(),e=c.createGain();o.type='sine';
+    o.frequency.setValueAtTime(f0*1.6,t0);o.frequency.exponentialRampToValueAtTime(f0,t0+.08);
+    e.gain.setValueAtTime(1.1*vel,t0);e.gain.setTargetAtTime(0,t0+.01,.13);o.connect(e);e.connect(g);o.start(t0);o.stop(t0+.7);
+    noise(.04,'bandpass',1800,1,.2,.01);
+  }
 }
 const DEFAULT_TIMBRE={S:'piano'};
 let TIMBRE=Object.assign({},DEFAULT_TIMBRE);
@@ -1073,26 +1083,63 @@ function accNotes(pat){
   });
   return out;
 }
+/* 드럼 비트 설명 (선택 칸 도움말) */
+const DRUM_INFO={
+  none:'드럼 없이 반주만',
+  ballad:'발라드 — 하이햇을 작게, 2·4박은 림(사이드스틱). 조용한 경배·고백 찬양, 템포 60~80',
+  '8beat':'8비트 — 8분음표 하이햇 + 킥·스네어의 기본 팝 리듬. 일반 CCM 대부분, 템포 70~120',
+  '16beat':'16비트 — 하이햇을 16분음표로 잘게. 16분음표·당김음이 많은 곡, 템포 60~100',
+  shuffle:'셔플 — 8분음표를 \'따-다 따-다\'로 튀게(셋잇단 느낌). 가스펠·흑인영가풍, 템포 70~130',
+  ballad68:'6/8 발라드 — \'쿵-짝-짝 쿵-짝-짝\' 셋잇단 흐름. 6/8·12/8 곡이나 느린 셋잇단 느낌의 곡, 템포 50~75',
+  halftime:'하프타임 — 3박에만 스네어, 넓고 웅장한 느낌. 경배곡 클라이맥스·느린 후렴, 템포 60~90'
+};
+let DRUM_FILL=true;try{DRUM_FILL=localStorage.getItem('ccm_drumFill')!=='0';}catch(e){}
 function drumNotes(style){
   const out=[];if(style==='none')return out;
   const [mn,md]=(SONG.meter||'4/4').split('/').map(Number);
   const barLen=mn*4/md,P0=SONG.pickup||0,add=(t,code,vel)=>{if(t>=P0-1e-6&&t<SONG_LEN-1e-6)out.push({t,dur:.25,midi:code,vel});};
   const compound=md===8&&mn%3===0;
+  const T3=1/3,side=style==='ballad'||style==='ballad68';
+  const fillBars=new Set();                                   // 줄(악구) 끝 마디 → 필인
+  if(DRUM_FILL)LINE_BREAKS.concat([SONG_LEN]).forEach(e=>{const st=e-barLen;if(st>=P0-1e-6)fillBars.add(Math.round((st-P0)/barLen));});
+  const lastBar=Math.round((SONG_LEN-P0)/barLen)-1;
   for(let b0=P0,bi=0;b0<SONG_LEN-1e-6;b0+=barLen,bi++){
-    if(bi===0)add(b0,49,.8);                                   // 첫 마디 심벌
+    const end=bi===lastBar&&DRUM_FILL;                        // 마지막 마디: 심벌로 마무리
+    if(bi===0)add(b0,49,.8);
+    if(end){add(b0,49,.9);add(b0,36,1);continue;}
+    const fill=fillBars.has(bi)&&bi>0;
+    const L=barLen,fs=fill?L-(compound?1.5:1):L;                // 필인 마디는 마지막 1박(6/8은 점4분)을 필인으로
+    const inF=x=>x<fs-1e-6;
     if(compound){                                             // 6/8 · 9/8 · 12/8
-      for(let x=0;x<barLen-1e-6;x+=.5)add(b0+x,42,x%1.5===0?.7:.4);
-      for(let x=0;x<barLen-1e-6;x+=1.5)add(b0+x,(x/1.5)%2===0?36:(style==='ballad'?37:38),(x/1.5)%2===0?1:.8);
+      for(let x=0;x<L-1e-6;x+=.5)if(inF(x))add(b0+x,42,(x%1.5===0?.7:.4)*(side?.7:1));
+      for(let x=0;x<L-1e-6;x+=1.5)if(inF(x))add(b0+x,(x/1.5)%2===0?36:(side?37:38),(x/1.5)%2===0?1:.8);
     }else if(mn===3){                                         // 3/4 왈츠
-      add(b0,36,1);for(let x=0;x<3;x+=.5)add(b0+x,42,x%1===0?.6:.35);
-      add(b0+1,style==='ballad'?37:38,.55);add(b0+2,style==='ballad'?37:38,.55);
+      if(inF(0))add(b0,36,1);for(let x=0;x<3;x+=.5)if(inF(x))add(b0+x,42,x%1===0?.6:.35);
+      [1,2].forEach(x=>{if(inF(x))add(b0+x,side?37:38,.55);});
     }else{                                                    // 4/4 (2/4는 앞 절반만)
-      const L=barLen;
-      const hatStep=style==='16beat'?.25:.5;
-      for(let x=0;x<L-1e-6;x+=hatStep)add(b0+x,42,(x%1===0?.65:.35)*(style==='ballad'?.75:1));
-      const kicks=style==='ballad'?[0,2.5]:style==='16beat'?[0,.75,2,2.5]:[0,2,2.5];
-      kicks.filter(x=>x<L).forEach(x=>add(b0+x,36,x%1===0?1:.75));
-      [1,3].filter(x=>x<L).forEach(x=>add(b0+x,style==='ballad'?37:38,style==='ballad'?.9:.85));
+      const H=(x,v)=>{if(x<L-1e-6&&inF(x))add(b0+x,42,v);},K=(x,v)=>{if(x<L-1e-6&&inF(x))add(b0+x,36,v);},
+            Sn=(x,v,c)=>{if(x<L-1e-6&&inF(x))add(b0+x,c||38,v);};
+      if(style==='shuffle'){
+        for(let q=0;q<L;q++){H(q,.65);H(q+2*T3,.4);}
+        K(0,1);K(2,1);K(2+2*T3,.6);Sn(1,.85);Sn(3,.85);
+      }else if(style==='ballad68'){                            // 4/4 곡에서는 12/8 느낌(박마다 셋잇단)
+        for(let q=0;q<L;q++)for(let r=0;r<3;r++)H(q+r*T3,r?.32:.55);
+        K(0,1);K(2,.9);K(2+2*T3,.5);Sn(1,.8,37);Sn(3,.8,37);
+      }else if(style==='halftime'){
+        for(let x=0;x<L;x+=.5)H(x,x%1===0?.6:.3);
+        K(0,1);K(.75,.55);K(3.5,.6);Sn(2,.95);
+      }else{
+        const hatStep=style==='16beat'?.25:.5;
+        for(let x=0;x<L-1e-6;x+=hatStep)H(x,(x%1===0?.65:.35)*(style==='ballad'?.75:1));
+        (style==='ballad'?[0,2.5]:style==='16beat'?[0,.75,2,2.5]:[0,2,2.5]).forEach(x=>K(x,x%1===0?1:.75));
+        [1,3].forEach(x=>Sn(x,style==='ballad'?.9:.85,style==='ballad'?37:38));
+      }
+    }
+    if(fill){                                                 // 필인: 스네어 → 탐 내려오기
+      const f0=b0+fs,len=L-fs;
+      if(side){add(f0,48,.55);add(f0+len/2,45,.6);}
+      else{const step=compound||style==='shuffle'||style==='ballad68'?len/3:len/4;
+        const seq=[38,50,48,45,41,41];for(let i=0;i*step<len-1e-6;i++)add(f0+i*step,seq[i]||45,.65+.08*i);}
     }
   }
   return out;
@@ -1403,9 +1450,13 @@ function restartIfPlaying(){if(playing)start(mode,Math.max(0,curBeat()));}
 Object.entries(INSTR).forEach(([id,o])=>{if(!o.hidden&&!o.bassOnly)$('accIns').add(new Option(o.name,id));});
 Object.entries(INSTR).filter(([id,o])=>o.bassOnly).reverse().forEach(([id,o])=>$('bassIns').add(new Option(o.name,id),$('bassIns').options[0]));
 $('bassIns').value=[...$('bassIns').options].some(o=>o.value===BASS_INS)?BASS_INS:'bassgtr';
-$('drum').value=DRUM;
+$('drum').value=DRUM;if($('drum').value!==DRUM){DRUM='none';$('drum').value='none';}
+[...$('drum').options].forEach(o=>o.title=DRUM_INFO[o.value]||'');
+function showDrumDesc(){const d=DRUM_INFO[$('drum').value]||'';$('drum').title=d;$('drumDesc').textContent=$('drum').value==='none'?'':d;}
+showDrumDesc();$('drumFill').checked=DRUM_FILL;
+$('drumFill').onchange=()=>{DRUM_FILL=$('drumFill').checked;try{localStorage.setItem('ccm_drumFill',DRUM_FILL?'1':'0');}catch(e){}restartIfPlaying();};
 $('bassIns').onchange=()=>{BASS_INS=$('bassIns').value;try{localStorage.setItem('ccm_bassIns',BASS_INS);}catch(e){}restartIfPlaying();};
-$('drum').onchange=()=>{DRUM=$('drum').value;try{localStorage.setItem('ccm_drum',DRUM);}catch(e){}restartIfPlaying();};
+$('drum').onchange=()=>{DRUM=$('drum').value;showDrumDesc();try{localStorage.setItem('ccm_drum',DRUM);}catch(e){}restartIfPlaying();};
 
 /* SF2 음원 선택 */
 $('sfSel').onchange=()=>sfSelect($('sfSel').value);
