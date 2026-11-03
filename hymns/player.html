@@ -134,15 +134,17 @@ body:not(.playing) .parts .play{display:none}
 #midiLive{display:none;font:700 13px "Noto Sans KR";padding:2px 10px;border-radius:999px;margin-left:8px}
 body.playing #midiLive.show{display:inline-block}
 #midiLive.ok{background:#e3f4ea;color:#1f7a4c}#midiLive.no{background:#fdecea;color:#c0392b}
-.pcol{display:grid;grid-template-columns:auto 128px;column-gap:6px;row-gap:3px;align-items:center}
+.pcol{display:grid;grid-template-columns:auto 112px;column-gap:6px;row-gap:3px;align-items:center}
 .timbre .pcol>label{display:contents}
-.pcol select{width:128px;max-width:128px}
-.pvl{font:400 12px "Noto Sans KR";color:var(--mute);text-align:right}
+.pcol select{width:112px;max-width:112px}
+.pvl{font:400 11px "Noto Sans KR";color:var(--mute);text-align:right}
 .pvol{display:flex;align-items:center;gap:4px;font:400 12px "Noto Sans KR";color:var(--mute)}
-.pvol input{width:100px;min-width:0;margin:0}
+.pvol input{width:84px;min-width:0;margin:0}
 .pvol b{min-width:22px;text-align:right;font-weight:400}
 .parts .accopt{display:flex;align-items:center;gap:5px;font:600 14px "Noto Sans KR";color:var(--ink);white-space:nowrap;margin-left:4px;cursor:pointer}
 body.playing .parts .accopt{display:none}
+#ferm{width:84px}#verses{width:84px}.ctrl{column-gap:10px}#tAll{width:130px}.timbre:has(.pcol){column-gap:10px}.fermi{font-weight:400;margin-left:2px}.fermi span{font-family:'Bravura','Noto Music','Segoe UI Symbol','Apple Symbols',serif;font-size:1.25em;line-height:1;position:relative;top:2px}
+.pk{font:800 16px 'Noto Sans KR';min-width:14px;text-align:center}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -195,7 +197,7 @@ body.playing .parts{margin-bottom:0}
       </div>
       <div class="ctrl">
         <label title="템포 (BPM)"><i class="dot"></i>템포 <input id="tempo" type="range" min="40" max="160" value="84"> <input id="tempoN" title="BPM (40–160)" type="number" min="40" max="160" value="84" inputmode="numeric"></label>
-        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표 <select id="ferm">
+        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표<span class="fermi">(<span>𝄐</span>)</span> <select id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label title="▶ 시작을 누르면 본 찬송 앞에 연주할 전주"><i class="dot"></i>전주 <select id="intro">
           <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디">끝4마디</option>
@@ -208,11 +210,11 @@ body.playing .parts{margin-bottom:0}
       </div>
       <div class="timbre" id="timbre">
         <span class="tl"><i class="dot"></i>악기</span>
-        <div class="pcol"><label data-v="S">소프라노 <select data-k="S"></select></label><span class="pvl">음량</span><div class="pvol" title="소프라노 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="S"><b></b></div></div>
-        <div class="pcol"><label data-v="A">앨토 <select data-k="A"></select></label><span class="pvl">음량</span><div class="pvol" title="앨토 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="A"><b></b></div></div>
-        <div class="pcol"><label data-v="T">테너 <select data-k="T"></select></label><span class="pvl">음량</span><div class="pvol" title="테너 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="T"><b></b></div></div>
-        <div class="pcol"><label data-v="B">베이스 <select data-k="B"></select></label><span class="pvl">음량</span><div class="pvol" title="베이스 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="B"><b></b></div></div>
-        <label>전체 <select id="tAll"><option value="">— 한번에 바꾸기 —</option></select></label>
+        <div class="pcol"><label data-v="S" title="소프라노"><b class="pk" style="color:var(--S)">S</b><select data-k="S"></select></label><span class="pvl">음량</span><div class="pvol" title="소프라노 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="S"><b></b></div></div>
+        <div class="pcol"><label data-v="A" title="앨토"><b class="pk" style="color:var(--A)">A</b><select data-k="A"></select></label><span class="pvl">음량</span><div class="pvol" title="앨토 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="A"><b></b></div></div>
+        <div class="pcol"><label data-v="T" title="테너"><b class="pk" style="color:var(--T)">T</b><select data-k="T"></select></label><span class="pvl">음량</span><div class="pvol" title="테너 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="T"><b></b></div></div>
+        <div class="pcol"><label data-v="B" title="베이스"><b class="pk" style="color:var(--B)">B</b><select data-k="B"></select></label><span class="pvl">음량</span><div class="pvol" title="베이스 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="B"><b></b></div></div>
+        <label class="tall">전체 <select id="tAll"><option value="">— 한번에 바꾸기 —</option></select></label>
       </div>
       <div class="timbre midi" id="midiRow">
         <button class="midibtn" id="midiBtn" title="유선(USB)·무선(블루투스) MIDI 악기를 연결해 직접 연주 (한 번 허용하면 곡이 바뀌어도 자동 연결)">🎹 MIDI 연결</button>
