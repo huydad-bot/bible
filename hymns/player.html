@@ -123,6 +123,12 @@ body.playing .status{flex:0 0 auto;white-space:nowrap}
 body.collapsed:not(.playing) .card>.panel{display:none}
 body:not(.playing) .parts .play{display:none}
 @media (max-width:560px){.hbtns{margin-left:0;width:100%}.hplay{flex:1}}
+/* SF2 음원 줄 */
+.midibtn{border:1px solid var(--line);background:#fff;border-radius:8px;height:30px;padding:0 12px;font:600 13.5px "Noto Sans KR";cursor:pointer}
+.midinote{font:700 13px "Noto Sans KR";padding:2px 10px;border-radius:999px;background:#f1eee8;color:var(--mute)}
+.midinote:empty{display:none}
+.midinote.ok{background:#e3f4ea;color:#1f7a4c}.midinote.no{background:#fdecea;color:#c0392b}
+.timbre select{max-width:190px;text-overflow:ellipsis}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -191,6 +197,13 @@ body.playing .parts{margin-bottom:0}
         <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표 <select id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label>전체 <select id="tAll"><option value="">— 한번에 바꾸기 —</option></select></label>
+      </div>
+      <div class="timbre sfrow" id="sfRow">
+        <label title="악기 소리의 출처 — SF2 사운드폰트를 고르면 실제 녹음된 악기 소리로 연주"><i class="dot"></i>음원 <select id="sfSel"><option value="synth">합성음 (기본 내장)</option></select></label>
+        <button class="midibtn" id="sfLoad" title="가지고 있는 .sf2 파일 불러오기 (한 번 불러오면 이 브라우저에 보관)">📂 SF2 불러오기</button>
+        <button class="midibtn" id="sfDel" title="이 브라우저에 보관한 SF2 지우기" style="display:none">삭제</button>
+        <input type="file" id="sfFile" accept=".sf2,.SF2" hidden>
+        <span class="midinote" id="sfStat"></span>
       </div>
     </div>
     <div id="score"></div>
@@ -513,6 +526,7 @@ function renderScore(){
 }
 
 /* ===== 오디오 ===== */
+let schedTimer=null;
 let ctx=null,master=null,vGain={},playing=false,startAt=0,spb=60/84,fromBeat=0,totalBeats=SONG_LEN,mode='ALL',endTimer=null;
 const $=id=>document.getElementById(id);
 (function buildVerseMenu(){
@@ -544,7 +558,7 @@ const INSTR={
 };
 const DEFAULT_TIMBRE={S:'basic',A:'basic',T:'basic',B:'basic'};
 let TIMBRE=Object.assign({},DEFAULT_TIMBRE);
-try{const t=JSON.parse((localStorage.getItem('hymn_timbre')||localStorage.getItem('hymn143_timbre'))||'null');if(t)Object.keys(t).forEach(k=>{if(INSTR[t[k]])TIMBRE[k]=t[k];});}catch(e){}
+try{const t=JSON.parse((localStorage.getItem('hymn_timbre')||localStorage.getItem('hymn143_timbre'))||'null');if(t)Object.keys(t).forEach(k=>{if(INSTR[t[k]]||/^sf:\d+:\d+$/.test(t[k]))TIMBRE[k]=t[k];});}catch(e){}
 const waveCache=new WeakMap();
 function organWave(c){
   if(waveCache.has(c))return waveCache.get(c);
@@ -557,7 +571,164 @@ function osc(c,type,f,det){
   if(type==='organ')o.setPeriodicWave(organWave(c));else o.type=type;
   o.frequency.value=f;if(det)o.detune.value=det;return o;
 }
-function noteOn(c,ins,v,dest,lfo,midi,t0,dur){
+/* ===== SF2 사운드폰트 음원 =====
+   GeneralUser GS(기본, sf2 폴더) 또는 직접 고른 .sf2 파일의 실제 악기 소리로 연주.
+   불러온 SF2는 브라우저 저장소(IndexedDB)에 보관 → 다음부터 바로 사용 */
+const SF_GU='GeneralUser-GS.sf2';
+let SF=null;                                   // 불러온 사운드폰트
+const SF_MAP={piano:[0,0],epiano:[0,4],organ:[0,19],choir:[0,52],flute:[0,73],clarinet:[0,71],strings:[0,48],brass:[0,61],
+  aguitar:[0,25],nylon:[0,24],eguitar:[0,27],dist:[0,29],pad:[0,89],bassgtr:[0,33],synbass:[0,38],drums:[128,0]};
+function parseSF2(ab){
+  const dv=new DataView(ab),N=ab.byteLength;
+  const str=(o,n)=>{let s='';for(let i=0;i<n;i++){const c=dv.getUint8(o+i);if(!c)break;s+=String.fromCharCode(c);}return s.trim();};
+  if(str(0,4)!=='RIFF'||str(8,4)!=='sfbk')throw new Error('SF2 파일이 아닙니다');
+  const ck={};
+  const walk=(o,e)=>{while(o+8<=e){const id=str(o,4),sz=dv.getUint32(o+4,true);
+    if(id==='LIST')walk(o+12,Math.min(e,o+8+sz));else ck[id]={o:o+8,n:sz};o+=8+sz+(sz&1);}};
+  walk(12,N);
+  ['phdr','pbag','pgen','inst','ibag','igen','shdr','smpl'].forEach(k=>{if(!ck[k])throw new Error('SF2 구조를 읽지 못했습니다 ('+k+')');});
+  const rec=(k,sz,f)=>{const a=[];for(let o=ck[k].o;o+sz<=ck[k].o+ck[k].n;o+=sz)a.push(f(o));return a;};
+  const phdr=rec('phdr',38,o=>({name:str(o,20),prog:dv.getUint16(o+20,true),bank:dv.getUint16(o+22,true),bag:dv.getUint16(o+24,true)}));
+  const bag=k=>rec(k,4,o=>dv.getUint16(o,true));
+  const gen=k=>rec(k,4,o=>({op:dv.getUint16(o,true),v:dv.getInt16(o+2,true),lo:dv.getUint8(o+2),hi:dv.getUint8(o+3)}));
+  const pbag=bag('pbag'),pgen=gen('pgen'),ibag=bag('ibag'),igen=gen('igen');
+  const inst=rec('inst',22,o=>({name:str(o,20),bag:dv.getUint16(o+20,true)}));
+  const shdr=rec('shdr',46,o=>({name:str(o,20),start:dv.getUint32(o+20,true),end:dv.getUint32(o+24,true),ls:dv.getUint32(o+28,true),le:dv.getUint32(o+32,true),
+    rate:dv.getUint32(o+36,true),root:dv.getUint8(o+40),corr:dv.getInt8(o+41),type:dv.getUint16(o+44,true)}));
+  if(shdr.some(s=>s.type&0x10))throw new Error('압축된 SF3 형식은 쓸 수 없습니다 (SF2를 골라 주세요)');
+  const zones=(bags,b0,b1,gens,term)=>{const zs=[];
+    for(let b=b0;b<b1;b++){const z={g:{},kl:0,kh:127,vl:0,vh:127};
+      for(let i=bags[b];i<bags[b+1]&&i<gens.length;i++){const q=gens[i];
+        if(q.op===43){z.kl=q.lo;z.kh=q.hi;}else if(q.op===44){z.vl=q.lo;z.vh=q.hi;}else z.g[q.op]=q.v;}
+      zs.push(z);}
+    let glob=null;if(zs.length&&zs[0].g[term]===undefined){glob=zs.shift();}
+    return {glob,zs:zs.filter(z=>z.g[term]!==undefined)};};
+  const insts=inst.slice(0,-1).map((x,i)=>Object.assign({name:x.name},zones(ibag,x.bag,inst[i+1].bag,igen,53)));
+  const presets=phdr.slice(0,-1).map((x,i)=>Object.assign({name:x.name,bank:x.bank,prog:x.prog},zones(pbag,x.bag,phdr[i+1].bag,pgen,41)));
+  const smpl=new Int16Array(ab.slice(ck.smpl.o,ck.smpl.o+(ck.smpl.n&~1)));
+  return {presets,insts,shdr,smpl,bufs:new Map(),res:new Map()};
+}
+const SF_DEF={8:13500,21:-12000,33:-12000,34:-12000,35:-12000,36:-12000,38:-12000,56:100,58:-1};
+const SF_NOADD=new Set([0,1,2,3,4,12,41,43,44,45,46,47,50,53,54,57,58]);
+function sfPreset(bank,prog){
+  const P=SF.presets;return P.find(p=>p.bank===bank&&p.prog===prog)||P.find(p=>p.bank===(bank>=128?128:0)&&p.prog===(bank>=128?0:prog))
+    ||P.find(p=>(bank>=128)===(p.bank>=128))||P[0];
+}
+function sfRegions(p,key,vel){                 // 건반·세기에 맞는 샘플들과 생성자 값
+  const ck=p.bank*128+p.prog+':'+key+':'+(vel>>4);if(SF.res.has(ck))return SF.res.get(ck);
+  const out=[];const pg0=p.glob?p.glob.g:{};
+  p.zs.forEach(pz=>{
+    if(key<pz.kl||key>pz.kh||vel<pz.vl||vel>pz.vh)return;
+    const I=SF.insts[pz.g[41]];if(!I)return;const pg=Object.assign({},pg0,pz.g);
+    const ig0=I.glob?I.glob.g:{};
+    I.zs.forEach(iz=>{
+      if(key<iz.kl||key>iz.kh||vel<iz.vl||vel>iz.vh)return;
+      const g=Object.assign({},SF_DEF,ig0,iz.g);
+      Object.keys(pg).forEach(k=>{k=+k;if(!SF_NOADD.has(k))g[k]=(g[k]??SF_DEF[k]??0)+pg[k];});
+      const s=SF.shdr[g[53]];if(s&&s.end>s.start)out.push({g,s,si:g[53]});
+    });
+  });
+  SF.res.set(ck,out);return out;
+}
+function sfBuffer(si){
+  if(SF.bufs.has(si))return SF.bufs.get(si);
+  const s=SF.shdr[si],n=Math.max(1,Math.min(s.end,SF.smpl.length)-s.start);
+  const b=new AudioBuffer({length:n,sampleRate:Math.min(192000,Math.max(3000,s.rate||44100)),numberOfChannels:1});
+  const d=b.getChannelData(0),src=SF.smpl;for(let i=0;i<n;i++)d[i]=src[s.start+i]/32768;
+  SF.bufs.set(si,b);return b;
+}
+const tc=x=>Math.pow(2,(x||-12000)/1200);
+const SF_GAIN=6;                               // 합성음과 비슷한 크기로 (드럼은 따로)
+function sfNoteOn(c,bank,prog,dest,key,t0,dur,vel){
+  const p=sfPreset(bank,prog);if(!p)return null;
+  const v127=Math.max(1,Math.min(127,Math.round(vel*127)));
+  const regs=sfRegions(p,key,v127);if(!regs.length)return null;
+  const env=c.createGain();env.gain.value=0;env.connect(dest);
+  const oscs=[],t1=t0+Math.max(.06,dur*.95);let stopAt=t1;
+  regs.forEach(({g,s,si})=>{
+    const src=c.createBufferSource();src.buffer=sfBuffer(si);
+    const root=g[58]>=0?g[58]:s.root;
+    src.playbackRate.value=Math.pow(2,((key-root)*g[56]+(g[51]||0)*100+(g[52]||0)+s.corr)/1200);
+    src._d=0;
+    if(g[54]===1||g[54]===3){src.loop=true;
+      src.loopStart=Math.max(0,(s.ls+(g[2]||0)+(g[45]||0)*32768-s.start)/s.rate);
+      src.loopEnd=Math.max(src.loopStart+.001,(s.le+(g[3]||0)+(g[50]||0)*32768-s.start)/s.rate);}
+    const amp=c.createGain();
+    amp.gain.value=SF_GAIN*(bank>=128?.3:1)*Math.pow(10,-Math.max(0,g[48]||0)*.4/200)*Math.pow(vel,1.6);
+    let node=src;
+    if(g[8]<13400){const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=Math.min(20000,8.176*Math.pow(2,g[8]/1200));
+      f.Q.value=Math.max(.0001,Math.pow(10,(g[9]||0)/200)*.7);node.connect(f);node=f;}
+    node.connect(amp);
+    if(g[17]&&c.createStereoPanner){const pn=c.createStereoPanner();pn.pan.value=Math.max(-1,Math.min(1,g[17]/500));amp.connect(pn);pn.connect(env);}
+    else amp.connect(env);
+    const off=Math.max(0,((g[0]||0)+(g[4]||0)*32768)/s.rate);
+    src.start(t0,off);
+    const rel=Math.min(3,tc(g[38]));stopAt=Math.max(stopAt,t1+rel+.05);
+    oscs.push(src);
+  });
+  const g=regs[0].g,dl=tc(g[33]),at=Math.max(.001,tc(g[34])),hd=tc(g[35]),dc=tc(g[36]),sus=Math.pow(10,-Math.max(0,Math.min(1440,g[37]||0))/200);
+  const a0=t0+Math.min(dl,.5),a1=a0+Math.min(at,4),h1=a1+Math.min(hd,4);
+  env.gain.setValueAtTime(0,t0);env.gain.setValueAtTime(0,a0);env.gain.linearRampToValueAtTime(1,a1);env.gain.setValueAtTime(1,h1);
+  env.gain.setTargetAtTime(sus,h1,Math.max(.005,Math.min(dc,20)/4));
+  env.gain.setTargetAtTime(0,Math.max(t1,a1),Math.max(.008,Math.min(3,tc(g[38]))/4));
+  oscs.forEach(o=>o.stop(stopAt));
+  return {env,oscs};
+}
+function sfTarget(ins){                         // 악기 id → [뱅크, 프로그램] (SF2 사용 시)
+  if(!SF)return null;
+  const m=/^sf:(\d+):(\d+)$/.exec(ins);if(m)return [+m[1],+m[2]];
+  return SF_MAP[ins]||null;
+}
+/* --- 저장소 (IndexedDB) --- */
+function sfDB(){return new Promise((ok,no)=>{try{const r=indexedDB.open('ccm_sf2',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);}catch(e){no(e);}});}
+async function sfDBop(mode,fn){const db=await sfDB();return new Promise((ok,no)=>{const tx=db.transaction('files',mode);const st=tx.objectStore('files');
+  const r=fn(st);tx.oncomplete=()=>ok(r&&r.result);tx.onerror=()=>no(tx.error);});}
+const sfDBget=k=>sfDBop('readonly',st=>st.get(k)),sfDBput=(k,v)=>sfDBop('readwrite',st=>st.put(v,k)),
+      sfDBdel=k=>sfDBop('readwrite',st=>st.delete(k)),sfDBkeys=()=>sfDBop('readonly',st=>st.getAllKeys());
+let SF_SRC='GeneralUser-GS.sf2';
+try{SF_SRC=localStorage.getItem('hymn_sfSrc')||SF_SRC;}catch(e){}
+function sfStat(t,cls){const e=$('sfStat');e.textContent=t;e.className='midinote '+(cls||'');}
+async function sfMenu(){
+  const sel=$('sfSel');let keys=[];try{keys=(await sfDBkeys())||[];}catch(e){}
+  sel.innerHTML='';sel.add(new Option('합성음 (기본 내장)','synth'));sel.add(new Option('GeneralUser GS',SF_GU));
+  keys.filter(k=>k!==SF_GU).forEach(k=>sel.add(new Option(k.replace(/\.sf2$/i,''),k)));
+  if(SF_SRC!=='synth'&&SF_SRC!==SF_GU&&!keys.includes(SF_SRC))SF_SRC=SF_GU;
+  sel.value=SF_SRC;$('sfDel').style.display=(SF_SRC!=='synth'&&keys.includes(SF_SRC))?'':'none';
+}
+function sfFillMenus(){                         // 각 파트 악기 선택 칸에 SF2 악기 목록 추가
+  const sels=[...document.querySelectorAll('#timbre select[data-k]'),$('tAll')];
+  sels.forEach(sel=>{sel.querySelectorAll('optgroup.sfg').forEach(x=>x.remove());
+    if(!SF)return;
+    const og=document.createElement('optgroup');og.className='sfg';og.label='SF2 악기 — '+SF.title;
+    SF.presets.filter(p=>p.bank<128).slice().sort((a,b)=>a.bank-b.bank||a.prog-b.prog)
+      .forEach(p=>og.appendChild(new Option((p.prog+1)+'. '+p.name+(p.bank?' (뱅크 '+p.bank+')':''),'sf:'+p.bank+':'+p.prog)));
+    sel.appendChild(og);});
+  document.querySelectorAll('#timbre select[data-k]').forEach(sel=>{const v=TIMBRE[sel.dataset.k];sel.value=v;if(sel.value!==v)sel.value='basic';});
+  $('tAll').value='';
+}
+async function sfUse(key,buf){                  // 사운드폰트 적용
+  if(key==='synth'){SF=null;sfStat('');sfFillMenus();return true;}
+  sfStat('불러오는 중…');
+  try{
+    if(!buf){const r=await sfDBget(key).catch(()=>null);buf=r&&r.buf;}
+    if(!buf&&key===SF_GU){try{const res=await fetch('sf2/'+SF_GU);if(res.ok){buf=await res.arrayBuffer();sfDBput(SF_GU,{buf,ts:Date.now()}).catch(()=>{});}}catch(e){}}
+    if(!buf){SF=null;sfFillMenus();
+      sfStat(key===SF_GU?'📂 SF2 불러오기 → sf2 폴더의 GeneralUser-GS.sf2 를 한 번 골라 주세요':'파일이 없습니다 — 다시 불러와 주세요','no');return false;}
+    const t0=performance.now();
+    SF=parseSF2(buf);SF.title=key===SF_GU?'GeneralUser GS':key.replace(/\.sf2$/i,'');
+    sfFillMenus();
+    sfStat('✓ '+SF.title+' · 악기 '+SF.presets.filter(p=>p.bank<128).length+'개'+(SF.presets.some(p=>p.bank>=128)?' + 드럼':''),'ok');
+    console.log('SF2 parsed',Math.round(performance.now()-t0),'ms');
+    return true;
+  }catch(err){SF=null;sfFillMenus();sfStat('읽기 실패: '+(err.message||err),'no');return false;}
+}
+async function sfSelect(key){SF_SRC=key;try{localStorage.setItem('hymn_sfSrc',key);}catch(e){}
+  await sfMenu();await sfUse(key);restartIfPlaying();}
+function noteOn(c,ins,v,dest,lfo,midi,t0,dur,vel=1){
+  const sft=sfTarget(ins);
+  if(sft){try{const h=sfNoteOn(c,sft[0],sft[1],dest,midi,t0,dur,vel);if(h)return h;}catch(e){console.warn('SF2 음 실패 → 합성음',e);}}
+  if(/^sf:/.test(ins))ins='basic';                    // SF2를 못 불러온 경우 기본 합성음으로
   const f=440*Math.pow(2,(midi-69)/12);
   const t1=t0+Math.max(.08,dur*.92);
   const env=c.createGain();env.gain.value=0;
@@ -723,7 +894,7 @@ function start(m,beat=0,intro=curIntro){
   const comp=ctx.createDynamicsCompressor();master.connect(comp);comp.connect(ctx.destination);
   const lfo=ctx.createOscillator();lfo.frequency.value=5.2;
   const lfoG=ctx.createGain();lfoG.gain.value=6;lfo.connect(lfoG);
-  const base=T(beat);startAt=ctx.currentTime+.12;lfo.start(startAt);lfo.stop(startAt+T(totalBeats)-base+1);
+  const base=T(beat);const EVQ=[];
   VOICES.forEach(v=>{
     const g=ctx.createGain();g.gain.value=v.vol*mixFor(v.k);
     if(ctx.createStereoPanner){const pn=ctx.createStereoPanner();pn.pan.value=v.pan;g.connect(pn);pn.connect(master);}
@@ -732,7 +903,8 @@ function start(m,beat=0,intro=curIntro){
     const play=(t,e,midi)=>{
       if(e<=beat+0.05)return;
       const t0=Math.max(t,beat);
-      noteOn(ctx,TIMBRE[v.k],v,g,lfoG,midi+tr,startAt+T(t0)-base,T(e)-T(t0));
+      const w=T(t0)-base,L=T(e)-T(t0),ins=TIMBRE[v.k],m=midi+tr;
+      EVQ.push({w,f:()=>noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L)});
     };
     let off=0;                                 // 전주: 구간 경계에서 음을 잘라 붙임
     curIntro.forEach(([a,b])=>{
@@ -745,10 +917,16 @@ function start(m,beat=0,intro=curIntro){
   });
   playing=true;curLine=-1;applyMix();
   if($('scoreOnly').checked){document.body.classList.add('playing');enterLandscape();fitTwoLines();}
+  /* 음은 미리 한꺼번에 만들지 않고 0.6초 앞서 조금씩 예약 (긴 곡·SF2 음원에서도 첫 음부터 소리가 나도록) */
+  EVQ.sort((a,b)=>a.w-b.w);let qi=0;
+  startAt=ctx.currentTime+.15;lfo.start(startAt);lfo.stop(startAt+T(totalBeats)-base+1);
+  const pump=()=>{const lim=ctx.currentTime-startAt+.6;
+    while(qi<EVQ.length&&EVQ[qi].w<lim){try{EVQ[qi].f();}catch(e){console.warn(e);}qi++;}};
+  pump();clearInterval(schedTimer);schedTimer=setInterval(pump,40);
   endTimer=setTimeout(()=>{stop();fromBeat=0;},(T(totalBeats)-base+.6)*1000);
 }
 function stop(silent){
-  clearTimeout(endTimer);
+  clearTimeout(endTimer);clearInterval(schedTimer);
   if(master){const m=master;m.gain.setTargetAtTime(0,ctx.currentTime,.03);setTimeout(()=>m.disconnect(),200);master=null;}
   playing=false;clearHL();showCount(0);fadeTok++;$('score').classList.remove('fading');document.body.classList.remove('playing');fitTwoLines();exitLandscape();
   if(!silent){$('pos').textContent='정지됨';}
@@ -892,6 +1070,23 @@ $('tAll').onchange=e=>{
   document.querySelectorAll('#timbre select[data-k]').forEach(sel=>{sel.value=id;TIMBRE[sel.dataset.k]=id;});
   e.target.value='';saveTimbre();restartIfPlaying();
 };
+/* SF2 음원 선택 */
+$('sfSel').onchange=()=>sfSelect($('sfSel').value);
+$('sfLoad').onclick=()=>$('sfFile').click();
+$('sfFile').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  sfStat('읽는 중… ('+(f.size/1048576).toFixed(1)+'MB)');
+  try{const buf=await f.arrayBuffer();
+    const key=/generaluser/i.test(f.name)?SF_GU:f.name;
+    if(await sfUse(key,buf)){SF_SRC=key;try{localStorage.setItem('hymn_sfSrc',key);}catch(_){}
+      try{await sfDBput(key,{buf,ts:Date.now()});}catch(_){toast('이 브라우저에는 보관하지 못해 이번에만 사용합니다');}
+      await sfMenu();restartIfPlaying();}
+  }catch(err){sfStat('읽기 실패','no');}
+};
+$('sfDel').onclick=async()=>{const k=$('sfSel').value;if(k==='synth')return;
+  try{await sfDBdel(k);}catch(e){}toast((k===SF_GU?'GeneralUser GS':k)+' 보관본을 지웠습니다');
+  await sfSelect(k===SF_GU?'synth':SF_GU);};
+sfMenu().then(()=>sfUse(SF_SRC));
 $('trans').onchange=()=>{
   const was=playing,b=curBeat();
   if(was)stop(true);
@@ -980,6 +1175,8 @@ $('lyrHtml').onclick=async()=>{
   const doc=document.documentElement.cloneNode(true);
   doc.querySelector('#score').innerHTML='';
   doc.querySelector('#lyrRows').innerHTML='';
+  doc.querySelectorAll('optgroup.sfg').forEach(o=>o.remove());
+  {const ss=doc.querySelector('#sfSel');if(ss)ss.innerHTML='<option value="synth">합성음 (기본 내장)</option>';const st=doc.querySelector('#sfStat');if(st){st.textContent='';st.className='midinote';}}
   doc.querySelectorAll('#timbre select[data-k], #tAll').forEach(sel=>{[...sel.options].forEach((o,i)=>{if(!(sel.id==='tAll'&&i===0))o.remove();});});   // 늘임표 선택지는 남김
   doc.querySelectorAll('.toast').forEach(x=>x.remove());
   {const c=doc.querySelector('#count');if(c){c.className='count';c.textContent='';}}
