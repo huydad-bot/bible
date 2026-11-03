@@ -134,10 +134,15 @@ body:not(.playing) .parts .play{display:none}
 #midiLive{display:none;font:700 13px "Noto Sans KR";padding:2px 10px;border-radius:999px;margin-left:8px}
 body.playing #midiLive.show{display:inline-block}
 #midiLive.ok{background:#e3f4ea;color:#1f7a4c}#midiLive.no{background:#fdecea;color:#c0392b}
-.pcol{display:flex;flex-direction:column;gap:2px}
-.pvol{display:flex;align-items:center;gap:6px;font:400 12px "Noto Sans KR";color:var(--mute);padding-left:2px}
-.pvol input{flex:1;min-width:90px}
-.pvol b{min-width:24px;text-align:right;font-weight:400}
+.pcol{display:grid;grid-template-columns:auto 128px;column-gap:6px;row-gap:3px;align-items:center}
+.timbre .pcol>label{display:contents}
+.pcol select{width:128px;max-width:128px}
+.pvl{font:400 12px "Noto Sans KR";color:var(--mute);text-align:right}
+.pvol{display:flex;align-items:center;gap:4px;font:400 12px "Noto Sans KR";color:var(--mute)}
+.pvol input{width:100px;min-width:0;margin:0}
+.pvol b{min-width:22px;text-align:right;font-weight:400}
+.parts .accopt{display:flex;align-items:center;gap:5px;font:600 14px "Noto Sans KR";color:var(--ink);white-space:nowrap;margin-left:4px;cursor:pointer}
+body.playing .parts .accopt{display:none}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -181,6 +186,7 @@ body.playing .parts{margin-bottom:0}
         <button class="pbtn" data-v="B" title="베이스">Bas</button>
         <button class="pbtn on" data-v="ALL" title="4성부 모두">All</button>
         <label class="keybtn" title="이조 (조 바꾸기)">이조<select id="trans"></select></label>
+        <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <span class="sp"></span>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
@@ -199,14 +205,13 @@ body.playing .parts{margin-bottom:0}
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
         <label title="연주 중 악보 화면이 자동으로 따라갑니다"><i class="dot"></i>따라가기 <input id="follow" type="checkbox" checked></label>
         <input id="scoreOnly" type="checkbox" checked hidden>
-        <label title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)"><i class="dot"></i>조표색 적용 <input id="accChk" type="checkbox"></label>
       </div>
       <div class="timbre" id="timbre">
-        <span class="tl"><i class="dot"></i>악기선택</span>
-        <div class="pcol"><label data-v="S">소프라노 <select data-k="S"></select></label><div class="pvol" title="소프라노 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="S"><b></b></div></div>
-        <div class="pcol"><label data-v="A">앨토 <select data-k="A"></select></label><div class="pvol" title="앨토 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="A"><b></b></div></div>
-        <div class="pcol"><label data-v="T">테너 <select data-k="T"></select></label><div class="pvol" title="테너 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="T"><b></b></div></div>
-        <div class="pcol"><label data-v="B">베이스 <select data-k="B"></select></label><div class="pvol" title="베이스 음량 (0 = 소리 없음)"><span>음량</span><input type="range" min="0" max="100" value="100" data-pv="B"><b></b></div></div>
+        <span class="tl"><i class="dot"></i>악기</span>
+        <div class="pcol"><label data-v="S">소프라노 <select data-k="S"></select></label><span class="pvl">음량</span><div class="pvol" title="소프라노 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="S"><b></b></div></div>
+        <div class="pcol"><label data-v="A">앨토 <select data-k="A"></select></label><span class="pvl">음량</span><div class="pvol" title="앨토 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="A"><b></b></div></div>
+        <div class="pcol"><label data-v="T">테너 <select data-k="T"></select></label><span class="pvl">음량</span><div class="pvol" title="테너 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="T"><b></b></div></div>
+        <div class="pcol"><label data-v="B">베이스 <select data-k="B"></select></label><span class="pvl">음량</span><div class="pvol" title="베이스 음량 (0 = 소리 없음)"><input type="range" min="0" max="100" value="100" data-pv="B"><b></b></div></div>
         <label>전체 <select id="tAll"><option value="">— 한번에 바꾸기 —</option></select></label>
       </div>
       <div class="timbre midi" id="midiRow">
