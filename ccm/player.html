@@ -142,6 +142,7 @@ body.playing #midiLive.show{display:inline-block}
 .setbtn{height:44px;padding:0 14px;border:1px solid #ddd3c3;border-radius:10px;background:#efe9df;color:var(--ink);font:600 14px "Noto Sans KR";cursor:pointer}
 .setbtn.open{background:#e2d9ca}
 body.collapsed:not(.playing) .card>.panel{display:none}
+body:not(.lyrOpen) #lyrBox{display:none}
 body:not(.playing) .parts .play{display:none}
 @media (max-width:560px){.hbtns{margin-left:0;width:100%}.hplay{flex:1}}
 .timbre select,.parts .inst select{max-width:190px;text-overflow:ellipsis}
@@ -174,6 +175,7 @@ body.playing .parts{margin-bottom:0}
     </div>
     <div class="hbtns">
       <button class="hplay" id="hPlay" title="시작 / 정지">▶ 시작</button>
+      <button class="setbtn" id="lyrBtn" title="가사 입력·저장·내보내기">✎ 가사 입력</button>
       <button class="setbtn" id="setBtn" title="악기·이조·템포·반주·MIDI 설정">⚙ 설정 펼치기</button>
     </div>
   </header>
@@ -1220,6 +1222,11 @@ function setPanel(open){document.body.classList.toggle('collapsed',!open);
 (function(){let o=false;try{o=localStorage.getItem('ccm_panelOpen')==='1';}catch(e){}setPanel(o);})();
 $('setBtn').onclick=()=>setPanel(document.body.classList.contains('collapsed'));
 $('hPlay').onclick=()=>$('play').click();
+/* 가사 입력 창 열기/닫기 (기본: 닫힘) */
+function setLyr(open){document.body.classList.toggle('lyrOpen',open);
+  $('lyrBtn').textContent=open?'✎ 가사 닫기':'✎ 가사 입력';$('lyrBtn').classList.toggle('open',open);
+  if(open){$('lyrBox').open=true;setTimeout(()=>$('lyrBox').scrollIntoView({behavior:'smooth',block:'start'}),50);}}
+$('lyrBtn').onclick=()=>setLyr(!document.body.classList.contains('lyrOpen'));setLyr(false);
 function start(m,beat=0,intro=curIntro){
   stop(true);
   if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -1541,7 +1548,7 @@ $('lyrHtml').onclick=async()=>{
   doc.querySelector('#play').classList.remove('on');doc.querySelector('#play').textContent='▶ 시작';
   {const h=doc.querySelector('#hPlay');if(h){h.classList.remove('on');h.textContent='▶ 시작';}}
   doc.querySelector('#pos').textContent='▶ 시작을 누르세요';
-  doc.querySelector('#lyrBox').remove();   // 저장본에는 가사 입력창을 넣지 않음
+  doc.querySelector('#lyrBox').remove();{const lb=doc.querySelector('#lyrBtn');if(lb)lb.remove();}doc.body.classList.remove('lyrOpen');   // 저장본에는 가사 입력창을 넣지 않음
   // 단독 파일: 곡 데이터를 파일 안에 넣고, 악보 라이브러리는 인터넷(CDN)에서 불러옴
   doc.querySelector('#loader').textContent='window.SONG_ID='+JSON.stringify(String(SONG.n))+';window.SONG='+JSON.stringify(SONG).replace(/</g,'\\u003c')+';';
   doc.querySelector('#abcjsLib').setAttribute('src','https://cdn.jsdelivr.net/npm/abcjs@6.7.2/dist/abcjs-basic-min.js');
