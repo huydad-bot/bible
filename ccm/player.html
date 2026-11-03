@@ -1184,10 +1184,29 @@ $('midiBtn').onclick=async()=>{
   if(!navigator.requestMIDIAccess){toast('이 브라우저는 MIDI를 지원하지 않습니다 (PC·안드로이드의 크롬/엣지를 쓰세요)');return;}
   try{
     midiAccess=midiAccess||await navigator.requestMIDIAccess({sysex:false});
-    midiAccess.onstatechange=refreshMidiDevices;refreshMidiDevices();
+    midiAccess.onstatechange=onMidiState;refreshMidiDevices();
+    try{localStorage.setItem('ccm_midiOn','1');}catch(_){}
     toast(midiAccess.inputs.size?'MIDI 악기를 연주해 보세요':'연결된 MIDI 장치가 없습니다 — 케이블·블루투스 페어링을 확인하세요');
   }catch(err){toast('MIDI 사용이 허용되지 않았습니다 (주소창의 권한 설정 확인)');}
 };
+/* 자동 다시 연결: 한 번 연결을 허용한 뒤에는 곡·화면이 바뀌어도 페이지가 열릴 때 저절로 연결 */
+let midiNames='';
+function onMidiState(){
+  const before=midiNames;refreshMidiDevices();
+  midiNames=midiAccess?[...midiAccess.inputs.values()].map(i=>i.name).sort().join('|'):'';
+  if(before&&midiNames!==before)toast(midiNames.length>before.length?'MIDI 장치가 다시 연결되었습니다':'MIDI 장치 연결이 끊겼습니다 — 다시 연결되면 자동으로 이어집니다');
+}
+(async function autoMidi(){
+  if(!navigator.requestMIDIAccess)return;
+  let want=false;try{want=localStorage.getItem('ccm_midiOn')==='1';}catch(e){}
+  let st='prompt';try{st=(await navigator.permissions.query({name:'midi'})).state;}catch(e){}
+  if(st==='denied'||(st!=='granted'&&!want))return;
+  try{midiAccess=await navigator.requestMIDIAccess({sysex:false});midiAccess.onstatechange=onMidiState;
+    refreshMidiDevices();midiNames=[...midiAccess.inputs.values()].map(i=>i.name).sort().join('|');}catch(e){}
+})();
+/* 브라우저는 화면을 한 번 누르기 전에는 소리를 막아 두므로, 첫 터치·클릭·키 입력 때 소리 장치를 깨움 */
+['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,function wake(){ensureCtx();
+  ['pointerdown','keydown','touchstart'].forEach(x=>document.removeEventListener(x,wake,true));},true));
 $('midiDev').onchange=()=>{MIDI_DEV=$('midiDev').value;try{localStorage.setItem('ccm_midiDev',MIDI_DEV);}catch(e){}};
 (function(){const sel=$('midiIns');sel.add(new Option('멜로디 악기와 같게','S'),sel.options[0]);
   Object.entries(INSTR).forEach(([id,o])=>{if(!o.hidden&&!o.bassOnly)sel.add(new Option(o.name,id));});
