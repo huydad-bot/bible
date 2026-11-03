@@ -150,6 +150,7 @@ body:not(.playing) .parts .play{display:none}
 .drumdesc:empty{display:none}
 .dcol{display:flex;flex-direction:column;gap:3px}
 .timbre .dcol label[title^="줄"]{font:400 12.5px "Noto Sans KR";color:var(--mute);padding-left:58px;gap:4px}
+#ferm{width:96px}.fermi{font-weight:400;margin-left:2px}.fermi span{font-family:'Bravura','Noto Music','Segoe UI Symbol','Apple Symbols',serif;font-size:1.25em;line-height:1;position:relative;top:2px}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -196,7 +197,7 @@ body.playing .parts{margin-bottom:0}
       </div>
       <div class="ctrl">
         <label title="템포 (BPM)"><i class="dot"></i>템포 <input id="tempo" type="range" min="40" max="160" value="84"> <input id="tempoN" title="BPM (40–160)" type="number" min="40" max="160" value="84" inputmode="numeric"></label>
-        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표 <select id="ferm">
+        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표<span class="fermi">(<span>𝄐</span>)</span> <select id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label title="▶ 시작을 누르면 곡 앞에 연주할 전주"><i class="dot"></i>전주 <select id="intro">
           <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디">끝4마디</option>
