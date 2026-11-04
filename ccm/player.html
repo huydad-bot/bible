@@ -1394,6 +1394,15 @@ function setLyr(open){document.body.classList.toggle('lyrOpen',open);
   $('lyrBtn').textContent=open?'✎ 가사 닫기':'✎ 가사 입력';$('lyrBtn').classList.toggle('open',open);
   if(open){$('lyrBox').open=true;setTimeout(()=>$('lyrBox').scrollIntoView({behavior:'smooth',block:'start'}),50);}}
 $('lyrBtn').onclick=()=>setLyr(!document.body.classList.contains('lyrOpen'));setLyr(false);
+/* 연주 중 화면 꺼짐(자동 잠금) 방지 — Screen Wake Lock (아이폰 iOS 16.4+, 안드로이드·PC 크롬/엣지) */
+let wakeLock=null;
+async function keepAwake(on){
+  try{
+    if(on){if(!wakeLock&&'wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null;});}}
+    else if(wakeLock){const w=wakeLock;wakeLock=null;await w.release();}
+  }catch(e){wakeLock=null;}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&playing)keepAwake(true);});
 function start(m,beat=0,intro=curIntro){
   stop(true);
   if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -1453,7 +1462,7 @@ function start(m,beat=0,intro=curIntro){
         else{at(END.pF,3,57,.6);at(END.pF,.5,36,.8);}}
     }
   });
-  playing=true;curLine=-1;applyMix();
+  playing=true;curLine=-1;applyMix();keepAwake(true);
   if($('scoreOnly').checked){document.body.classList.add('playing');enterLandscape();fitTwoLines();}
   /* 음은 미리 한꺼번에 만들지 않고 0.6초 앞서 조금씩 예약 (긴 곡·SF2 음원에서도 첫 음부터 소리가 나도록) */
   EVQ.sort((a,b)=>a.w-b.w);let qi=0;
@@ -1464,6 +1473,7 @@ function start(m,beat=0,intro=curIntro){
   endTimer=setTimeout(()=>{stop();fromBeat=0;},(Math.max(T(totalBeats),END&&EM!=='cut'?T(END.pF)+END.tail:0)-base+.6)*1000);
 }
 function stop(silent){
+  if(!silent)keepAwake(false);
   clearTimeout(endTimer);clearInterval(schedTimer);
   if(master){const m=master;m.gain.setTargetAtTime(0,ctx.currentTime,.03);setTimeout(()=>m.disconnect(),200);master=null;}
   playing=false;clearHL();showCount(0);$('midiLive').className='';fadeTok++;$('score').classList.remove('fading');document.body.classList.remove('playing');fitTwoLines();exitLandscape();
