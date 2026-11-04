@@ -598,9 +598,10 @@ function renderScore(){
     responsive:'resize',add_classes:true,visualTranspose:+$('trans').value,staffwidth:880,scale:1,
     paddingtop:0,paddingbottom:10,paddingleft:10,paddingright:10,
     format:{vocalfont:'Noto Serif KR 15',gchordfont:'Noto Sans KR 13',annotationfont:'Noto Sans KR 13 bold'},
-    clickListener:(el)=>{
+    clickListener:(el,tn,cls,an,drag,ev)=>{
       const b=elemStart.get(el);if(b===undefined)return;
-      start(mode,scoreToPerf(b),[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
+      buildForm($('verses').value);
+      start(mode,scoreToPerf(b,clickedVerse(el,ev,b)),[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
     }
   })[0];
   const keyOf={'0-0':'S'};
@@ -649,7 +650,21 @@ function perfPos(p){                        // 연주 박(전주 뒤) → {악�
   for(const sg of FORM)if(p<sg.off+(sg.b-sg.a)-1e-9)return {sb:sg.a+Math.max(0,p-sg.off),v:sg.v,sg};
   const sg=FORM[FORM.length-1];return {sb:sg.b-1e-6,v:sg.v,sg};
 }
-function scoreToPerf(b){for(const sg of FORM)if(b>=sg.a-1e-9&&b<sg.b-1e-9)return sg.off+b-sg.a;return 0;}
+/* 누른 가사가 몇 절 줄인지 → 그 절의 그 자리부터 연주 (음표를 누르면 지금 부르는 절, 멈춰 있으면 1절) */
+function clickedVerse(el,ev,b){
+  const filled=VKEYS.filter(k=>sylls(LYR[k]).length);
+  let cur=0;if(playing){const g=curBeat();if(g>=introLen)cur=perfPos(g-introLen).v;}
+  if(!ev||b>=REFRAIN_AT||filled.length<2)return cur;
+  const els=(el.abselem&&el.abselem.elemset)||[];
+  for(const e of els){const tx=e&&e.querySelector&&e.querySelector('text.abcjs-lyric');if(!tx)continue;
+    const ts=[...tx.querySelectorAll('tspan')];
+    let i=ts.findIndex(t=>t===ev.target||t.contains(ev.target));
+    if(i<0){let best=1e9;ts.forEach((t,j)=>{const r=t.getBoundingClientRect();const d=Math.abs((r.top+r.bottom)/2-ev.clientY);if(r.height&&d<best&&d<r.height){best=d;i=j;}});}
+    if(i>=0&&filled[i])return +filled[i].slice(1)-1;
+  }
+  return cur;
+}
+function scoreToPerf(b,v){if(v!=null){const sg=FORM.find(x=>x.v===v&&b>=x.a-1e-9&&b<x.b-1e-9);if(sg)return sg.off+b-sg.a;}for(const sg of FORM)if(b>=sg.a-1e-9&&b<sg.b-1e-9)return sg.off+b-sg.a;return 0;}
 let schedTimer=null;
 let ctx=null,master=null,vGain={},playing=false,startAt=0,spb=60/84,fromBeat=0,totalBeats=SONG_LEN,mode='S',endTimer=null;
 const $=id=>document.getElementById(id);
