@@ -206,7 +206,8 @@ body.playing .parts{margin-bottom:0}
 <ul>
 <li><b>반주</b>: 악보의 코드(E, A, B7, C#m7…)로 자동 반주 — 화음 / 아르페지오 / 리듬.</li>
 <li><b>반주 악기 · 베이스</b>: 반주 소리와 낮은 근음 소리. 'A/B'처럼 분수 코드는 / 뒤의 음을 베이스로 칩니다.</li>
-<li><b>드럼</b>: 발라드 · 8비트 · 16비트 · 셔플 · 6/8 발라드 · 하프타임. 고르면 아래에 비트 설명이 나옵니다. <b>필인·마무리</b>: 줄 끝 필인과 곡 끝 심벌.</li>
+<li><b>드럼</b>: 발라드 · 8비트 · 16비트 · 셔플 · 6/8 발라드 · 하프타임. 고르면 아래에 비트 설명이 나옵니다. <b>필인</b>: 줄 끝 필인.</li>
+<li><b>엔딩</b>: 롤 엔딩(드럼 롤 → 심벌, 화음 펼침) · 컷 오프(다 같이 '탁') · 점점 느리게 · 마지막 줄 반복(태그) · 없음.</li>
 <li><b>음량</b>: 멜로디 · 반주 · 베이스 · 드럼을 따로 조절. <b>멜로디를 0</b>으로 내리면 반주만 남는 MR이 됩니다.</li>
 </ul><h3>MIDI 악기로 직접 연주</h3>
 <ul>
@@ -262,6 +263,12 @@ body.playing .parts{margin-bottom:0}
           <option value="ref">후렴</option><option value="none" selected>없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
+        <label title="곡을 끝내는 방법"><i class="dot"></i>엔딩 <select id="ending">
+          <option value="roll" title="마지막 음 앞 한 박 드럼 롤('촤라라라') → 심벌, 반주는 마지막 화음을 펼쳐 길게 울림. 대부분의 곡에 무난">롤 엔딩</option>
+          <option value="cut" title="마지막 음에서 모두 함께 '탁' 치고 바로 멈춤. 빠르고 경쾌한 곡">컷 오프</option>
+          <option value="rit" title="마지막 줄을 점점 느리게 → 화음을 길게 울림. 느린 경배곡">점점 느리게</option>
+          <option value="tag" title="마지막 줄을 두 번 더 반복한 뒤 롤 엔딩. CCM에서 흔한 태그 엔딩">마지막 줄 반복</option>
+          <option value="none" title="엔딩 없이 악보 끝에서 그대로 멈춤">없음</option></select></label>
         <input id="follow" type="checkbox" checked hidden>
         <input id="scoreOnly" type="checkbox" checked hidden>
       </div>
@@ -270,7 +277,7 @@ body.playing .parts{margin-bottom:0}
           <option value="none">없음</option><option value="block">화음</option><option value="arp" selected>아르페지오</option><option value="rhythm">리듬</option></select></label>
         <label title="반주 소리"><i class="dot"></i>반주 악기 <select id="accIns"></select></label>
         <label title="낮은 음(근음)을 연주할 악기"><i class="dot"></i>베이스 <select id="bassIns"><option value="same">반주 악기와 같게</option><option value="none">없음</option></select></label>
-        <div class="dcol"><label title="드럼 리듬 — 고른 비트의 설명이 옆에 나옵니다"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option><option value="shuffle">셔플</option><option value="ballad68">6/8 발라드</option><option value="halftime">하프타임</option></select></label><label title="줄(악구) 끝마다 탐 필인, 곡 끝은 심벌로 마무리"><input id="drumFill" type="checkbox" checked> 필인·마무리</label></div>
+        <div class="dcol"><label title="드럼 리듬 — 고른 비트의 설명이 옆에 나옵니다"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option><option value="shuffle">셔플</option><option value="ballad68">6/8 발라드</option><option value="halftime">하프타임</option></select></label><label title="줄(악구) 끝마다 탐 필인 (롤 엔딩의 드럼 롤 포함)"><input id="drumFill" type="checkbox" checked> 필인</label></div>
         <span class="drumdesc" id="drumDesc"></span>
       </div>
       <div class="timbre mix" id="mixRow">
@@ -639,6 +646,8 @@ function renderScore(){
 /* ===== 오디오 ===== */
 /* 연주 순서: SONG.form = [[시작박,끝박,절(0부터),'표시'],…] (되돌이표·D.C.·D.S. 곡) — 없으면 선택한 절 수만큼 전곡 반복 */
 let FORM=[],PERF_LEN=0;
+let ENDING='roll';try{ENDING=localStorage.getItem('ccm_ending')||'roll';}catch(e){}
+let END_RIT=null;
 /* 연주 횟수 선택값 'n:k' — n번(절) 부르고, k=1이면 끝에 후렴을 한 번 더 */
 const CHORUS_AT=SONG.chorusAt??(HAS_REFRAIN?REFRAIN_AT:null);
 function buildForm(val){
@@ -647,6 +656,9 @@ function buildForm(val){
   const f=SONG.form?SONG.form.map(x=>({a:x[0],b:x[1],v:x[2]||0,label:x[3]||''}))
     :Array.from({length:n},(_,r)=>({a:0,b:SONG_LEN,v:r%NUM_VERSES,label:vl(r)}));
   if(!SONG.form&&k&&CHORUS_AT!=null)f.push({a:CHORUS_AT,b:SONG_LEN,v:(n-1)%NUM_VERSES,label:'후렴 반복'});
+  if(ENDING==='tag'&&f.length){                 // 태그: 마지막 줄을 두 번 더
+    const L=f[f.length-1],ls=Math.max(L.a,...LINE_BREAKS.filter(x=>x<L.b-1e-6));
+    if(L.b-ls>0)for(let i=0;i<2;i++)f.push({a:ls,b:L.b,v:L.v,label:'마지막 줄 반복'});}
   let off=0;f.forEach(sg=>{sg.off=off;off+=sg.b-sg.a;});FORM=f;PERF_LEN=off;
 }
 function perfPos(p){                        // 연주 박(전주 뒤) → {악보 박, 절, 구간}
@@ -752,6 +764,7 @@ function drumHit(c,dest,code,t0,vel){
   }else if(code===42)noise(.12,'highpass',7500,.7,.35,.025);   // 닫힌 하이햇
   else if(code===46)noise(.5,'highpass',7000,.7,.35,.14);      // 열린 하이햇
   else if(code===49)noise(1.5,'highpass',5000,.5,.45,.5);      // 심벌
+  else if(code===57)noise(3.5,'highpass',4200,.5,.55,1.1);     // 엔딩 심벌 (길게 울림)
   else if(code===41||code===45||code===48||code===50){         // 탐 (낮은→높은)
     const f0={41:90,45:120,48:160,50:200}[code],o=c.createOscillator(),e=c.createGain();o.type='sine';
     o.frequency.setValueAtTime(f0*1.6,t0);o.frequency.exponentialRampToValueAtTime(f0,t0+.08);
@@ -1061,6 +1074,7 @@ function buildWarp(total){
     curIntro.forEach(([a,b])=>{fs.forEach(([x,y])=>{const s0=Math.max(a,x),e0=Math.min(b,y);if(e0>s0)mark(off+s0-a,off+e0-a,K);});off+=b-a;});
     FORM.forEach(sg=>fs.forEach(([x,y])=>{const s0=Math.max(sg.a,x),e0=Math.min(sg.b,y);if(e0>s0)mark(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,K);}));
   }
+  if(END_RIT)for(let i=Math.round(END_RIT.a*RES);i<Math.round(END_RIT.b*RES)&&i<fac.length;i++){const u=((i+.5)/RES-END_RIT.a)/(END_RIT.b-END_RIT.a);fac[i]*=1+0.9*u;}   // 엔딩: 점점 느리게
   if(ritOn)for(let i=Math.round(ritG0*RES);i<Math.round(introLen*RES);i++){const u=(i+.5)/RES-ritG0;fac[i]*=1+RIT_K*u/RIT_BEATS;}
   CUM=new Float64Array(fac.length+1);
   for(let i=0;i<fac.length;i++)CUM[i+1]=CUM[i]+fac[i]*spb/RES;
@@ -1205,7 +1219,7 @@ function drumNotes(style){
   if(DRUM_FILL)LINE_BREAKS.concat([SONG_LEN]).forEach(e=>{const st=e-barLen;if(st>=P0-1e-6)fillBars.add(Math.round((st-P0)/barLen));});
   const lastBar=Math.round((SONG_LEN-P0)/barLen)-1;
   for(let b0=P0,bi=0;b0<SONG_LEN-1e-6;b0+=barLen,bi++){
-    const end=bi===lastBar&&DRUM_FILL;                        // 마지막 마디: 심벌로 마무리
+    const end=false;                                          // 곡 끝 엔딩은 start()에서 따로 (드럼 롤 + 심벌)
     if(bi===0)add(b0,49,.8);
     if(end){add(b0,49,.9);add(b0,36,1);continue;}
     const fill=fillBars.has(bi)&&bi>0;
@@ -1388,11 +1402,18 @@ function start(m,beat=0,intro=curIntro){
   curIntro=intro||[];introLen=curIntro.reduce((a,[x,y])=>a+(y-x),0);
   ritOn=introLen>0&&$('rit').checked;ritG0=Math.max(0,introLen-RIT_BEATS);
   const tr=+$('trans').value;buildForm($('verses').value);totalBeats=introLen+PERF_LEN;fromBeat=beat;
-  buildWarp(totalBeats);
   master=ctx.createGain();master.gain.value=.9;
   const comp=ctx.createDynamicsCompressor();master.connect(comp);comp.connect(ctx.destination);
   const lfo=ctx.createOscillator();lfo.frequency.value=5.2;
   const lfoG=ctx.createGain();lfoG.gain.value=6;lfo.connect(lfoG);
+  /* 엔딩 (선택): roll 드럼 롤→심벌+화음 펼침 / cut 다 같이 '탁' / rit 마지막 줄 점점 느리게 / tag 마지막 줄 반복 후 롤 / none */
+  const EM=ENDING==='tag'?'roll':ENDING,ROLL=1,END=(()=>{if(EM==='none')return null;const sg=FORM[FORM.length-1];if(!sg)return null;
+    const tk=VOICES[0].tokens.filter(n=>n.p!=='r'&&n.t>=sg.a-1e-6&&n.t<sg.b-1e-6);if(!tk.length)return null;
+    const tF=tk[tk.length-1].t,pF=introLen+sg.off+tF-sg.a;if(pF<=beat+.05)return null;
+    return {tF,pF,dur:tk[tk.length-1].dur};})();
+  END_RIT=END&&EM==='rit'?{a:Math.max(introLen,END.pF-6),b:END.pF+END.dur}:null;
+  buildWarp(totalBeats);
+  if(END)END.tail=EM==='cut'?Math.max(.35,Math.min(1.2,T(END.pF+END.dur)-T(END.pF))):Math.max(3,Math.min(6,T(END.pF+END.dur)-T(END.pF)+1.5));
   const base=T(beat);const EVQ=[];
   VOICES.concat(accVoices()).forEach(v=>{
     const g=ctx.createGain();g.gain.value=v.vol*mixFor(v.k);
@@ -1400,6 +1421,8 @@ function start(m,beat=0,intro=curIntro){
     else g.connect(master);
     vGain[v.k]=g;
     const play=(t,e,midi,vel,rb)=>{
+      if(END&&t>=introLen&&(v.k==='AC'||v.k==='AB')){if(t>=END.pF-1e-6)return;if(e>END.pF)e=END.pF;}   // 엔딩 화음으로 바꿈
+      if(END&&v.k==='DR'&&t>=END.pF-(EM==='roll'&&DRUM_FILL?ROLL:0)-1e-6&&t>=introLen)return;          // 엔딩 롤·심벌로 바꿈
       if(e<=beat+0.05||(v.noTr&&t<beat-1e-6))return;          // 드럼은 중간부터 시작할 때 지난 타격을 치지 않음
       const t0=Math.max(t,beat);
       const w=T(t0)-base,L=T(e)-T(t0),ins=v.ins||TIMBRE[v.k],m=v.noTr?midi:midi+tr,lf=v.k==='S'?lfoG:null,vv=vel||1;
@@ -1415,6 +1438,20 @@ function start(m,beat=0,intro=curIntro){
       const s0=Math.max(n.t,sg.a),e0=Math.min(n.t+n.dur,sg.b);
       if(e0>s0&&!(v.noTr&&n.t<sg.a-1e-6))play(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,n.midi,n.vel,e0===n.t+n.dur?n.restAfter:0);
     }));
+    if(END){                                                                   // 엔딩 음 추가
+      const at=(p,sec,midi,vel)=>{if(p<beat-1e-6)return;const w=T(p)-base,ins=v.ins||TIMBRE[v.k],m=v.noTr?midi:midi+tr;
+        EVQ.push({w,f:()=>noteOn(ctx,ins,v,g,null,m,startAt+w,sec,vel)});};
+      const ks=Object.keys(CHORDS).map(Number).filter(k=>k<=END.tF+1e-6).sort((a,b)=>a-b),c=ks.length?parseChord(CHORDS[ks[ks.length-1]]):null;
+      if(v.k==='AC'&&c){const ch=voiceChord(c),full=[...ch,ch[0]+12,ch[1]+12].sort((a,b)=>a-b);
+        if(EM==='cut')full.forEach(m=>at(END.pF,END.tail,m,1));
+        else full.forEach((m,i)=>at(END.pF+i*.09,END.tail-i*.05,m,.85));}
+      if(v.k==='AB'&&c)at(END.pF,END.tail,bassNote(c),1);
+      if(v.k==='DR'&&DRUM!=='none'){
+        if(EM==='roll'){if(DRUM_FILL){const n=8;for(let i=0;i<n;i++){const p=END.pF-ROLL+i*ROLL/n,code=i<5?38:[48,45,41][i-5];at(p,.2,code,.3+.6*i/(n-1));}}
+          at(END.pF,3,49,1);at(END.pF,3,57,.8);at(END.pF,.5,36,1);}
+        else if(EM==='cut'){at(END.pF,.6,49,1);at(END.pF,.3,38,.95);at(END.pF,.3,36,1);}
+        else{at(END.pF,3,57,.6);at(END.pF,.5,36,.8);}}
+    }
   });
   playing=true;curLine=-1;applyMix();
   if($('scoreOnly').checked){document.body.classList.add('playing');enterLandscape();fitTwoLines();}
@@ -1424,7 +1461,7 @@ function start(m,beat=0,intro=curIntro){
   const pump=()=>{const lim=ctx.currentTime-startAt+.6;
     while(qi<EVQ.length&&EVQ[qi].w<lim){try{EVQ[qi].f();}catch(e){console.warn(e);}qi++;}};
   pump();clearInterval(schedTimer);schedTimer=setInterval(pump,40);
-  endTimer=setTimeout(()=>{stop();fromBeat=0;},(T(totalBeats)-base+.6)*1000);
+  endTimer=setTimeout(()=>{stop();fromBeat=0;},(Math.max(T(totalBeats),END&&EM!=='cut'?T(END.pF)+END.tail:0)-base+.6)*1000);
 }
 function stop(silent){
   clearTimeout(endTimer);clearInterval(schedTimer);
@@ -1583,6 +1620,9 @@ $('drum').value=DRUM;if($('drum').value!==DRUM){DRUM='none';$('drum').value='non
 [...$('drum').options].forEach(o=>o.title=DRUM_INFO[o.value]||'');
 function showDrumDesc(){const d=DRUM_INFO[$('drum').value]||'';$('drum').title=d;$('drumDesc').textContent=$('drum').value==='none'?'':d;}
 showDrumDesc();$('drumFill').checked=DRUM_FILL;
+$('ending').value=ENDING;if($('ending').value!==ENDING){ENDING='roll';$('ending').value='roll';}
+$('ending').title=$('ending').selectedOptions[0].title;
+$('ending').onchange=()=>{ENDING=$('ending').value;$('ending').title=$('ending').selectedOptions[0].title;try{localStorage.setItem('ccm_ending',ENDING);}catch(e){}restartIfPlaying();};
 $('drumFill').onchange=()=>{DRUM_FILL=$('drumFill').checked;try{localStorage.setItem('ccm_drumFill',DRUM_FILL?'1':'0');}catch(e){}restartIfPlaying();};
 $('bassIns').onchange=()=>{BASS_INS=$('bassIns').value;try{localStorage.setItem('ccm_bassIns',BASS_INS);}catch(e){}restartIfPlaying();};
 $('drum').onchange=()=>{DRUM=$('drum').value;showDrumDesc();try{localStorage.setItem('ccm_drum',DRUM);}catch(e){}restartIfPlaying();};
