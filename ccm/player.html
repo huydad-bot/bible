@@ -600,8 +600,11 @@ function renderScore(){
     format:{vocalfont:'Noto Serif KR 15',gchordfont:'Noto Sans KR 13',annotationfont:'Noto Sans KR 13 bold'},
     clickListener:(el,tn,cls,an,drag,ev)=>{
       const b=elemStart.get(el);if(b===undefined)return;
-      buildForm($('verses').value);
-      start(mode,scoreToPerf(b,clickedVerse(el,ev,b)),[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
+      const cv=clickedVerse(el,ev,b),sel=$('verses');
+      if(!SONG.form){const [n0,k0]=String(sel.value).split(':');            // 고른 횟수보다 뒤 절을 누르면 그 절까지 연주
+        if(cv+1>(+n0||1)){const want=[(cv+1)+':'+(k0||0),(cv+1)+':0'].find(v=>[...sel.options].some(o=>o.value===v));if(want)sel.value=want;}}
+      buildForm(sel.value);
+      start(mode,scoreToPerf(b,cv),[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
     }
   })[0];
   const keyOf={'0-0':'S'};
