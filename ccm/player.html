@@ -1229,7 +1229,7 @@ function drumNotes(style){
 }
 let ACC_PAT='arp',ACC_INS='piano',BASS_INS='bassgtr',DRUM='none';
 /* 음량: 0~100 슬라이더 → 기준 음량 대비 배율 */
-const VOL_BASE={S:.32,AC:.085,AB:.17,DR:.5};
+const VOL_BASE={S:.32,AC:.24,AB:.15,DR:.5};   // 반주(화음)가 묻히지 않게 — 반주 방식 차이가 들리도록
 const VOL_DEF={S:80,AC:60,AB:60,DR:60,LIVE:80};
 let LEVEL=Object.assign({},VOL_DEF);
 try{const o=JSON.parse(localStorage.getItem('ccm_levels')||'null');if(o)Object.keys(VOL_DEF).forEach(k=>{if(typeof o[k]==='number')LEVEL[k]=o[k];});
