@@ -2,6 +2,7 @@
 window.SONG_LIST = [
   { n: 20,  title: '내 안에 사는 이', key: 'C', tune: 'Gary Garcia' },
   { n: 66,  title: '오 신실하신 주',   key: 'C', tune: '최용덕' },
+  { n: 166, title: '모든 이름 위에 뛰어난 이름', key: 'D', tune: '고형원' },
   { n: 282, title: '내가 어둠 속에서', key: 'E', tune: '문경일' },
   { n: 284, title: '너는 시냇가에',   key: 'E', tune: '박윤호' },
   { n: 286, title: '두 손 들고 찬양합니다', key: 'E', tune: 'Andre Kempen' },
