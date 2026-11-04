@@ -1420,7 +1420,7 @@ let curLine=-1;
    다음 줄(전주 중에는 1절 첫 줄)을 미리 보여 준다 */
 const LOOKAHEAD_SEC=2.5;
 const lineOf=ib=>LINE_BREAKS.filter(x=>ib>=x-1e-6).length;
-const PAGE_AHEAD_SEC=1.0;   // 악보만 보기(두 줄 페이지): 다음 페이지 첫 음 1초 전에 넘김
+const PAGE_AHEAD_SEC=2.5;   // 연주 화면: 다음 페이지 첫 음 2.5초 전에 넘김
 function aheadLine(g,ib,page){
   let ahead=Ginv(T(g)+(page?PAGE_AHEAD_SEC:LOOKAHEAD_SEC));                       // 2.5초 뒤의 위치
   const S=VOICES[0].tokens.find(n=>ib>=n.t-1e-6&&ib<n.t+n.dur-1e-6);
