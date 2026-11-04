@@ -448,7 +448,12 @@ function abcLines(v){
       else{const pp=abcPitch(n.p,state);s+=parts.map(q=>pp+q).join('-');}
     }
     if(slurV&&MEL.has(n.t)&&!(nx&&MEL.has(nx.t)))s+=')';                                   // 슬러 끝
-    cur+=s+' ';
+    {                                         // 8분·16분음표는 한 박 안에서 빔으로 묶음 (박 경계·쉼표·4분음표 이상에서는 띄움)
+      const [mn,md]=(SONG.meter||'4/4').split('/').map(Number),G=md===8&&mn%3===0?1.5:4/md;
+      const e=n.t+n.dur,onBeat=Math.abs(((e-PICKUP)/G)-Math.round((e-PICKUP)/G))<1e-6;
+      const join=n.p!=='r'&&n.dur<G-1e-6&&nx&&nx.p!=='r'&&nx.dur<G-1e-6&&!onBeat;
+      cur+=s+(join?'':' ');
+    }
     const end=n.t+n.dur;
     if(end===SONG_LEN)cur+='|]';
     else if(DBL.has(end)){cur+='|| ';state={};}
