@@ -620,6 +620,20 @@ function renderScore(){
 
 /* ===== 오디오 ===== */
 let schedTimer=null;
+/* 아멘: 여러 절을 이어 부를 때 아멘은 마지막 절 끝에만 — SONG.amenAt(아멘 시작 박), 없으면 곡 끝 직전 겹세로줄 위치 */
+const AMEN_AT=(()=>{if(SONG.amenAt!=null)return SONG.amenAt;const d=(SONG.doubleBars||[]).filter(x=>x<SONG_LEN-1e-6&&x>SONG_LEN-12);return d.length?Math.max(...d):SONG_LEN;})();
+let FORM=[],PERF_LEN=0;
+function buildForm(nv){
+  nv=Math.max(1,nv|0);FORM=[];let off=0;
+  for(let r=0;r<nv;r++){const b=r<nv-1?AMEN_AT:SONG_LEN;FORM.push({a:0,b,v:r,off});off+=b;}
+  PERF_LEN=off;
+}
+function perfPos(p){                        // 연주 박(전주 뒤) → {악보 박, 절}
+  for(const sg of FORM)if(p<sg.off+(sg.b-sg.a)-1e-9)return {sb:sg.a+Math.max(0,p-sg.off),v:sg.v};
+  const sg=FORM[FORM.length-1]||{b:SONG_LEN,v:0};return {sb:sg.b-1e-6,v:sg.v};
+}
+function scoreToPerf(b){return b;}           // 악보를 누르면 1절의 그 자리부터
+buildForm(1);
 let ctx=null,master=null,vGain={},playing=false,startAt=0,spb=60/84,fromBeat=0,totalBeats=SONG_LEN,mode='ALL',endTimer=null;
 const $=id=>document.getElementById(id);
 (function buildVerseMenu(){
@@ -885,9 +899,9 @@ function noteOn(c,ins,v,dest,lfo,midi,t0,dur,vel=1){
 /* ===== 전주 ===== */
 // 구간 [시작박, 끝박) — 못갖춘마디(1박)를 포함해 자연스럽게 1절로 이어지도록 잘랐다
 const INTRO_DEFS=Object.assign({
-  fl:[[0,2*BPB],[SONG_LEN-2*BPB,SONG_LEN]],   // 처음 2마디 + 마지막 2마디
-  l4:[[SONG_LEN-4*BPB,SONG_LEN]],             // 마지막 4마디
-  ref:HAS_REFRAIN?[[REFRAIN_AT,SONG_LEN]]:[], // 후렴 전체
+  fl:[[0,2*BPB],[AMEN_AT-2*BPB,AMEN_AT]],     // 처음 2마디 + 마지막 2마디 (아멘 제외)
+  l4:[[AMEN_AT-4*BPB,AMEN_AT]],               // 마지막 4마디 (아멘 제외)
+  ref:HAS_REFRAIN?[[REFRAIN_AT,AMEN_AT]]:[],  // 후렴 전체 (아멘 제외)
   none:[]
 },SONG.intro||{});
 let curIntro=[],introLen=0;
@@ -909,7 +923,7 @@ function buildWarp(total){
   if(K!==1&&fs.length){
     let off=0;                                 // 전주 구간 안의 늘임표
     curIntro.forEach(([a,b])=>{fs.forEach(([x,y])=>{const s0=Math.max(a,x),e0=Math.min(b,y);if(e0>s0)mark(off+s0-a,off+e0-a,K);});off+=b-a;});
-    for(let r=0;introLen+r*SONG_LEN<total;r++)fs.forEach(([x,y])=>mark(introLen+r*SONG_LEN+x,introLen+r*SONG_LEN+y,K));
+    FORM.forEach(sg=>fs.forEach(([x,y])=>{const s0=Math.max(sg.a,x),e0=Math.min(sg.b,y);if(e0>s0)mark(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,K);}));
   }
   if(ritOn)for(let i=Math.round(ritG0*RES);i<Math.round(introLen*RES);i++){const u=(i+.5)/RES-ritG0;fac[i]*=1+RIT_K*u/RIT_BEATS;}
   CUM=new Float64Array(fac.length+1);
@@ -992,7 +1006,7 @@ const NN=['도','도#','레','레#','미','파','파#','솔','솔#','라','라#'
 const nName=m=>NN[m%12]+(Math.floor(m/12)-1);
 function expectedMidi(){                     // 지금 연주 위치의 멜로디 음 (이조 반영)
   if(!playing)return null;const g=curBeat();if(g<introLen)return null;
-  const b=(g-introLen)%SONG_LEN;const V=VOICES.find(x=>x.k===mode)||VOICES[0];   // 고른 파트(All이면 소프라노)
+  const b=perfPos(g-introLen).sb;const V=VOICES.find(x=>x.k===mode)||VOICES[0];   // 고른 파트(All이면 소프라노)
   const n=V.tokens.find(x=>b>=x.t-1e-6&&b<x.t+x.dur-1e-6);
   return n&&n.p!=='r'?toMidi(n.p)+(+$('trans').value):null;
 }
@@ -1100,7 +1114,7 @@ function start(m,beat=0,intro=curIntro){
   mode=m;spb=60/+$('tempo').value;
   curIntro=intro||[];introLen=curIntro.reduce((a,[x,y])=>a+(y-x),0);
   ritOn=introLen>0&&$('rit').checked;ritG0=Math.max(0,introLen-RIT_BEATS);
-  const tr=+$('trans').value;const nv=+$('verses').value;totalBeats=introLen+SONG_LEN*nv;fromBeat=beat;
+  const tr=+$('trans').value;const nv=+$('verses').value;buildForm(nv);totalBeats=introLen+PERF_LEN;fromBeat=beat;
   buildWarp(totalBeats);
   master=ctx.createGain();master.gain.value=.9;
   const comp=ctx.createDynamicsCompressor();master.connect(comp);comp.connect(ctx.destination);
@@ -1124,9 +1138,10 @@ function start(m,beat=0,intro=curIntro){
       v.notes.forEach(n=>{const s0=Math.max(n.t,a),e0=Math.min(n.t+n.dur,b);if(e0>s0)play(off+s0-a,off+e0-a,n.midi,e0===n.t+n.dur?n.restAfter:0);});
       off+=b-a;
     });
-    for(let r=0;r<nv;r++)v.notes.forEach(n=>{   // 다른 파트가 길게 끄는 음은 남은 길이만큼 연주
-      const t=introLen+n.t+r*SONG_LEN;play(t,t+n.dur,n.midi,n.restAfter);
-    });
+    FORM.forEach(sg=>v.notes.forEach(n=>{       // 절마다 (마지막 절이 아니면 아멘 앞에서 다음 절로)
+      const s0=Math.max(n.t,sg.a),e0=Math.min(n.t+n.dur,sg.b);if(e0<=s0)return;
+      play(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,n.midi,e0===n.t+n.dur?n.restAfter:0);
+    }));
   });
   playing=true;curLine=-1;applyMix();
   if($('scoreOnly').checked){document.body.classList.add('playing');enterLandscape();fitTwoLines();}
@@ -1162,7 +1177,7 @@ function aheadLine(g,ib,page){
   if(S&&!page)ahead=Math.max(ahead,g+(S.t+S.dur-ib)+1e-3);           // 지금 음이 끝나는 위치
   if(ahead>=totalBeats)return lineOf(ib);
   if(ahead<introLen){const sb=introSrc(ahead);return sb===null?lineOf(ib):lineOf(sb);}
-  return lineOf((ahead-introLen)%SONG_LEN);
+  return lineOf(perfPos(ahead-introLen).sb);
 }
 function lineBox(li){
   const els=document.querySelectorAll('#score svg .abcjs-l'+li);
@@ -1240,9 +1255,9 @@ function tick(){
     const inIntro=g<introLen;
     const b=inIntro?introSrc(Math.max(0,g)):g-introLen;
     if(b!==null&&g>=0){
-      const ib=inIntro?b:b%SONG_LEN;
+      const PP=inIntro?null:perfPos(b);const ib=inIntro?b:PP.sb;
       clearHL();
-      const verse=inIntro?-1:Math.floor(b/SONG_LEN);            // 0=1절, 전주는 -1
+      const verse=inIntro?-1:PP.v;            // 0=1절, 전주는 -1
       const filled=VKEYS.filter(k=>sylls(LYR[k]).length);
       noteMap.forEach(n=>{
         if(!(ib>=n.start&&ib<n.start+n.dur))return;
@@ -1268,10 +1283,10 @@ function tick(){
       else if(document.body.classList.contains('playing'))followLine(pageStart(aheadLine(g,ib,true)));   // 화면 페이지 단위(2~3줄)로 넘김
       else followLine(aheadLine(g,ib),LINE_BREAKS.filter(x=>ib>=x).length);
       showCount(inIntro?Math.ceil(introLen-g-1e-6):0);
-      const v=Math.floor(b/SONG_LEN)+1;
+      const v=inIntro?0:PP.v+1;
       const bar=ib<PICKUP?'못갖춘마디':barNum(ib)+'마디';
       const who=mode==='ALL'?'4성부':VOICES.find(x=>x.k===mode).name;
-      $('pos').innerHTML=inIntro&&introLen-g<=COUNT_N?`<b>${who}</b> · 시작까지 ${Math.ceil(introLen-g-1e-6)}`:inIntro?`<b>${who}</b> · 전주 · ${bar}`:`<b>${who}</b> · ${v}절 · ${bar}${ib>=REFRAIN_AT?' (후렴)':''}`;
+      $('pos').innerHTML=inIntro&&introLen-g<=COUNT_N?`<b>${who}</b> · 시작까지 ${Math.ceil(introLen-g-1e-6)}`:inIntro?`<b>${who}</b> · 전주 · ${bar}`:`<b>${who}</b> · ${v}절 · ${bar}${ib>=REFRAIN_AT?' (후렴)':''}${!inIntro&&AMEN_AT<SONG_LEN&&ib>=AMEN_AT?' (아멘)':''}`;
     }
   }
   requestAnimationFrame(tick);
