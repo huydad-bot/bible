@@ -1713,5 +1713,19 @@ b.onclick=()=>{try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);e
 d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
 const h=d.getElementById('helpBtn');hb.insertBefore(b,h||null);
 })();</script>
+<style>/* 연주 중 제목을 가운데로 */
+body.playing .ptitle{justify-content:center}
+@media (min-width:700px){body.playing .parts{position:relative}body.playing .ptitle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:42%;margin:0;pointer-events:none}}
+</style>
+<script>/* 스페이스바 = 시작/정지 (입력칸에서는 띄어쓰기) */
+document.addEventListener('keydown',e=>{
+  if(e.code!=='Space'&&e.key!==' ')return;
+  const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+  e.preventDefault();if(e.repeat)return;
+  if(t&&t.tagName==='BUTTON')t.blur();
+  const nx=document.getElementById('plNext');if(nx&&!nx.hidden){const g=document.getElementById('plGo')||document.getElementById('plAgain');if(g){g.click();return;}}
+  document.getElementById('play').click();
+},true);
+</script>
 </body>
 </html>
