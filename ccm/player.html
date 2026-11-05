@@ -2,7 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CCM 연습">
+<style>html:fullscreen,html:-webkit-full-screen{background:var(--bg);overflow:auto}body{padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}</style>
 <title>CCM 멜로디 연습</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script id="abcjsLib" src="abcjs-basic-min.js"></script>
@@ -2016,5 +2021,17 @@ const q=new URLSearchParams(location.search).get('pl');
 if(q!=null&&getPL()[+q]===String(SONG.n))setTimeout(()=>startHere(+q),900);
 })();
 </script>
+<script>/* 전체화면 (iPad Safari·PC) */
+(function(){
+const d=document,el=d.documentElement;
+const can=!!(el.requestFullscreen||el.webkitRequestFullscreen);
+const cur=()=>d.fullscreenElement||d.webkitFullscreenElement;
+const hb=d.querySelector('.hbtns');if(!hb||!can||navigator.standalone)return;
+const b=d.createElement('button');b.className='setbtn';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (iPad·PC)';
+const lab=()=>{b.textContent=cur()?'⤢ 전체화면 끄기':'⛶ 전체화면';};lab();
+b.onclick=()=>{try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
+d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
+const h=d.getElementById('helpBtn');hb.insertBefore(b,h||null);
+})();</script>
 </body>
 </html>
