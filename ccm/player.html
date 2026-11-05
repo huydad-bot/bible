@@ -454,12 +454,12 @@ function splitDur(d){                          // 한 음표로 못 그리는 �
   return parts;
 }
 function abcLines(v){
-  const lines=[];let cur='';let state={};
+  const lines=[];let cur='';let state={};let slurOpen=false;
   v.tokens.forEach((n,idx)=>{
     let s='';
     const slurV=v.k==='S'||v.k==='A', nx=v.tokens[idx+1];
     const pv=v.tokens[idx-1];
-    if(slurV&&nx&&nx.p!=='r'&&n.p!=='r'&&MEL.has(nx.t)&&!MEL.has(n.t)&&!n.tie)s+='(';      // 슬러 시작 (붙임줄이면 생략)      // 슬러 시작
+    if(slurV&&nx&&nx.p!=='r'&&n.p!=='r'&&MEL.has(nx.t)&&!MEL.has(n.t)&&!n.tie){s+='(';slurOpen=true;}      // 슬러 시작 (붙임줄이면 생략)      // 슬러 시작
     if(v.k==='S'){
       if(n.t===0&&SONG.tempoText)s+=`"^${SONG.tempoText}"`;
       if(HAS_REFRAIN&&n.t===REFRAIN_AT&&SONG.refrainLabel!=='')s+=`"^${SONG.refrainLabel||'후렴'}"`;
@@ -476,7 +476,7 @@ function abcLines(v){
       if(n.p==='r')s+=parts.map(q=>'z'+q).join(' ');
       else{const pp=abcPitch(n.p,state);s+=parts.map(q=>pp+q).join('-');if(n.tie)s+='-';}
     }
-    if(slurV&&MEL.has(n.t)&&!(nx&&MEL.has(nx.t))&&!(pv&&pv.tie&&!MEL.has(pv.t)))s+=')';                                   // 슬러 끝
+    if(slurOpen&&slurV&&MEL.has(n.t)&&!(nx&&MEL.has(nx.t))){s+=')';slurOpen=false;}                                   // 슬러 끝
     {                                         // 8분·16분음표는 한 박 안에서 빔으로 묶음 (박 경계·쉼표·4분음표 이상에서는 띄움)
       const [mn,md]=(SONG.meter||'4/4').split('/').map(Number),G=md===8&&mn%3===0?1.5:4/md;
       const e=n.t+n.dur,onBeat=Math.abs(((e-PICKUP)/G)-Math.round((e-PICKUP)/G))<1e-6;
@@ -626,7 +626,7 @@ function renderScore(){
     }
   })[0];
   const keyOf={'0-0':'S'};
-  const clock={};
+  const clock={},tri={};
   const keyAcc={};
   vis.lines.forEach(line=>{
     if(!line.staff)return;
@@ -636,7 +636,11 @@ function renderScore(){
       clock[k]=clock[k]||0;
       voice.forEach(el=>{
         if(el.el_type!=='note'||el.duration===undefined)return;
-        const d=el.duration*4;
+        if(el.startTriplet){tri[k]={m:el.tripletMultiplier||2/3,n:el.startTriplet};}          // 셋잇단: 실제 길이 = 표기 길이 × 2/3
+        const tm=el.tripletMultiplier||(tri[k]&&tri[k].n>0?tri[k].m:1);
+        const d=Math.round(el.duration*4*tm*48)/48;
+        if(tri[k]&&tri[k].n>0&&--tri[k].n===0)tri[k]=null;
+        if(el.endTriplet)tri[k]=null;
         const els=(el.abselem&&el.abselem.elemset)||[];
         if(!el.rest)noteMap.push({k,start:clock[k],dur:d,els});
         elemStart.set(el,clock[k]);
