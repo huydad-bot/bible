@@ -422,6 +422,12 @@ VOICES.forEach(v=>{
     while(i!==undefined&&i<v.tokens.length&&v.tokens[i].p==='r'){r+=v.tokens[i].dur;i++;}n.restAfter=r;});
 });
 let NOTE_TAIL=0;                              // 다음에 만드는 음의 여운(초)
+let NOTE_LEG=false,NOTE_SOFT=false,PLAYN=null; // 이음줄(슬러): 앞 음은 끊지 않고 다음 음에 이어, 이어지는 음은 부드럽게(텅잉 없이)
+let LEG_DONE=false;
+function markLegato(){if(LEG_DONE)return;LEG_DONE=true;
+  VOICES.forEach(v=>{if(!(v.k==='S'||v.k==='A'))return;
+    v.notes.forEach((n,i)=>{const nx=v.notes[i+1];
+      n.legIn=isMel({t:n.t});n.legOut=!!nx&&Math.abs(nx.t-(n.t+n.dur))<1e-6&&isMel({t:nx.t});});});}
 
 /* ===== ABC 악보 생성 ===== */
 function abcPitch(p,state){
@@ -783,7 +789,8 @@ function sfNoteOn(c,bank,prog,dest,key,t0,dur,vel){
   const v127=Math.max(1,Math.min(127,Math.round(vel*127)));
   const regs=sfRegions(p,key,v127);if(!regs.length)return null;
   const env=c.createGain();env.gain.value=0;env.connect(dest);
-  const oscs=[],t1=t0+Math.max(.06,dur*.95);let stopAt=t1;
+  if(NOTE_SOFT)vel*=.8;
+  const oscs=[],t1=t0+Math.max(.06,NOTE_LEG?dur+.05:dur*.95);let stopAt=t1;
   regs.forEach(({g,s,si})=>{
     const src=c.createBufferSource();src.buffer=sfBuffer(si);
     const root=g[58]>=0?g[58]:s.root;
@@ -871,7 +878,8 @@ function noteOn(c,ins,v,dest,lfo,midi,t0,dur,vel=1){
   if(sft){try{const h=sfNoteOn(c,sft[0],sft[1],dest,midi,t0,dur,vel);if(h)return h;}catch(e){console.warn('SF2 음 실패 → 합성음',e);}}
   if(/^sf:/.test(ins))ins='basic';                    // SF2를 못 불러온 경우 기본 합성음으로
   const f=440*Math.pow(2,(midi-69)/12);
-  const t1=t0+Math.max(.08,dur*.92);
+  if(NOTE_SOFT)vel*=.8;
+  const t1=t0+Math.max(.08,NOTE_LEG?dur+.05:dur*.92);
   const env=c.createGain();env.gain.value=0;
   const out=c.createGain();out.gain.value=INSTR[ins].lvl;
   env.connect(out);out.connect(dest);
@@ -1160,7 +1168,7 @@ async function keepAwake(on){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&playing)keepAwake(true);});
 function start(m,beat=0,intro=curIntro){
-  stop(true);
+  stop(true);markLegato();
   if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
   ctx.resume();
   mode=m;spb=60/+$('tempo').value;
@@ -1183,20 +1191,22 @@ function start(m,beat=0,intro=curIntro){
       const t0=Math.max(t,beat);
       const w=T(t0)-base,L=T(e)-T(t0),ins=TIMBRE[v.k],m=midi+tr;
       const tl=rb>0?Math.min(2.5,T(e+rb)-T(e)):0;
-      EVQ.push({w,f:()=>{NOTE_TAIL=tl;try{noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L);}finally{NOTE_TAIL=0;}}});
+      const lg=PLAYN?{o:!!PLAYN.legOut&&Math.abs(e-t-PLAYN.dur)<1e-6,i:!!PLAYN.legIn}:{};
+      EVQ.push({w,f:()=>{NOTE_TAIL=tl;NOTE_LEG=lg.o;NOTE_SOFT=lg.i;try{noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L);}finally{NOTE_TAIL=0;NOTE_LEG=NOTE_SOFT=false;}}});
     };
     let off=0;                                 // 전주: 구간 경계에서 음을 잘라 붙임
     curIntro.forEach(([a,b])=>{
-      v.notes.forEach(n=>{const s0=Math.max(n.t,a),e0=Math.min(n.t+n.dur,b);if(e0>s0)play(off+s0-a,off+e0-a,n.midi,e0===n.t+n.dur?n.restAfter:0);});
+      v.notes.forEach(n=>{PLAYN=n;const s0=Math.max(n.t,a),e0=Math.min(n.t+n.dur,b);if(e0>s0)play(off+s0-a,off+e0-a,n.midi,e0===n.t+n.dur?n.restAfter:0);});
       off+=b-a;
     });
-    FORM.forEach(sg=>v.notes.forEach(n=>{       // 절마다 (마지막 절이 아니면 아멘 앞에서 다음 절로)
+    FORM.forEach(sg=>v.notes.forEach(n=>{PLAYN=n;       // 절마다 (마지막 절이 아니면 아멘 앞에서 다음 절로)
       const s0=Math.max(n.t,sg.a),e0=Math.min(n.t+n.dur,sg.b);if(e0<=s0)return;
       play(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,n.midi,e0===n.t+n.dur?n.restAfter:0);
     }));
   });
   {const sel=id=>{const e=$(id);return e&&e.selectedOptions[0]?e.selectedOptions[0].text:'';};   // 연주 화면: 제목 옆에 템포·전주·선택 표시
    $('pInfo').innerHTML=`<span>♩=${$('tempo').value}</span><span>전주 ${curIntro.length?sel('intro'):'없음'}${curIntro.length&&$('rit').checked?' rit.':''}</span><span>${sel('verses')}</span>`;}
+  PLAYN=null;
   playing=true;curLine=-1;applyMix();keepAwake(true);
   if($('scoreOnly').checked){document.body.classList.add('playing');enterLandscape();fitTwoLines();}
   /* 음은 미리 한꺼번에 만들지 않고 0.6초 앞서 조금씩 예약 (긴 곡·SF2 음원에서도 첫 음부터 소리가 나도록) */
