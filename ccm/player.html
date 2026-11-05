@@ -169,6 +169,10 @@ body:not(.playing) #curtain{display:none!important}
 /* 가사: 곡 제목과 같은 명조체 */
 #score text.abcjs-lyric,#score text.abcjs-lyric tspan{font-family:'Noto Serif KR',serif!important;font-weight:600}
 .duckopt{font:400 13px 'Noto Sans KR'!important;color:var(--mute)!important;gap:4px}
+.pinfo{display:none;gap:6px;align-items:center;white-space:nowrap;margin-left:10px}
+.pinfo span{font:600 12.5px 'Noto Sans KR';color:var(--ink);background:#e4dccd;border-radius:999px;padding:2px 9px}
+body.playing .pinfo{display:inline-flex}
+@media (max-width:560px){body.playing .pinfo{display:none}}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -252,6 +256,7 @@ body.playing .parts{margin-bottom:0}
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
+        <span class="pinfo" id="pInfo"></span>
         <span id="midiLive"></span>
         <span class="status" id="pos">▶ 시작을 누르세요</span>
       </div>
@@ -1479,6 +1484,8 @@ function start(m,beat=0,intro=curIntro){
         else{at(END.pF,3,57,.6);at(END.pF,.5,36,.8);}}
     }
   });
+  {const sel=id=>{const e=$(id);return e&&e.selectedOptions[0]?e.selectedOptions[0].text:'';};   // 연주 화면: 제목 옆에 템포·전주·선택 표시
+   $('pInfo').innerHTML=`<span>♩=${$('tempo').value}</span><span>전주 ${curIntro.length?sel('intro'):'없음'}${curIntro.length&&$('rit').checked?' rit.':''}</span><span>${sel('verses')}</span>`;}
   playing=true;curLine=-1;applyMix();keepAwake(true);
   if($('scoreOnly').checked){document.body.classList.add('playing');enterLandscape();fitTwoLines();}
   /* 음은 미리 한꺼번에 만들지 않고 0.6초 앞서 조금씩 예약 (긴 곡·SF2 음원에서도 첫 음부터 소리가 나도록) */
