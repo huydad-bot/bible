@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="찬송가 연습">
-<style>html:fullscreen,html:-webkit-full-screen{background:var(--bg);overflow:auto}body{padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}</style>
+<style>html.fs body.playing .panel{padding-left:60px}html.fs .back{margin-left:60px}html:fullscreen,html:-webkit-full-screen{background:var(--bg);overflow:auto}body{padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}</style>
 <title>찬송가 파트 연습</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script id="abcjsLib" src="abcjs-basic-min.js"></script>
@@ -1708,7 +1708,7 @@ const can=!!(el.requestFullscreen||el.webkitRequestFullscreen);
 const cur=()=>d.fullscreenElement||d.webkitFullscreenElement;
 const hb=d.querySelector('.hbtns');if(!hb||!can||navigator.standalone)return;
 const b=d.createElement('button');b.className='setbtn';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (iPad·PC)';
-const lab=()=>{b.textContent=cur()?'⤢ 전체화면 끄기':'⛶ 전체화면';};lab();
+const lab=()=>{b.textContent=cur()?'⤢ 전체화면 끄기':'⛶ 전체화면';el.classList.toggle('fs',!!cur());};lab();
 b.onclick=()=>{try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
 d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
 const h=d.getElementById('helpBtn');hb.insertBefore(b,h||null);
