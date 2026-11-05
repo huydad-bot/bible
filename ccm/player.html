@@ -1913,7 +1913,7 @@ dlg.innerHTML=`<div class="hbox plbox" role="dialog" aria-label="연주 예약">
 <div class="plrow"><select id="plPick"></select><button class="plb" id="plAdd">＋ 추가</button></div>
 <h3>예약 목록 <small id="plCount"></small></h3>
 <ol id="plList"></ol>
-<div class="plrow"><label>곡 사이 쉬기 <select id="plGap"><option value="2">2초</option><option value="4">4초</option><option value="8">8초</option></select></label>
+<div class="plrow"><label>곡이 끝나면 <select id="plGap"><option value="hold">버튼 누를 때까지 대기</option><option value="5">5초</option><option value="10">10초</option><option value="20">20초</option></select></label>
 <button class="plb pri" id="plStart">▶ 예약 연주 시작</button><button class="plb" id="plClear">목록 비우기</button></div></div>`;
 document.body.appendChild(dlg);
 const btn=document.createElement('button');btn.className='setbtn';btn.id='plBtn';btn.title='여러 곡을 순서대로 이어서 연주';btn.textContent='📋 예약';
@@ -1930,6 +1930,7 @@ const st=document.createElement('style');st.textContent=`
 #plList li::before{content:counter(pl);font:900 16px "Noto Serif KR";color:var(--ALL);min-width:22px;text-align:right}
 #plList li.cur{background:#efe9df}
 #plList .nm{flex:1;min-width:0}#plList .nm small{display:block;color:var(--mute);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#plList .plgo{color:#1f7a4c;font-weight:700}
 #plList button{border:1px solid var(--line);background:#fff;border-radius:6px;width:30px;height:28px;cursor:pointer}
 #plList:empty::after{content:'예약한 곡이 없습니다';color:var(--mute);font-size:13px;padding:8px}
 body.playing .hbtns #plBtn{display:none}
@@ -1949,8 +1950,9 @@ function draw(){
   E('plList').innerHTML='';
   pl.forEach((n,i)=>{const li=document.createElement('li');if(cur!=null&&+cur===i)li.className='cur';
     const c=jget(CFG(n),null);
-    li.innerHTML=`<span class="nm">${n} ${titleOf(n)}<small>${cfgSummary(c)}</small></span><button title="위로">▲</button><button title="아래로">▼</button><button title="빼기">✕</button>`;
-    const [up,dn,rm]=li.querySelectorAll('button');
+    li.innerHTML=`<span class="nm">${n} ${titleOf(n)}<small>${cfgSummary(c)}</small></span><button title="이 곡부터 연주" class="plgo">▶</button><button title="위로">▲</button><button title="아래로">▼</button><button title="빼기">✕</button>`;
+    const [pg,up,dn,rm]=li.querySelectorAll('button');
+    pg.onclick=()=>{if(p0(i))return;dlg.hidden=true;};
     up.onclick=()=>{if(i>0){const p=getPL();[p[i-1],p[i]]=[p[i],p[i-1]];jput(PLK,p);draw();}};
     dn.onclick=()=>{const p=getPL();if(i<p.length-1){[p[i+1],p[i]]=[p[i],p[i+1]];jput(PLK,p);draw();}};
     rm.onclick=()=>{const p=getPL();p.splice(i,1);jput(PLK,p);draw();};
@@ -1958,7 +1960,7 @@ function draw(){
 }
 E('plPick').innerHTML=LIST.map(s=>`<option value="${s.n}">${s.n} ${s.title}</option>`).join('');
 E('plPick').value=String(SONG.n);
-try{E('plGap').value=localStorage.getItem(GAPK)||'4';}catch(e){}
+try{E('plGap').value=localStorage.getItem(GAPK)||'hold';}catch(e){}if(!E('plGap').value)E('plGap').value='hold';
 E('plGap').onchange=()=>{try{localStorage.setItem(GAPK,E('plGap').value);}catch(e){}};
 btn.onclick=()=>{draw();dlg.hidden=false;};
 E('plClose').onclick=()=>{dlg.hidden=true;};
@@ -1968,6 +1970,7 @@ E('plDelCfg').onclick=()=>{try{localStorage.removeItem(CFG(SONG.n));}catch(e){}d
 E('plAddCur').onclick=()=>{if(!jget(CFG(SONG.n),null))jput(CFG(SONG.n),readCfg());const p=getPL();p.push(String(SONG.n));jput(PLK,p);draw();};
 E('plAdd').onclick=()=>{const p=getPL();p.push(E('plPick').value);jput(PLK,p);draw();};
 E('plClear').onclick=()=>{jput(PLK,[]);draw();};
+function p0(i){const p=getPL();if(p[i]===String(SONG.n)){dlg.hidden=true;stop(true);history.replaceState(null,'','player.html?n='+SONG.n+'&pl='+i);startHere(i);return true;}go(i);return true;}
 const go=(i)=>{const p=getPL();if(i>=p.length)return;location.href='player.html?n='+encodeURIComponent(p[i])+'&pl='+i;};
 E('plStart').onclick=()=>{const p=getPL();if(!p.length){toast('예약한 곡이 없습니다');return;}
   if(p[0]===String(SONG.n)){dlg.hidden=true;history.replaceState(null,'','player.html?n='+SONG.n+'&pl=0');startHere(0);}else go(0);};
@@ -1987,13 +1990,25 @@ function showTap(){
 }
 window.onSongEnd=function(){
   if(PLI==null)return;
-  const p=getPL(),ni=PLI+1;
-  if(ni>=p.length){PLI=null;toast('예약 연주를 마쳤습니다');history.replaceState(null,'','player.html?n='+SONG.n);return;}
-  let sec=+(E('plGap').value||4);
-  nx.innerHTML=`<div class="card2">다음 곡 (${ni+1}/${p.length})<b>${p[ni]} ${titleOf(p[ni])}</b><span id="plCd">${sec}</span>초 뒤 시작 · <button class="plb" id="plStop">그만하기</button></div>`;
+  const p=getPL(),ni=PLI+1,last=ni>=p.length,gap=E('plGap').value;
+  const nextTxt=last?'예약한 곡을 모두 연주했습니다':`다음 곡 (${ni+1}/${p.length})<b>${p[ni]} ${titleOf(p[ni])}</b>`;
+  nx.innerHTML=`<div class="card2">${nextTxt}
+    <div class="plrow" style="justify-content:center">
+      ${PLI>0?'<button class="plb" id="plPrev">◀ 이전 곡</button>':''}
+      <button class="plb" id="plAgain">↺ 이 곡 다시</button>
+      ${last?'<button class="plb" id="plFirst">⏮ 처음부터</button>':'<button class="plb pri" id="plGo">▶ 다음 곡 연주</button>'}
+    </div>
+    <div style="margin-top:6px;font-size:12.5px;color:var(--mute)">${!last&&gap!=='hold'?'<span id="plCd">'+gap+'</span>초 뒤 자동으로 넘어갑니다 · ':''}<button class="plb" id="plStop" style="height:28px">그만하기</button> <button class="plb" id="plList2" style="height:28px">📋 목록</button></div></div>`;
   nx.hidden=false;
-  const tm=setInterval(()=>{sec--;const c=E('plCd');if(c)c.textContent=sec;if(sec<=0){clearInterval(tm);go(ni);}},1000);
-  E('plStop').onclick=()=>{clearInterval(tm);nx.hidden=true;PLI=null;history.replaceState(null,'','player.html?n='+SONG.n);};
+  let tm=null;
+  const clear=()=>{if(tm){clearInterval(tm);tm=null;}};
+  if(!last&&gap!=='hold'){let sec=+gap;tm=setInterval(()=>{sec--;const c=E('plCd');if(c)c.textContent=sec;if(sec<=0){clear();go(ni);}},1000);}
+  if(E('plGo'))E('plGo').onclick=()=>{clear();go(ni);};
+  if(E('plPrev'))E('plPrev').onclick=()=>{clear();go(PLI-1);};
+  if(E('plFirst'))E('plFirst').onclick=()=>{clear();p0(0);};
+  E('plAgain').onclick=()=>{clear();nx.hidden=true;startHere(PLI);};
+  E('plStop').onclick=()=>{clear();nx.hidden=true;PLI=null;history.replaceState(null,'','player.html?n='+SONG.n);};
+  E('plList2').onclick=()=>{clear();nx.hidden=true;draw();dlg.hidden=false;};
 };
 /* 직접 정지하면 예약 연주 중단 */
 E('play').addEventListener('click',()=>{if(PLI!=null&&!playing){PLI=null;history.replaceState(null,'','player.html?n='+SONG.n);toast('예약 연주를 멈췄습니다');}});
