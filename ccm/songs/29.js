@@ -7,7 +7,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 0,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 1,
   chorusAt: 72,           // '이 세상 그 무엇보다 …' 반복 부분

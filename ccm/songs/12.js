@@ -7,7 +7,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: .5,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 2,
   refrainAt: 31.5,        // '아바 아버지 …' 부터 두 절 공통

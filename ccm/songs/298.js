@@ -10,7 +10,7 @@ registerSong({
   key: 'E',
   meter: '4/4',
   pickup: .25,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 2,
   refrainAt: 54.25,       // '하나님이 일하기 시작하네' + 7단 코다 가사는 모든 절 공통 (후렴 칸)

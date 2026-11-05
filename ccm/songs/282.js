@@ -9,7 +9,7 @@ registerSong({
   key: 'E',
   meter: '4/4',
   pickup: 1,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 3,
   refrainAt: 31.5,        // '기뻐 찬양하네 …' 부터 모든 절 공통

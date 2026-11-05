@@ -7,7 +7,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 0,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 2,
   refrainAt: 32,          // '오 신실하신 주 …' 부터 두 절 공통

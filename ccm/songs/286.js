@@ -8,7 +8,7 @@ registerSong({
   key: 'E',
   meter: '4/4',
   pickup: .5,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 1,
   chorusAt: 30,          // '나 주님만을 섬기리…' 반복 부분

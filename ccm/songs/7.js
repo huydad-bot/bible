@@ -6,7 +6,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 3,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 3,
   refrainAt: 64,          // '나는 순례자 돌아가리 …' 부터 모든 절 공통

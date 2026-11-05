@@ -8,7 +8,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 1,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 2,
   refrainAt: 65,          // 2번 괄호 '하나님께서 너와 언제나 …' 부터 끝까지

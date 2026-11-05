@@ -9,7 +9,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 0,
-  tempo: 100,
+  tempo: 80,
   tempoText: '',
   verses: 1,
   lineBreaks: [16, 31, 47],
