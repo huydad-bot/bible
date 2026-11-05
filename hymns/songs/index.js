@@ -10,6 +10,7 @@ window.SONG_LIST = [
   { n: 8,   title: '하늘에 가득 찬 영광의 하나님', key: 'D', tune: '구원의 하나님' },
   { n: 9,   title: '주 우리 하나님',       key: 'Fm', tune: 'YIGDAL (LEONI)' },
   { n: 10,  title: '하나님의 크신 사랑',   key: 'Bb', tune: 'BEECHER' },
+  { n: 11,  title: '찬송하는 소리 있어', key: 'G',  tune: 'HARWELL' },
   { n: 29,  title: '내게 있는 모든 것을',   key: 'D',  tune: 'SURRENDER' },
   { n: 91,  title: '주 어느 때 다시 오실는지', key: 'Bb', tune: 'WILL JESUS FIND US WATCHING' },
   { n: 92,  title: '하나님의 나팔 소리',   key: 'G',  tune: 'ROLL CALL' },
