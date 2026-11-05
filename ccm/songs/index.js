@@ -1,6 +1,7 @@
 /* CCM 목록 — 곡 파일(songs/번호.js)을 추가하면 여기에도 한 줄 추가 */
 window.SONG_LIST = [
   { n: 7,   title: '나는 순례자',     key: 'C', tune: 'Joyce Lee' },
+  { n: 12,  title: '나의 피난처 예수', key: 'C', tune: 'Herlin Pirena' },
   { n: 20,  title: '내 안에 사는 이', key: 'C', tune: 'Gary Garcia' },
   { n: 66,  title: '오 신실하신 주',   key: 'C', tune: '최용덕' },
   { n: 166, title: '모든 이름 위에 뛰어난 이름', key: 'D', tune: '고형원' },
