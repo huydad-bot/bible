@@ -13,6 +13,7 @@ window.SONG_LIST = [
   { n: 51,  title: '시편 8편',        key: 'C', tune: '최덕신' },
   { n: 52,  title: '실로암',          key: 'C', tune: '신상근' },
   { n: 59,  title: '야곱의 축복',     key: 'C', tune: '김인식' },
+  { n: 60,  title: '약한 나로 강하게', key: 'C', tune: 'Reuben Morgan' },
   { n: 66,  title: '오 신실하신 주',   key: 'C', tune: '최용덕' },
   { n: 166, title: '모든 이름 위에 뛰어난 이름', key: 'D', tune: '고형원' },
   { n: 282, title: '내가 어둠 속에서', key: 'E', tune: '문경일' },
