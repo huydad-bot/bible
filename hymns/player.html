@@ -600,7 +600,7 @@ function renderScore(){
     }
   })[0];
   const keyOf={'0-0':'S','0-1':'A','1-0':'T','1-1':'B'};
-  const clock={};
+  const clock={},tri={};
   const keyAcc={};
   vis.lines.forEach(line=>{
     if(!line.staff)return;
@@ -610,7 +610,11 @@ function renderScore(){
       clock[k]=clock[k]||0;
       voice.forEach(el=>{
         if(el.el_type!=='note'||el.duration===undefined)return;
-        const d=el.duration*4;
+        if(el.startTriplet){tri[k]={m:el.tripletMultiplier||2/3,n:el.startTriplet};}          // 셋잇단: 실제 길이 = 표기 길이 × 2/3
+        const tm=el.tripletMultiplier||(tri[k]&&tri[k].n>0?tri[k].m:1);
+        const d=Math.round(el.duration*4*tm*48)/48;
+        if(tri[k]&&tri[k].n>0&&--tri[k].n===0)tri[k]=null;
+        if(el.endTriplet)tri[k]=null;
         const els=(el.abselem&&el.abselem.elemset)||[];
         if(!el.rest)noteMap.push({k,start:clock[k],dur:d,els});
         elemStart.set(el,clock[k]);
