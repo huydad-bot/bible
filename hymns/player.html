@@ -162,6 +162,7 @@ body:not(.playing) #curtain{display:none!important}
 .timbre:has(.pcol)>.tl,.timbre:has(.pcol)>label.tall{height:var(--selh,30px);display:flex;align-items:center}
 /* 가사: 곡 제목과 같은 명조체 */
 #score text.abcjs-lyric,#score text.abcjs-lyric tspan{font-family:'Noto Serif KR',serif!important;font-weight:600}
+.duckopt{font:400 13px 'Noto Sans KR'!important;color:var(--mute)!important;gap:4px}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
 body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
 body.playing .parts{margin-bottom:0}
@@ -277,6 +278,7 @@ body.playing .parts{margin-bottom:0}
         <label title="연주에 쓸 MIDI 장치">장치 <select id="midiDev"><option value="all">모든 장치</option></select></label>
         <label title="MIDI로 연주할 때 나는 악기 소리 — 악기 자체에서 소리가 나면 '소리 끔'">미디악기 <select id="midiIns"><option value="off">소리 끔 (악기 소리 사용)</option></select></label>
         <label title="MIDI 연주 음량">내 연주 <input id="liveVol" type="range" min="0" max="100" value="80" style="width:84px;vertical-align:middle"><b class="vv" id="liveVolV" style="font:400 12px 'Noto Sans KR';color:var(--mute)"></b></label>
+        <label class="duckopt" title="MIDI 악기로 연주하는 동안 고른 파트(All이면 소프라노) 소리를 작게 (연주를 멈추면 약 1.5초 뒤 원래대로)"><input id="duck" type="checkbox" checked> 내 연주 때 파트 소리 줄이기</label>
         <span class="midinote" id="midiNote"></span>
       </div>
       <div class="timbre sfrow" id="sfRow">
@@ -664,7 +666,8 @@ const $=id=>document.getElementById(id);
 /* 파트별 음량 (0~100, 기본 100) */
 const PV={S:100,A:100,T:100,B:100};
 try{const o=JSON.parse(localStorage.getItem('hymn_partVol')||'null');if(o)Object.keys(PV).forEach(k=>{if(typeof o[k]==='number')PV[k]=o[k];});}catch(e){}
-function mixFor(k){const pv=(PV[k]??100)/100;if(mode==='ALL'||k===mode)return pv;return ($('practice').checked?0.16:0)*pv;}
+let DUCKED=false;const DUCK=0.15;            // 내 연주(MIDI) 중에는 고른 파트(All이면 소프라노)를 15%로
+function mixFor(k){const pv=(PV[k]??100)/100*(DUCKED&&k===(mode==='ALL'?'S':mode)?DUCK:1);if(mode==='ALL'||k===mode)return pv;return ($('practice').checked?0.16:0)*pv;}
 function applyMix(){
   if(ctx&&master)VOICES.forEach(v=>vGain[v.k].gain.setTargetAtTime(v.vol*mixFor(v.k),ctx.currentTime,.05));
   document.querySelectorAll('.pbtn').forEach(b=>b.classList.toggle('on',b.dataset.v===mode));
@@ -1033,8 +1036,21 @@ function showMidi(m){
   const txt='♪ '+nName(m)+(exp!=null&&cls==='no'?' (→ '+nName(exp)+')':'');
   el.textContent=txt;el.className='midinote '+cls;lv.textContent=txt;lv.className='show '+cls;
 }
+/* 내 연주가 들어오면 자동 멜로디(파트)를 줄이고, 멈추면 원래대로 */
+let lastLive=0,duckTimer=null;
+try{const d=localStorage.getItem('duckOn');if(d!==null)document.getElementById('duck').checked=d==='1';}catch(e){}
+document.getElementById('duck').addEventListener('change',e=>{try{localStorage.setItem('duckOn',e.target.checked?'1':'0');}catch(_){}if(!e.target.checked)setDuck(false);});
+function setDuck(on){
+  if(DUCKED===on)return;DUCKED=on;
+  if(ctx&&master)Object.keys(vGain).forEach(k=>{const v=VOICES.find(x=>x.k===k);if(!v)return;
+    vGain[k].gain.setTargetAtTime(v.vol*mixFor(k),ctx.currentTime,on?.06:.4);});
+  if(!duckTimer&&on)duckTimer=setInterval(()=>{
+    if(!DUCKED){clearInterval(duckTimer);duckTimer=null;return;}
+    if(liveNotes.size===0&&performance.now()-lastLive>1500){setDuck(false);clearInterval(duckTimer);duckTimer=null;}},200);
+}
 function midiNoteOn(m,velo){
-  ensureCtx();showMidi(m);
+  ensureCtx();showMidi(m);lastLive=performance.now();
+  if(playing&&document.getElementById('duck').checked)setDuck(true);
   if(MIDI_INS==='off')return;
   midiNoteOff(m,true);
   const ins=MIDI_INS==='S'?(TIMBRE[mode]||TIMBRE.S):MIDI_INS;
@@ -1042,6 +1058,7 @@ function midiNoteOn(m,velo){
   if(h){h.oscs.forEach(o=>o.detune.value=o._d+bendCents);liveNotes.set(m,h);}
 }
 function midiNoteOff(m,quick){
+  lastLive=performance.now();
   const h=liveNotes.get(m);if(!h)return;liveNotes.delete(m);
   const now=ctx.currentTime,g=h.env.gain;
   try{g.cancelScheduledValues(now);g.setValueAtTime(g.value,now);g.setTargetAtTime(0,now,quick?.01:.07);}catch(e){}
