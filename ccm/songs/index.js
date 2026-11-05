@@ -11,6 +11,7 @@ window.SONG_LIST = [
   { n: 47,  title: '성령이 오셨네',   key: 'C', tune: '김도현' },
   { n: 50,  title: '시편 40편',       key: 'C', tune: '김지면' },
   { n: 51,  title: '시편 8편',        key: 'C', tune: '최덕신' },
+  { n: 52,  title: '실로암',          key: 'C', tune: '신상근' },
   { n: 66,  title: '오 신실하신 주',   key: 'C', tune: '최용덕' },
   { n: 166, title: '모든 이름 위에 뛰어난 이름', key: 'D', tune: '고형원' },
   { n: 282, title: '내가 어둠 속에서', key: 'E', tune: '문경일' },
