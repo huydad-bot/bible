@@ -9,6 +9,7 @@ window.SONG_LIST = [
   { n: 31,  title: '먼저 그 나라와 의를', key: 'C', tune: 'Karen Lafferty' },
   { n: 40,  title: '사랑하는 나의 아버지', key: 'C', tune: 'Robert D Fitts' },
   { n: 47,  title: '성령이 오셨네',   key: 'C', tune: '김도현' },
+  { n: 50,  title: '시편 40편',       key: 'C', tune: '김지면' },
   { n: 66,  title: '오 신실하신 주',   key: 'C', tune: '최용덕' },
   { n: 166, title: '모든 이름 위에 뛰어난 이름', key: 'D', tune: '고형원' },
   { n: 282, title: '내가 어둠 속에서', key: 'E', tune: '문경일' },
