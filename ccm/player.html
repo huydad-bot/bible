@@ -14,6 +14,7 @@ window.registerSong=function(s){window.SONG=s;};
   if(!n){location.replace('index.html');return;}
   window.SONG_ID=n;
   document.write('<script src="songs/'+window.SONG_ID+'.js"><\/script>');
+  document.write('<script src="songs/index.js"><\/script>');
 })();
 </script>
 <style>
@@ -1520,7 +1521,7 @@ function start(m,beat=0,intro=curIntro){
   const pump=()=>{const lim=ctx.currentTime-startAt+.6;
     while(qi<EVQ.length&&EVQ[qi].w<lim){try{EVQ[qi].f();}catch(e){console.warn(e);}qi++;}};
   pump();clearInterval(schedTimer);schedTimer=setInterval(pump,40);
-  endTimer=setTimeout(()=>{stop();fromBeat=0;},(Math.max(T(totalBeats),END&&EM!=='cut'?T(END.pF)+END.tail:0)-base+.6)*1000);
+  endTimer=setTimeout(()=>{stop();fromBeat=0;if(window.onSongEnd)onSongEnd();},(Math.max(T(totalBeats),END&&EM!=='cut'?T(END.pF)+END.tail:0)-base+.6)*1000);
 }
 function stop(silent){
   if(!silent)keepAwake(false);
@@ -1828,6 +1829,7 @@ $('lyrHtml').onclick=async()=>{
   doc.querySelector('#play').classList.remove('on');doc.querySelector('#play').textContent='▶ 시작';
   {const h=doc.querySelector('#hPlay');if(h){h.classList.remove('on');h.textContent='▶ 시작';}}
   doc.querySelector('#pos').textContent='▶ 시작을 누르세요';
+  {const x=doc.querySelector('#plBtn');if(x)x.remove();const d=doc.querySelector('#plDlg');if(d)d.remove();const n=doc.querySelector('#plNext');if(n)n.remove();}
   doc.querySelector('#lyrBox').remove();{const lb=doc.querySelector('#lyrBtn');if(lb)lb.remove();}doc.body.classList.remove('lyrOpen');   // 저장본에는 가사 입력창을 넣지 않음
   // 단독 파일: 곡 데이터를 파일 안에 넣고, 악보 라이브러리는 인터넷(CDN)에서 불러옴
   doc.querySelector('#loader').textContent='window.SONG_ID='+JSON.stringify(String(SONG.n))+';window.SONG='+JSON.stringify(SONG).replace(/</g,'\\u003c')+';';
@@ -1855,6 +1857,149 @@ buildLyricUI();
 renderScore();
 requestAnimationFrame(tick);
 if(fromLink&&HAS_EDITOR){$('lyrBox').open=true;setTimeout(()=>toast('공유 링크의 가사를 불러왔습니다'),300);}
+</script>
+<script>
+/* ===== 연주 예약 (여러 곡 연달아) =====
+   곡마다 설정 저장: localStorage 'ccm_cfg_<번호>' — 그 곡을 열면 저장한 설정이 자동 적용
+   예약 목록: 'ccm_playlist' = [곡번호,…] — ▶ 예약 연주 시작 → 곡이 끝나면 다음 곡으로 */
+(function(){
+const PLK='ccm_playlist',GAPK='ccm_plGap',CFG=n=>'ccm_cfg_'+n;
+const jget=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');return v==null?d:v;}catch(e){return d;}};
+const jput=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+const E=id=>document.getElementById(id);
+const LIST=(window.SONG_LIST||[]).slice().sort((a,b)=>a.n-b.n);
+const titleOf=n=>{const s=LIST.find(x=>String(x.n)===String(n));return s?s.title:(String(n)===String(SONG.n)?SONG.title:n+'번');};
+const optText=(id)=>{const e=E(id);return e&&e.selectedOptions[0]?e.selectedOptions[0].text:'';};
+const melSel=()=>document.querySelector('select[data-k=S]');
+function readCfg(){
+  const lv={};document.querySelectorAll('input.vol').forEach(r=>{if(r.dataset.vk!=='LIVE')lv[r.dataset.vk]=+r.value;});
+  return {ins:melSel().value,trans:E('trans').value,tempo:E('tempo').value,intro:E('intro').value,rit:E('rit').checked,
+    verses:E('verses').value,ending:E('ending').value,accPat:E('accPat').value,accIns:E('accIns').value,bassIns:E('bassIns').value,
+    drum:E('drum').value,drumFill:E('drumFill').checked,ferm:E('ferm').value,levels:lv};
+}
+function cfgSummary(c){
+  if(!c)return '기본 설정';
+  const pick=(id,v)=>{const e=E(id);const o=e&&[...e.options].find(x=>x.value===v);return o?o.text:v;};
+  return `♩${c.tempo} · 전주 ${pick('intro',c.intro)} · ${pick('verses',c.verses)} · ${pick('ending',c.ending)} · 드럼 ${pick('drum',c.drum)}`;
+}
+function setSel(el,v){if(!el||v==null)return false;if(![...el.options].some(o=>o.value===v)&&!el.querySelector('option[value="'+CSS.escape(v)+'"]'))return false;el.value=v;return true;}
+function applyCfg(c){
+  if(!c)return;
+  try{
+    if(c.ins){TIMBRE.S=c.ins;saveTimbre();setSel(melSel(),c.ins);}
+    if(c.accIns){ACC_INS=c.accIns;try{localStorage.setItem('ccm_accIns',c.accIns);}catch(e){}setSel(E('accIns'),c.accIns);}
+    if(c.bassIns){BASS_INS=c.bassIns;try{localStorage.setItem('ccm_bassIns',c.bassIns);}catch(e){}setSel(E('bassIns'),c.bassIns);}
+    [['accPat','accPat'],['drum','drum'],['ending','ending'],['ferm','ferm']].forEach(([id,k])=>{if(setSel(E(id),c[k])&&E(id).onchange)E(id).onchange();});
+    if(setSel(E('intro'),c.intro)){}
+    E('rit').checked=!!c.rit;
+    if(setSel(E('verses'),c.verses)){}
+    if(c.drumFill!=null){E('drumFill').checked=!!c.drumFill;E('drumFill').onchange();}
+    if(c.tempo)setTempo(c.tempo,false);
+    if(c.levels)document.querySelectorAll('input.vol').forEach(r=>{const v=c.levels[r.dataset.vk];if(v!=null){r.value=v;r.oninput&&r.oninput();r.onchange&&r.onchange();}});
+    if(c.trans!=null&&E('trans').value!==String(c.trans)&&setSel(E('trans'),String(c.trans)))E('trans').onchange();
+  }catch(e){console.warn('설정 적용 실패',e);}
+}
+/* 이 곡에 저장된 설정이 있으면 열 때 적용 */
+const saved=jget(CFG(SONG.n),null);
+if(saved)applyCfg(saved);
+
+/* ----- 예약 창 ----- */
+const dlg=document.createElement('div');dlg.className='helpdlg';dlg.id='plDlg';dlg.hidden=true;
+dlg.innerHTML=`<div class="hbox plbox" role="dialog" aria-label="연주 예약"><button class="hclose" id="plClose" title="닫기">✕</button>
+<h2>연주 예약</h2>
+<p class="plhelp">곡마다 설정(템포·전주·선택·엔딩·악기·반주·드럼·음량·이조)을 맞춘 뒤 <b>이 곡 설정 저장</b>을 누르세요. 저장한 설정은 그 곡을 열 때마다 적용되고, 예약 연주에도 쓰입니다.</p>
+<div class="plrow"><b id="plCur"></b><span class="plsum" id="plCurSum"></span></div>
+<div class="plrow"><button class="plb pri" id="plSave">💾 이 곡 설정 저장</button><button class="plb" id="plAddCur">＋ 이 곡 예약에 추가</button><button class="plb" id="plDelCfg">설정 지우기</button></div>
+<div class="plrow"><select id="plPick"></select><button class="plb" id="plAdd">＋ 추가</button></div>
+<h3>예약 목록 <small id="plCount"></small></h3>
+<ol id="plList"></ol>
+<div class="plrow"><label>곡 사이 쉬기 <select id="plGap"><option value="2">2초</option><option value="4">4초</option><option value="8">8초</option></select></label>
+<button class="plb pri" id="plStart">▶ 예약 연주 시작</button><button class="plb" id="plClear">목록 비우기</button></div></div>`;
+document.body.appendChild(dlg);
+const btn=document.createElement('button');btn.className='setbtn';btn.id='plBtn';btn.title='여러 곡을 순서대로 이어서 연주';btn.textContent='📋 예약';
+E('hPlay').before(btn);
+const st=document.createElement('style');st.textContent=`
+.plbox{max-width:640px}.plhelp{font-size:13px;color:var(--mute);margin:2px 0 10px}
+.plrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.plsum{font-size:12.5px;color:var(--mute)}
+.plb{border:1px solid #ddd3c3;background:#fff;border-radius:8px;height:34px;padding:0 12px;font:600 13.5px "Noto Sans KR";cursor:pointer}
+.plb.pri{background:#1f7a4c;border-color:#1f7a4c;color:#fff}
+#plPick{height:34px;border:1px solid #ddd3c3;border-radius:8px;font:14px "Noto Sans KR";max-width:320px}
+#plList{margin:4px 0;padding-left:0;list-style:none;counter-reset:pl}
+#plList li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--line);counter-increment:pl}
+#plList li::before{content:counter(pl);font:900 16px "Noto Serif KR";color:var(--ALL);min-width:22px;text-align:right}
+#plList li.cur{background:#efe9df}
+#plList .nm{flex:1;min-width:0}#plList .nm small{display:block;color:var(--mute);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#plList button{border:1px solid var(--line);background:#fff;border-radius:6px;width:30px;height:28px;cursor:pointer}
+#plList:empty::after{content:'예약한 곡이 없습니다';color:var(--mute);font-size:13px;padding:8px}
+body.playing .hbtns #plBtn{display:none}
+#plNext{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(30,25,20,.45)}
+#plNext[hidden]{display:none}
+#plNext .card2{background:var(--card);border-radius:14px;padding:22px 26px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25);font:15px "Noto Sans KR"}
+#plNext .card2 b{display:block;font:900 22px "Noto Serif KR";margin:6px 0 14px}`;
+document.head.appendChild(st);
+const nx=document.createElement('div');nx.id='plNext';nx.hidden=true;document.body.appendChild(nx);
+
+const getPL=()=>jget(PLK,[]).map(String);
+function draw(){
+  const pl=getPL(),cur=new URLSearchParams(location.search).get('pl');
+  E('plCur').textContent=SONG.n+' '+SONG.title;
+  E('plCurSum').textContent=jget(CFG(SONG.n),null)?'저장된 설정: '+cfgSummary(jget(CFG(SONG.n),null)):'저장된 설정 없음 (기본 설정)';
+  E('plCount').textContent=pl.length?`(${pl.length}곡)`:'';
+  E('plList').innerHTML='';
+  pl.forEach((n,i)=>{const li=document.createElement('li');if(cur!=null&&+cur===i)li.className='cur';
+    const c=jget(CFG(n),null);
+    li.innerHTML=`<span class="nm">${n} ${titleOf(n)}<small>${cfgSummary(c)}</small></span><button title="위로">▲</button><button title="아래로">▼</button><button title="빼기">✕</button>`;
+    const [up,dn,rm]=li.querySelectorAll('button');
+    up.onclick=()=>{if(i>0){const p=getPL();[p[i-1],p[i]]=[p[i],p[i-1]];jput(PLK,p);draw();}};
+    dn.onclick=()=>{const p=getPL();if(i<p.length-1){[p[i+1],p[i]]=[p[i],p[i+1]];jput(PLK,p);draw();}};
+    rm.onclick=()=>{const p=getPL();p.splice(i,1);jput(PLK,p);draw();};
+    E('plList').appendChild(li);});
+}
+E('plPick').innerHTML=LIST.map(s=>`<option value="${s.n}">${s.n} ${s.title}</option>`).join('');
+E('plPick').value=String(SONG.n);
+try{E('plGap').value=localStorage.getItem(GAPK)||'4';}catch(e){}
+E('plGap').onchange=()=>{try{localStorage.setItem(GAPK,E('plGap').value);}catch(e){}};
+btn.onclick=()=>{draw();dlg.hidden=false;};
+E('plClose').onclick=()=>{dlg.hidden=true;};
+dlg.onclick=e=>{if(e.target===dlg)dlg.hidden=true;};
+E('plSave').onclick=()=>{jput(CFG(SONG.n),readCfg());draw();toast(SONG.n+'번 설정을 저장했습니다');};
+E('plDelCfg').onclick=()=>{try{localStorage.removeItem(CFG(SONG.n));}catch(e){}draw();toast('저장한 설정을 지웠습니다');};
+E('plAddCur').onclick=()=>{if(!jget(CFG(SONG.n),null))jput(CFG(SONG.n),readCfg());const p=getPL();p.push(String(SONG.n));jput(PLK,p);draw();};
+E('plAdd').onclick=()=>{const p=getPL();p.push(E('plPick').value);jput(PLK,p);draw();};
+E('plClear').onclick=()=>{jput(PLK,[]);draw();};
+const go=(i)=>{const p=getPL();if(i>=p.length)return;location.href='player.html?n='+encodeURIComponent(p[i])+'&pl='+i;};
+E('plStart').onclick=()=>{const p=getPL();if(!p.length){toast('예약한 곡이 없습니다');return;}
+  if(p[0]===String(SONG.n)){dlg.hidden=true;history.replaceState(null,'','player.html?n='+SONG.n+'&pl=0');startHere(0);}else go(0);};
+
+/* ----- 예약 연주 진행 ----- */
+let PLI=null;
+function badge(){const p=getPL();if(PLI==null)return;const s=document.createElement('span');s.textContent=`예약 ${PLI+1}/${p.length}`;s.style.background='#1f7a4c';s.style.color='#fff';E('pInfo').prepend(s);}
+function startHere(i){
+  PLI=i;
+  const doStart=()=>{nx.hidden=true;start(mode,0,getIntro());badge();
+    setTimeout(()=>{if(ctx&&ctx.state!=='running'){stop(true);showTap();}},400);};
+  doStart();
+}
+function showTap(){
+  nx.innerHTML=`<div class="card2">예약 연주 ${PLI+1}/${getPL().length}<b>${SONG.n} ${SONG.title}</b><button class="plb pri" id="plTap">▶ 눌러서 시작</button><div style="margin-top:8px;font-size:12px;color:var(--mute)">브라우저가 자동 재생을 막아 한 번 눌러 주어야 합니다</div></div>`;
+  nx.hidden=false;E('plTap').onclick=()=>{nx.hidden=true;start(mode,0,getIntro());badge();};
+}
+window.onSongEnd=function(){
+  if(PLI==null)return;
+  const p=getPL(),ni=PLI+1;
+  if(ni>=p.length){PLI=null;toast('예약 연주를 마쳤습니다');history.replaceState(null,'','player.html?n='+SONG.n);return;}
+  let sec=+(E('plGap').value||4);
+  nx.innerHTML=`<div class="card2">다음 곡 (${ni+1}/${p.length})<b>${p[ni]} ${titleOf(p[ni])}</b><span id="plCd">${sec}</span>초 뒤 시작 · <button class="plb" id="plStop">그만하기</button></div>`;
+  nx.hidden=false;
+  const tm=setInterval(()=>{sec--;const c=E('plCd');if(c)c.textContent=sec;if(sec<=0){clearInterval(tm);go(ni);}},1000);
+  E('plStop').onclick=()=>{clearInterval(tm);nx.hidden=true;PLI=null;history.replaceState(null,'','player.html?n='+SONG.n);};
+};
+/* 직접 정지하면 예약 연주 중단 */
+E('play').addEventListener('click',()=>{if(PLI!=null&&!playing){PLI=null;history.replaceState(null,'','player.html?n='+SONG.n);toast('예약 연주를 멈췄습니다');}});
+const q=new URLSearchParams(location.search).get('pl');
+if(q!=null&&getPL()[+q]===String(SONG.n))setTimeout(()=>startHere(+q),900);
+})();
 </script>
 </body>
 </html>
