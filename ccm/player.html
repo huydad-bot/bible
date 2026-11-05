@@ -580,6 +580,7 @@ function lyricLinesFor(i){
       const sy=lyrSy(k);if(!sy.length)return;
       const top=firstV;firstV=false;                          // 한 줄 안에서 후렴이 시작되면 후렴 가사는 첫 줄에만
       const arr=line.flatMap(n=>n.t>=REFRAIN_AT?(top?sylFor(n,syR):sylFor(n,[]).map(()=>undefined)):sylFor(n,sy));
+      for(let i=0;i<arr.length&&arr[i]==='_';i++)arr[i]='\u200b';   // 줄 첫머리의 '_'(가사 없는 음)는 빈칸으로
       if(multi&&SYL_IDX.get(line[0])===0&&arr[0]!==undefined)arr[0]=(vi+1)+'.~'+arr[0];   // 가사가 두 절 이상일 때만 절 번호
       out+=wLine(arr)+'\n';
     });
