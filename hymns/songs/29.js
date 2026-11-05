@@ -8,7 +8,7 @@ registerSong({
   key: 'D',
   meter: '4/4',
   pickup: 0,
-  tempo: 84,
+  tempo: 100,
   tempoText: '보통으로',
   verses: 3,
   refrainAt: 32,

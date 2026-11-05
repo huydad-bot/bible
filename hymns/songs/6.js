@@ -8,7 +8,7 @@ registerSong({
   key: 'D',
   meter: '4/4',
   pickup: 1,
-  tempo: 96,
+  tempo: 100,
   tempoText: '조금 빠르게',
   verses: 1,
   bars: [1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 52],   // '라' 마디가 3박

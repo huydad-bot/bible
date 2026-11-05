@@ -8,7 +8,7 @@ registerSong({
   key: 'Ab',
   meter: '4/4',
   pickup: 1,
-  tempo: 80,
+  tempo: 100,
   tempoText: '보통으로',
   verses: 1,
   bars: [1, 5, 9, 13, 17, 21, 25, 29, 32],   // 아멘 앞 마디가 3박이라 마디선 직접 지정

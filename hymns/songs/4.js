@@ -8,7 +8,7 @@ registerSong({
   key: 'Eb',
   meter: '4/4',
   pickup: 0,
-  tempo: 80,
+  tempo: 100,
   tempoText: '보통으로',
   verses: 1,
   lineBreaks: [28],

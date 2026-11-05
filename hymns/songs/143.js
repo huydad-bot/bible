@@ -11,7 +11,7 @@ registerSong({
   key: 'G',            // 조 (단조는 'Em' 처럼)
   meter: '4/4',
   pickup: 1,           // 못갖춘마디 박 수 (없으면 0)
-  tempo: 84,
+  tempo: 100,
   tempoText: '보통으로',
   verses: 4,           // 절 수
   refrainAt: 32,       // 후렴 시작 박 (후렴이 없으면 이 줄을 지움)

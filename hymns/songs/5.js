@@ -7,7 +7,7 @@ registerSong({
   key: 'Bb',
   meter: '4/4',
   pickup: 2,
-  tempo: 84,
+  tempo: 100,
   tempoText: '보통으로',
   verses: 1,
   bars: [2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 52],   // '세' 마디가 2박

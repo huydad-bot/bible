@@ -8,7 +8,7 @@ registerSong({
   key: 'D',
   meter: '3/4',
   pickup: 0,
-  tempo: 92,
+  tempo: 100,
   tempoText: '보통으로',
   verses: 4,
   refrainAt: 72,          // 마지막 줄(우리 예배를 …)은 모든 절 공통 — 가사 칸 '후렴'에 한 번 입력

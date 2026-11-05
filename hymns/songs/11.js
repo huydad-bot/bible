@@ -8,7 +8,7 @@ registerSong({
   key: 'G',
   meter: '3/4',
   pickup: 1,
-  tempo: 92,
+  tempo: 100,
   tempoText: '보통으로',
   verses: 3,
   refrainAt: 36,          // '할렐루야 …' (아멘 포함) 은 모든 절 공통 — 가사 칸 '후렴'에 한 번 입력
