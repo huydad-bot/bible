@@ -359,7 +359,8 @@ const LS_LYR='ccm'+SONG.n+'_lyrics';
 const BARS=SONG.bars||null;                 // 불규칙 마디(아멘 앞 짧은 마디 등)는 마디선 위치를 직접 지정
 const DBL=new Set(SONG.doubleBars||[]);
 const BARX=SONG.barText||{};              // {끝박:'|:' ':|2' …} 되돌이표·괄호 세로줄
-const MARKX=SONG.marks||{};               // {박:'!segno!' '"_D.C. al Fine"' …}     // 겹세로줄 위치
+const MARKX=SONG.marks||{};
+const STARTX=SONG.startText||{};            // {박:'[1'} 줄 맨 앞에서 1번 괄호를 시작할 때               // {박:'!segno!' '"_D.C. al Fine"' …}     // 겹세로줄 위치
 const FERM=new Set(SONG.fermatas||[]);      // 늘임표 위치
 const isBar=end=>end>0&&(BARS?BARS.some(b=>Math.abs(b-end)<1e-6):Math.abs((end-PICKUP)/BPB-Math.round((end-PICKUP)/BPB))<1e-6);
 function barNum(ib){
@@ -471,6 +472,7 @@ function abcLines(v){
     const slurV=v.k==='S'||v.k==='A', nx=v.tokens[idx+1];
     const pv=v.tokens[idx-1];
     if(slurV&&nx&&nx.p!=='r'&&n.p!=='r'&&MEL.has(nx.t)&&!MEL.has(n.t)&&!n.tie){s+='(';slurOpen=true;}      // 슬러 시작 (붙임줄이면 생략)      // 슬러 시작
+    if(v.k==='S'&&STARTX[n.t])s+=STARTX[n.t]+' ';                 // 줄 첫머리에서 시작하는 괄호 ([1 등)
     if(v.k==='S'){
       if(n.t===0&&SONG.tempoText)s+=`"^${SONG.tempoText}"`;
       if(HAS_REFRAIN&&n.t===REFRAIN_AT&&SONG.refrainLabel!=='')s+=`"^${SONG.refrainLabel||'후렴'}"`;
