@@ -6,7 +6,7 @@ registerSong({
   key: 'D',
   meter: '4/4',
   pickup: .5,
-  tempo: 76,
+  tempo: 100,
   tempoText: '',
   verses: 1,
   chorusAt: 32.5,         // '예수는 주 예수는 주 온 천하 만물…' 반복 부분

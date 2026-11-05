@@ -6,7 +6,7 @@ registerSong({
   key: 'E',
   meter: '4/4',
   pickup: .25,
-  tempo: 70,
+  tempo: 100,
   tempoText: '',
   verses: 1,
   chorusAt: 32.25,       // '하늘문이 열리고…' — 후렴처럼 반복하는 부분

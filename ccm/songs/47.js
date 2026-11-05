@@ -7,7 +7,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 0,
-  tempo: 72,
+  tempo: 100,
   tempoText: '',
   verses: 2,
   refrainAt: 32,          // '성령이 오셨네 …' 부터 두 절 공통

@@ -8,7 +8,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 2,
-  tempo: 84,
+  tempo: 100,
   tempoText: '',
   verses: 2,
   refrainAt: 66,          // 2번 괄호 '- 오 주여 당신께 …' 부터

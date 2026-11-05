@@ -8,7 +8,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 0,
-  tempo: 80,
+  tempo: 100,
   tempoText: '',
   verses: 2,
   refrainAt: 63.5,        // '새 노래로 부르자 …' (5·6단) 은 두 절 공통

@@ -7,7 +7,7 @@ registerSong({
   key: 'E',
   meter: '4/4',
   pickup: 1,
-  tempo: 72,
+  tempo: 100,
   tempoText: '',
   verses: 2,
   chorusAt: 31,          // '주의 뜻대로 주의 뜻대로…' 반복 부분

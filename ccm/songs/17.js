@@ -8,7 +8,7 @@ registerSong({
   key: 'C',
   meter: '4/4',
   pickup: 2,
-  tempo: 66,
+  tempo: 100,
   tempoText: '',
   verses: 2,
   refrainAt: 31.5,        // '날 세우사 저 산에 우뚝 …' 부터 두 절 공통
