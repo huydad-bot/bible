@@ -348,7 +348,7 @@ const SCORE={S:SONG.S,A:SONG.A,T:SONG.T,B:SONG.B};
 const [MN,MD]=(SONG.meter||'4/4').split('/').map(Number);
 const BPB=MN*4/MD;                  // 한 마디의 박 수 (4분음표 = 1박)
 const PICKUP=SONG.pickup||0;        // 못갖춘마디 박 수
-const SONG_LEN=parseTokens(SCORE.S).reduce((a,n)=>a+n.dur,0);
+const SONG_LEN=Math.round(parseTokens(SCORE.S).reduce((a,n)=>a+n.dur,0)*48)/48;
 const REFRAIN_AT=SONG.refrainAt??SONG_LEN;   // 후렴 없는 곡은 생략
 const NUM_VERSES=SONG.verses||1;
 const HAS_REFRAIN=REFRAIN_AT<SONG_LEN;
@@ -411,8 +411,9 @@ function parseTokens(s){
   const out=[];let t=0;
   s.trim().split(/\s+/).forEach(tok=>{
     if(tok==='|')return;
-    const [p,d]=tok.split(':');const dur=parseFloat(d);const tie=/~$/.test(d);
-    out.push({p,t,dur,tie});t+=dur;
+    const [p,d]=tok.split(':');const dd=d.replace(/~$/,'');const tie=/~$/.test(d);
+    const dur=dd.includes('/')?(+dd.split('/')[0])/(+dd.split('/')[1]):parseFloat(dd);   // 셋잇단 8분음표 = 1/3
+    out.push({p,t,dur,tie});t=Math.round((t+dur)*48)/48;   // 1/48박 격자 (셋잇단 누적 오차 방지)
   });
   return out;
 }
@@ -468,7 +469,10 @@ function abcLines(v){
     }
     if(v.k==='B'&&FERM.has(n.t))s+='!invertedfermata!';
     {                                         // 한 음표로 못 그리는 길이(예: 5박)는 붙임줄로 나눔
-      const parts=splitDur(n.dur);
+      const tri=Math.abs(n.dur*3-Math.round(n.dur*3))<1e-6&&Math.abs(n.dur*4-Math.round(n.dur*4))>1e-6;   // 셋잇단 (1/3·2/3박)
+      if(tri){const pv2=v.tokens[idx-1],isTri=x=>x&&Math.abs(x.dur*3-Math.round(x.dur*3))<1e-6&&Math.abs(x.dur*4-Math.round(x.dur*4))>1e-6;
+        let k=0;for(let j=idx-1;j>=0&&isTri(v.tokens[j]);j--)k++;if(k%3===0)s+='(3';}
+      const parts=tri?[Math.round(n.dur*6)]:splitDur(n.dur);
       if(n.p==='r')s+=parts.map(q=>'z'+q).join(' ');
       else{const pp=abcPitch(n.p,state);s+=parts.map(q=>pp+q).join('-');if(n.tie)s+='-';}
     }
@@ -479,7 +483,7 @@ function abcLines(v){
       const join=n.p!=='r'&&n.dur<G-1e-6&&nx&&nx.p!=='r'&&nx.dur<G-1e-6&&!onBeat;
       cur+=s+(join?'':' ');
     }
-    const end=n.t+n.dur;
+    const end=Math.round((n.t+n.dur)*48)/48;
     if(BARX[end]!==undefined){cur+=BARX[end]+' ';state={};}
     else if(end===SONG_LEN)cur+='|]';
     else if(DBL.has(end)){cur+='|| ';state={};}
@@ -520,7 +524,7 @@ function sNoteLines(){
   const res=[[]];const S=VOICES[0];
   S.tokens.forEach(n=>{
     if(n.p!=='r')res[res.length-1].push(n);
-    const end=n.t+n.dur;
+    const end=Math.round((n.t+n.dur)*48)/48;
     if(LINE_BREAKS.includes(end))res.push([]);
   });
   return res;
