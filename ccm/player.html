@@ -274,8 +274,8 @@ body.playing .parts{margin-bottom:0}
         <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표<span class="fermi">(<span>𝄐</span>)</span> <select id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label title="▶ 시작을 누르면 곡 앞에 연주할 전주"><i class="dot"></i>전주 <select id="intro">
-          <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디">끝4마디</option>
-          <option value="ref">후렴</option><option value="none" selected>없음</option></select>
+          <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디" selected>끝4마디</option>
+          <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
         <label title="곡을 끝내는 방법"><i class="dot"></i>엔딩 <select id="ending">
@@ -684,6 +684,8 @@ function renderScore(){
 /* ===== 오디오 ===== */
 /* 연주 순서: SONG.form = [[시작박,끝박,절(0부터),'표시'],…] (되돌이표·D.C.·D.S. 곡) — 없으면 선택한 절 수만큼 전곡 반복 */
 let FORM=[],PERF_LEN=0;
+/* 새 기본값(전주 끝4마디·롤 엔딩·아르페지오·발라드·필인)을 한 번 적용: 예전에 저장된 공통 설정을 지움 */
+try{if(localStorage.getItem('ccm_def2')!=='1'){['ccm_ending','ccm_accPat','ccm_drum','ccm_drumFill'].forEach(k=>localStorage.removeItem(k));localStorage.setItem('ccm_def2','1');}}catch(e){}
 let ENDING='roll';try{ENDING=localStorage.getItem('ccm_ending')||'roll';}catch(e){}
 let END_RIT=null;
 /* 연주 횟수 선택값 'n:k' — n번(절) 부르고, k=1이면 끝에 후렴을 한 번 더 */
@@ -1301,7 +1303,7 @@ function drumNotes(style){
   }
   return out;
 }
-let ACC_PAT='arp',ACC_INS='piano',BASS_INS='bassgtr',DRUM='none';
+let ACC_PAT='arp',ACC_INS='piano',BASS_INS='bassgtr',DRUM='ballad';
 /* 음량: 0~100 슬라이더 → 기준 음량 대비 배율 */
 const VOL_BASE={S:.32,AC:.24,AB:.15,DR:.5};   // 반주(화음)가 묻히지 않게 — 반주 방식 차이가 들리도록
 const VOL_DEF={S:80,AC:60,AB:60,DR:60,LIVE:80};
