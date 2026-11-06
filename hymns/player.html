@@ -663,7 +663,7 @@ function renderScore(){
 let schedTimer=null;
 /* 아멘: 여러 절을 이어 부를 때 아멘은 마지막 절 끝에만 — SONG.amenAt(아멘 시작 박), 없으면 곡 끝 직전 겹세로줄 위치 */
 const AMEN_AT=(()=>{if(SONG.amenAt!=null)return SONG.amenAt;const d=(SONG.doubleBars||[]).filter(x=>x<SONG_LEN-1e-6&&x>SONG_LEN-12);return d.length?Math.max(...d):SONG_LEN;})();
-const END_HOLD=AMEN_AT>=SONG_LEN-1e-6?1.5:0;   // 아멘이 없는 곡: 마지막 음을 1.5초 더 길게
+const END_HOLD=AMEN_AT>=SONG_LEN-1e-6?0.75:0;   // 아멘이 없는 곡: 마지막 음을 0.75초 더 길게
 let FORM=[],PERF_LEN=0;
 function buildForm(nv){
   nv=Math.max(1,nv|0);FORM=[];let off=0;
