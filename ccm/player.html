@@ -203,7 +203,7 @@ body.playing .parts{margin-bottom:0}
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
 <li><b>스페이스바</b>: 연주 중 누르면 그 자리에서 일시정지(화면 유지), 다시 누르면 이어서 연주. <b>■ 정지</b> 또는 Esc로 처음 화면으로.</li>
-<li>연주 화면 아래 막대: <b>⏪</b> 2마디 뒤로 · <b>⏸/▶</b> 일시정지/계속 · <b>⏩</b> 2마디 앞으로 · <b>■</b> 정지 (키보드 ←/→도 같음)</li>
+<li>연주 화면 아래 막대: <b>⏪</b> 2마디 뒤로 · <b>⏸/▶</b> 일시정지/계속 · <b>⏩</b> 2마디 앞으로 · <b>■</b> 정지 (키보드 ←/→도 같음). 이동한 음표는 잠깐 주황색으로 빛나고, 위쪽에 몇 마디인지 표시됩니다. 곡이 끝나도 악보 화면이 유지되며 ▶ 다시 연주, ■ 처음 화면으로.</li>
 <li>악보의 <b>음표나 가사를 누르면</b> 그 음부터 바로 연주합니다.</li>
 <li>연주 중에는 화면이 두 줄씩 자동으로 넘어갑니다(다음 줄 약 1초 전). 휴대폰은 안드로이드에서 가로 화면으로 바뀝니다(아이폰은 직접 돌려 주세요).</li>
 <li><b>✎ 가사 입력</b>: 가지고 계신 악보의 가사를 절별로 붙여넣으면 음표 아래에 자동 배치됩니다. 글자 수가 맞으면 숫자가 초록색이 됩니다. 가사는 이 브라우저에만 저장되며, 파일로 내보내기/불러오기·가사 포함 HTML 저장으로 다른 기기에 옮길 수 있습니다.</li>
@@ -1528,9 +1528,13 @@ function start(m,beat=0,intro=curIntro){
   const pump=()=>{const lim=ctx.currentTime-startAt+.6;
     while(qi<EVQ.length&&EVQ[qi].w<lim){try{EVQ[qi].f();}catch(e){console.warn(e);}qi++;}};
   pump();clearInterval(schedTimer);schedTimer=setInterval(pump,40);
-  endTimer=setTimeout(()=>{stop();fromBeat=0;if(window.onSongEnd)onSongEnd();},(Math.max(T(totalBeats),END&&EM!=='cut'?T(END.pF)+END.tail:0)-base+.6)*1000);
+  endTimer=setTimeout(()=>{songEnded();if(window.onSongEnd)onSongEnd();},(Math.max(T(totalBeats),END&&EM!=='cut'?T(END.pF)+END.tail:0)-base+.6)*1000);
 }
 var PAUSE=null,KEEPV=false;
+/* 곡이 끝나도 연주 화면 유지: ▶ 처음부터 다시, ■ 처음 화면으로 */
+function songEnded(){const it=curIntro;KEEPV=true;try{stop(true);}finally{KEEPV=false;}keepAwake(false);clearHL();
+  if(!document.body.classList.contains('playing')){stop();fromBeat=0;return;}
+  PAUSE={b:0,it,end:true};fromBeat=0;document.body.classList.add('paused');$('pos').textContent='연주 끝 · ▶ 다시 / ■ 나가기';}
 function TBH(){return document.body.classList.contains('playing')?58:0;}   // 하단 조작 막대 높이   // 일시정지: 화면·위치 유지
 function stop(silent){
   if(!silent)keepAwake(false);
@@ -1631,8 +1635,10 @@ function showCount(n){
   el.textContent=n;el.classList.remove('beat');void el.offsetWidth;el.classList.add('show','beat');
 }
 function tick(){
-  if(playing){
-    const g=curBeat();
+  const PZ=!playing&&PAUSE&&PAUSE.show;if(PZ)PAUSE.show=false;   // 일시정지 중 ⏪⏩로 옮긴 위치 표시
+  const FL=performance.now()<(window.SEEKFL||0);
+  if(playing||PZ){
+    const g=playing?curBeat():PAUSE.b;
     const inIntro=g<introLen;
     const b=inIntro?introSrc(Math.max(0,g)):g-introLen;
     if(b!==null&&g>=0){
@@ -1643,7 +1649,7 @@ function tick(){
       noteMap.forEach(n=>{
         if(!(ib>=n.start&&ib<n.start+n.dur))return;
         if(mixFor(n.k)>0)
-          n.els.forEach(el=>{if(el&&el.classList){const c='hl-'+n.k;el.classList.add(c);lit.push([el,c]);}});
+          n.els.forEach(el=>{if(el&&el.classList){const c='hl-'+n.k;el.classList.add(c);lit.push([el,c]);if(FL){el.classList.add('hl-seek');lit.push([el,'hl-seek']);}}});
         if(EV&&n.k===ECHO_V&&!inIntro&&inEcho(n.start)&&sylls(LYR.e).length){   // 메아리 가사
           n.els.forEach(el=>{const tx=el&&el.querySelector&&el.querySelector('text.abcjs-lyric');const ts=tx&&tx.querySelector('tspan');
             if(ts){ts.classList.add('hl-ly');lit.push([ts,'hl-ly']);}});
@@ -1663,11 +1669,12 @@ function tick(){
       if(inIntro)followLine(0);                                   // 전주 동안은 1절 첫 줄을 보여 줌
       else if(document.body.classList.contains('playing'))followLine(pageStart(aheadLine(g,ib,true)));   // 화면 페이지 단위(2~3줄)로 넘김
       else followLine(aheadLine(g,ib),LINE_BREAKS.filter(x=>ib>=x).length);
-      showCount(inIntro?Math.ceil(introLen-g-1e-6):0);
+      showCount(inIntro&&!PZ?Math.ceil(introLen-g-1e-6):0);
       const v=inIntro?0:PP.v+1,seg=inIntro?'':(PP.sg.label||v+'절');
       const bar=ib<PICKUP?'못갖춘마디':barNum(ib)+'마디';
       const who='멜로디';
       $('pos').innerHTML=inIntro&&introLen-g<=COUNT_N?`<b>${who}</b> · 시작까지 ${Math.ceil(introLen-g-1e-6)}`:inIntro?`<b>${who}</b> · 전주 · ${bar}`:`<b>${who}</b> · ${seg} · ${bar}${ib>=REFRAIN_AT?' (후렴)':''}`;
+      if(PZ)$('pos').innerHTML='일시정지 · '+(inIntro?'전주 · '+bar:bar);
     }
   }
   requestAnimationFrame(tick);
@@ -2076,18 +2083,20 @@ body.playing #play,body.playing #pExit,body.paused #pExit{display:none!important
 #tbar button.pp{width:72px;background:var(--ink);color:#fff;border-color:var(--ink)}
 body.paused #tbar button.pp{background:#1f7a4c;border-color:#1f7a4c}
 #tbar button:active{transform:scale(.95)}
+.hl-seek{filter:drop-shadow(0 0 3px #ff9800) drop-shadow(0 0 7px #ff9800)}
+#score .hl-seek path,#score .hl-seek ellipse{stroke:#ff9800;stroke-width:1.2px}
 </style>
 <script>/* 하단 조작 막대: ⏪ 2마디 뒤로 · ⏸/▶ · ⏩ 2마디 앞으로 · ■ 정지 */
 (function(){
 const snap=b=>{const o=introLen+PICKUP;if(b<o)return b<introLen?0:introLen;return o+Math.floor((b-o)/BPB+1e-6)*BPB;};
-function seek(dir){
+function seek(dir){window.SEEKFL=performance.now()+1500;clearTimeout(window.SEEKT);window.SEEKT=setTimeout(()=>{if(PAUSE)PAUSE.show=true;},1550);
   let b;if(playing)b=curBeat();else if(PAUSE)b=PAUSE.b;else return;
   const cur=snap(Math.max(0,b-(dir<0?.4:0)));
   let tg=dir<0?cur-BPB:cur+2*BPB;
   if(dir<0&&b-cur>BPB*.5)tg=cur;            // 마디 중간이면 그 마디 처음으로 (한 번 더 누르면 더 뒤로)
   tg=Math.max(0,tg);if(tg>=totalBeats-.5)return;
   if(playing){const it=curIntro;KEEPV=true;try{start(mode,tg,it);}finally{KEEPV=false;}}
-  else{PAUSE.b=tg;fromBeat=tg;const g=tg-introLen;$('pos').textContent='일시정지 · '+(g>=0?'이동함':'전주');}
+  else{PAUSE.b=tg;fromBeat=tg;PAUSE.end=false;PAUSE.show=true;}
 }
 const B=id=>document.getElementById(id);
 B('tbBack').onclick=()=>seek(-1);B('tbFwd').onclick=()=>seek(1);
