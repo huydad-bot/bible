@@ -271,8 +271,8 @@ body.playing .parts{margin-bottom:0}
         <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표<span class="fermi">(<span>𝄐</span>)</span> <select id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label title="▶ 시작을 누르면 본 찬송 앞에 연주할 전주"><i class="dot"></i>전주 <select id="intro">
-          <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디">끝4마디</option>
-          <option value="ref">후렴</option><option value="none" selected>없음</option></select>
+          <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디" selected>끝4마디</option>
+          <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
@@ -692,6 +692,7 @@ const $=id=>document.getElementById(id);
     sel.add(new Option(t,i));
   }
   if(!HAS_REFRAIN){const o=document.querySelector('#intro option[value=ref]');if(o)o.remove();}
+  sel.value=String(NUM_VERSES);   // 기본: 전곡
 })();
 /* 파트별 음량 (0~100, 기본 100) */
 const PV={S:100,A:100,T:100,B:100};
