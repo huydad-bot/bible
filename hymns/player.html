@@ -665,7 +665,7 @@ function buildForm(nv){
 }
 function perfPos(p){                        // 연주 박(전주 뒤) → {악보 박, 절}
   for(const sg of FORM)if(p<sg.off+(sg.b-sg.a)-1e-9)return {sb:sg.a+Math.max(0,p-sg.off),v:sg.v};
-  const sg=FORM[FORM.length-1]||{b:SONG_LEN,v:0};return {sb:sg.b-1e-6,v:sg.v};
+  const sg=FORM[FORM.length-1]||{b:SONG_LEN,v:0};return {sb:sg.b-1e-3,v:sg.v};
 }
 /* 누른 가사가 몇 절 줄인지 → 그 절의 그 자리부터 연주 (음표를 누르면 지금 부르는 절, 멈춰 있으면 1절) */
 function clickedVerse(el,ev,b){
