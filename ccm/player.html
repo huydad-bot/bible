@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
+<script>try{if(window.top===window&&/player\.html$/.test(location.pathname))location.replace("index.html#"+"player.html"+location.search);}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,7 +17,7 @@
 window.registerSong=function(s){window.SONG=s;};
 (function(){
   var n=(new URLSearchParams(location.search).get('n')||'').replace(/[^0-9A-Za-z_-]/g,'');
-  if(!n){location.replace('index.html');return;}
+  if(!n){location.replace('list.html');return;}
   window.SONG_ID=n;
   document.write('<script src="songs/'+window.SONG_ID+'.js"><\/script>');
   document.write('<script src="songs/index.js"><\/script>');
@@ -241,7 +242,7 @@ body.playing .parts{margin-bottom:0}
 <li>가사·악보는 개인 연습용입니다. 가사가 들어간 파일은 공개 웹에 올리지 마세요.</li>
 </ul></div></div>
 <div class="wrap">
-  <a class="back" id="back" href="index.html">← CCM 목록</a>
+  <a class="back" id="back" href="list.html">← CCM 목록</a>
   <header>
     <div class="num" id="hNum"></div>
     <div class="ttl">
@@ -347,7 +348,7 @@ body.playing .parts{margin-bottom:0}
 <script>
 /* ===== 곡 데이터 (songs/번호.js) ===== */
 if(!window.SONG){
-  document.querySelector('.wrap').innerHTML='<a class="back" href="index.html">← CCM 목록</a><div class="card" style="margin-top:12px">CCM <b>'+
+  document.querySelector('.wrap').innerHTML='<a class="back" href="list.html">← CCM 목록</a><div class="card" style="margin-top:12px">CCM <b>'+
     String(window.SONG_ID).replace(/[<>&"]/g,'')+'번</b> 데이터가 없습니다 (songs 폴더 확인).</div>';
   throw new Error('song not found');
 }
@@ -1164,9 +1165,10 @@ let weFS=false;
 function enterLandscape(){
   if(!IS_PHONE)return;
   const portrait=()=>window.innerHeight>window.innerWidth;
-  const el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen;
+  let TD=document;try{if(window.top!==window)TD=top.document;}catch(e){}
+  const el=TD.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen;
   const hint=()=>{if(portrait())toast('휴대폰을 가로로 돌리면 악보가 더 크게 보입니다');};
-  if(rq&&!document.fullscreenElement){
+  if(rq&&!TD.fullscreenElement&&!TD.webkitFullscreenElement){
     try{Promise.resolve(rq.call(el,{navigationUI:'hide'})).then(()=>{weFS=true;
       return screen.orientation&&screen.orientation.lock?screen.orientation.lock('landscape'):Promise.reject();
     }).catch(()=>setTimeout(hint,300));}catch(e){hint();}
@@ -2033,18 +2035,19 @@ const q=new URLSearchParams(location.search).get('pl');
 if(q!=null&&getPL()[+q]===String(SONG.n))setTimeout(()=>startHere(+q),900);
 })();
 </script>
-<script>/* 전체화면 (iPad Safari·PC) */
+<script>/* 전체화면 버튼: 프로그램 틀(index.html)의 전체화면을 켜고 끔 */
 (function(){
-const d=document,el=d.documentElement;
-const can=!!(el.requestFullscreen||el.webkitRequestFullscreen);
-const cur=()=>d.fullscreenElement||d.webkitFullscreenElement;
-const hb=d.querySelector('.hbtns');if(!hb||!can||navigator.standalone)return;
-const b=d.createElement('button');b.className='setbtn';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (iPad·PC)';
-const lab=()=>{b.textContent=cur()?'⤢ 전체화면 끄기':'⛶ 전체화면';el.classList.toggle('fs',!!cur());};lab();
-b.onclick=()=>{try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
-d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
+let T=null;try{if(window.top!==window&&top.FS)T=top.FS;}catch(e){}
+const d=document,el=d.documentElement,hb=d.querySelector('.hbtns');if(!hb)return;
+const can=T?T.can:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
+const cur=()=>T?T.is():!!(d.fullscreenElement||d.webkitFullscreenElement);
+const b=d.createElement('button');b.className='setbtn';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (해제: Esc, iPad는 아래로 쓸기)';
+const lab=()=>{b.textContent=cur()?'⤢ 전체화면 끄기':'⛶ 전체화면';el.classList.toggle('fs',cur());};lab();
+b.onclick=()=>{if(T){T.toggle();return;}try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
+window.addEventListener('appfs',lab);d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
 const h=d.getElementById('helpBtn');hb.insertBefore(b,h||null);
 })();</script>
+
 <style>/* 연주 중 제목을 가운데로 */
 body.playing .ptitle{justify-content:center}
 @media (min-width:700px){body.playing .parts{position:relative}body.playing .ptitle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:42%;margin:0;pointer-events:none}}
@@ -2061,7 +2064,7 @@ function endPause(){if(!PAUSE)return;stop();fromBeat=0;}
 $('pExit').onclick=endPause;
 document.addEventListener('keydown',e=>{
   const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
-  if(e.key==='Escape'&&PAUSE){endPause();return;}
+  if(e.key==='Escape'&&PAUSE&&!document.documentElement.classList.contains('fs')){endPause();return;}
   if(e.code!=='Space'&&e.key!==' ')return;
   e.preventDefault();if(e.repeat)return;
   if(t&&t.tagName==='BUTTON')t.blur();
