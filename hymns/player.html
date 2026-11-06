@@ -1018,8 +1018,11 @@ function fitTwoLines(){
   const boxes=[];for(let i=0;i<=LINE_BREAKS.length;i++){const b=lineBox(i);if(b)boxes.push(b);}
   if(!boxes.length)return;
   let h2=0;
-  if(boxes.length===1)h2=boxes[0].bot-boxes[0].top;
-  for(let i=0;i+1<boxes.length;i++)h2=Math.max(h2,boxes[i+1].bot-boxes[i].top);
+  /* 두 줄 높이는 오선(다섯 줄) 위치 간격으로 잰다 — 글자·괄호 등의 위치가 브라우저(특히 iPad 사파리)마다 다르게 잡혀도 영향 없음 */
+  const T=[];for(let i=0;i<=LINE_BREAKS.length;i++){let t=Infinity;document.querySelectorAll('#score svg .abcjs-staff.abcjs-l'+i).forEach(e=>{const r=e.getBoundingClientRect();if(r.height)t=Math.min(t,r.top);});if(isFinite(t))T.push(t);}
+  if(T.length>=2){let p=0;for(let i=0;i+1<T.length;i++)p=Math.max(p,T[i+1]-T[i]);h2=p*2;}
+  else{if(boxes.length===1)h2=boxes[0].bot-boxes[0].top;
+    for(let i=0;i+1<boxes.length;i++)h2=Math.max(h2,boxes[i+1].bot-boxes[i].top);}
   const panelH=document.querySelector('.panel').getBoundingClientRect().height;
   const avail=window.innerHeight-TBH()-panelH-36;
   if(h2>0&&avail>80){const w=Math.round(Math.min(W,W*avail/h2));sc.style.width=w+'px';
@@ -1278,6 +1281,17 @@ function lineBox(li){
   const els=document.querySelectorAll('#score svg .abcjs-l'+li);
   let top=Infinity,bot=-Infinity;
   els.forEach(e=>{const r=e.getBoundingClientRect();if(r.height||r.width){top=Math.min(top,r.top);bot=Math.max(bot,r.bottom);}});
+  if(!isFinite(top))return null;
+  /* 엉뚱한 위치로 잡히는 글자(빈 가사·보이지 않는 마디줄 등)가 있어도 줄 높이가 부풀지 않도록: 앞뒤 줄의 오선 사이로 제한 */
+  const sw=swBox(li);
+  if(sw){const pv=swBox(li-1),nx=swBox(li+1);
+    if(pv)top=Math.max(top,pv.bot+1);top=Math.min(top,sw.top);
+    if(nx)bot=Math.min(bot,nx.top-1);bot=Math.max(bot,sw.bot);}
+  return {top,bot};
+}
+function swBox(li){
+  if(li<0)return null;let top=Infinity,bot=-Infinity;
+  document.querySelectorAll('#score svg .abcjs-staff-wrapper.abcjs-l'+li).forEach(e=>{const r=e.getBoundingClientRect();if(r.height){top=Math.min(top,r.top);bot=Math.max(bot,r.bottom);}});
   return isFinite(top)?{top,bot}:null;
 }
 function followLine(li,nowLi){
