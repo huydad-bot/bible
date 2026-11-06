@@ -1020,7 +1020,7 @@ function fitTwoLines(){
     if(sc._pb)sc.style.paddingBottom=(sc._pb*w/W)+'%';}
 }
 let refitT=null;
-window.addEventListener('resize',()=>{clearTimeout(refitT);refitT=setTimeout(()=>{if(playing){fitTwoLines();PAGES=null;curLine=-1;}},200);});
+window.addEventListener('resize',()=>{clearTimeout(refitT);refitT=setTimeout(()=>{if(playing){fitTwoLines();PAGES=null;CURPAGE=null;curLine=-1;}},200);});
 /* 휴대폰: 연주 시작 시 전체 화면 + 가로 모드 (지원하지 않는 기기는 안내만) */
 const IS_PHONE=matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<600;
 let weFS=false;
@@ -1224,7 +1224,7 @@ function start(m,beat=0,intro=curIntro){
   {const sel=id=>{const e=$(id);return e&&e.selectedOptions[0]?e.selectedOptions[0].text:'';};   // 연주 화면: 제목 옆에 템포·전주·선택 표시
    $('pInfo').innerHTML=`<span>♩=${$('tempo').value}</span><span>전주 ${curIntro.length?sel('intro'):'없음'}${curIntro.length&&$('rit').checked?' rit.':''}</span><span>${sel('verses')}</span>`;}
   PLAYN=null;
-  playing=true;curLine=-1;applyMix();keepAwake(true);
+  playing=true;curLine=-1;CURPAGE=null;applyMix();keepAwake(true);
   if($('scoreOnly').checked){document.body.classList.add('playing');enterLandscape();fitTwoLines();}
   /* 음은 미리 한꺼번에 만들지 않고 0.6초 앞서 조금씩 예약 (긴 곡·SF2 음원에서도 첫 음부터 소리가 나도록) */
   EVQ.sort((a,b)=>a.w-b.w);let qi=0;
@@ -1301,7 +1301,29 @@ function buildPages(){
   for(let i=0;i<n;){let j=i;while(j+1<n&&bx[j+1]&&bx[i]&&bx[j+1].bot-bx[i].top<=avail)j++;PAGES.push([i,j]);i=j+1;}
   return PAGES;
 }
-function pageOf(li){const P=PAGES||buildPages();return P.find(([a,b])=>li>=a&&li<=b)||[li,li];}
+/* 곡의 흐름(반복·D.S.·Fine·절)에 따른 페이지: 지금 향하는 줄부터, 실제로 이어서 연주될 줄만 담음 */
+let CURPAGE=null;
+function flowSeq(p){                              // 연주 박 p부터 연주될 악보 줄 순서
+  const seq=[];let on=false;
+  for(const sg of FORM){const end=sg.off+(sg.b-sg.a);let from=sg.a;
+    if(!on){if(p>=end-1e-9)continue;on=true;from=sg.a+Math.max(0,p-sg.off);}
+    const l0=lineOf(from+1e-3),l1=lineOf(sg.b-1e-3);
+    for(let l=l0;l<=l1;l++)if(seq[seq.length-1]!==l)seq.push(l);
+    if(seq.length>16)break;}
+  return seq;
+}
+function flowPage(L,p){
+  let seq=flowSeq(Math.max(0,p)),k=seq.indexOf(L);if(k<0){seq=[L];k=0;}
+  const pb=Math.max(0,document.querySelector('.panel').getBoundingClientRect().bottom)+6;
+  const avail=window.innerHeight-TBH()-pb-10,b0=lineBox(L);let j=L;
+  if(b0)while(k+1<seq.length&&seq[k+1]===j+1){const bx=lineBox(j+1);if(!bx||bx.bot-b0.top>avail)break;j++;k++;}
+  return [L,j];
+}
+function followFlow(L,p){
+  if(CURPAGE&&L>=CURPAGE[0]&&L<=CURPAGE[1])return;
+  CURPAGE=flowPage(L,p);curLine=-1;followLine(L);
+}
+function pageOf(li){if(CURPAGE&&li>=CURPAGE[0]&&li<=CURPAGE[1])return CURPAGE;const P=PAGES||buildPages();return P.find(([a,b])=>li>=a&&li<=b)||[li,li];}
 function pageStart(li){return pageOf(li)[0];}
 function setCurtain(li){                         // 페이지 아래로 잘려 보이는 줄을 가림
   const c=$('curtain');if(!c)return;
@@ -1370,8 +1392,9 @@ function tick(){
           });
         }
       });
-      if(inIntro)followLine(0);                                   // 전주 동안은 1절 첫 줄을 보여 줌
-      else if(document.body.classList.contains('playing'))followLine(pageStart(aheadLine(g,ib,true)));   // 화면 페이지 단위(2~3줄)로 넘김
+      const PV=document.body.classList.contains('playing');
+      if(inIntro){if(PV)followFlow(0,0);else followLine(0);}      // 전주 동안은 1절 첫 줄을 보여 줌
+      else if(PV){let a=Ginv(T(g)+PAGE_AHEAD_SEC);if(a>=totalBeats||a<g)a=g;followFlow(aheadLine(g,ib,true),a-introLen);}   // 곡의 흐름대로 페이지 넘김   // 화면 페이지 단위(2~3줄)로 넘김
       else followLine(aheadLine(g,ib),LINE_BREAKS.filter(x=>ib>=x).length);
       showCount(inIntro&&!PZ?Math.ceil(introLen-g-1e-6):0);
       const v=inIntro?0:PP.v+1;
