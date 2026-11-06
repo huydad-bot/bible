@@ -17,7 +17,7 @@ html,body{margin:0;height:100%;background:#f4f1ea;overflow:hidden}
 <iframe id="app" title="CCM 멜로디 연습" allow="fullscreen; autoplay; midi; screen-wake-lock"></iframe>
 <script>
 /* 프로그램 틀: 목록·연주 화면을 이 틀 안에서 바꿔 보여 주므로 곡을 옮겨 다녀도 전체화면이 유지됨.
-   브라우저 규칙상 전체화면은 사용자의 첫 터치·클릭·키 입력 때 들어감. Esc(또는 iPad에서 아래로 쓸기)로 해제. */
+   전체화면은 ⛶ 버튼으로 켜고, Esc(또는 iPad에서 아래로 쓸기)로 해제. */
 const F=document.getElementById('app'),de=document.documentElement;
 const h=decodeURIComponent(location.hash.slice(1));
 F.src=/^(list|player)\.html/.test(h)?h:'list.html';
@@ -26,7 +26,7 @@ const canFS=!!(de.requestFullscreen||de.webkitRequestFullscreen)&&!navigator.sta
 const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){}};
 function req(){if(!canFS||isFS())return;try{const r=(de.requestFullscreen||de.webkitRequestFullscreen).call(de,{navigationUI:'hide'});if(r&&r.catch)r.catch(()=>{});}catch(e){}}
 function exit(){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}}
-function auto(){if(!canFS||isFS()||ss('fsOff')==='1')return;req();}
+function auto(){}   // 첫 터치 때 자동 전체화면은 쓰지 않음 (⛶ 전체화면 버튼으로만)
 window.FS={can:canFS,is:isFS,on(){ss('fsOff',null);req();},off(){ss('fsOff','1');exit();},toggle(){isFS()?this.off():this.on();}};
 let was=false;
 function changed(){const now=isFS();if(was&&!now)ss('fsOff','1');was=now;notify();}   // 사용자가 해제하면 다시 켤 때까지 자동으로 들어가지 않음
