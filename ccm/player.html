@@ -1887,7 +1887,7 @@ $('lyrHtml').onclick=async()=>{
   doc.querySelector('#play').classList.remove('on');doc.querySelector('#play').textContent='▶ 시작';
   {const h=doc.querySelector('#hPlay');if(h){h.classList.remove('on');h.textContent='▶ 시작';}}
   doc.querySelector('#pos').textContent='▶ 시작을 누르세요';
-  {const x=doc.querySelector('#plBtn');if(x)x.remove();const d=doc.querySelector('#plDlg');if(d)d.remove();const n=doc.querySelector('#plNext');if(n)n.remove();}
+  {doc.querySelectorAll('.navbtn').forEach(x=>x.remove());const x=doc.querySelector('#plBtn');if(x)x.remove();const d=doc.querySelector('#plDlg');if(d)d.remove();const n=doc.querySelector('#plNext');if(n)n.remove();}
   doc.querySelector('#lyrBox').remove();{const lb=doc.querySelector('#lyrBtn');if(lb)lb.remove();}doc.body.classList.remove('lyrOpen');   // 저장본에는 가사 입력창을 넣지 않음
   // 단독 파일: 곡 데이터를 파일 안에 넣고, 악보 라이브러리는 인터넷(CDN)에서 불러옴
   doc.querySelector('#loader').textContent='window.SONG_ID='+JSON.stringify(String(SONG.n))+';window.SONG='+JSON.stringify(SONG).replace(/</g,'\\u003c')+';';
@@ -1976,6 +1976,15 @@ dlg.innerHTML=`<div class="hbox plbox" role="dialog" aria-label="연주 예약">
 document.body.appendChild(dlg);
 const btn=document.createElement('button');btn.className='setbtn';btn.id='plBtn';btn.title='여러 곡을 순서대로 이어서 연주';btn.textContent='📋 예약';
 E('hPlay').before(btn);
+/* 이전 곡 · 다음 곡 · 목록 (← 목록 링크 대신) */
+{const ix=LIST.findIndex(x=>String(x.n)===String(SONG.n));
+ const mk=(id,txt,tip,fn)=>{const b=document.createElement('button');b.className='setbtn navbtn';b.id=id;b.textContent=txt;b.title=tip;if(fn)b.onclick=fn;else b.disabled=true;btn.before(b);return b;};
+ const pv=ix>0?LIST[ix-1]:null,nx=ix>=0&&ix<LIST.length-1?LIST[ix+1]:null;
+ const goN=n=>()=>{try{stop(true);}catch(e){}location.href='player.html?n='+n;};
+ mk('navPrev','◀ 이전곡',pv?`이전 곡: ${pv.n} ${pv.title}`:'첫 곡입니다',pv&&goN(pv.n));
+ mk('navNext','다음곡 ▶',nx?`다음 곡: ${nx.n} ${nx.title}`:'마지막 곡입니다',nx&&goN(nx.n));
+ mk('navList','☰ 목록','곡 목록으로 돌아가기',()=>{try{stop(true);}catch(e){}location.href='list.html';});
+ const back=document.getElementById('back');if(back)back.style.display='none';}
 const st=document.createElement('style');st.textContent=`
 .plbox{max-width:640px}.plhelp{font-size:13px;color:var(--mute);margin:2px 0 10px}
 .plrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
@@ -1991,7 +2000,9 @@ const st=document.createElement('style');st.textContent=`
 #plList .plgo{color:#1f7a4c;font-weight:700}
 #plList button{border:1px solid var(--line);background:#fff;border-radius:6px;width:30px;height:28px;cursor:pointer}
 #plList:empty::after{content:'예약한 곡이 없습니다';color:var(--mute);font-size:13px;padding:8px}
-body.playing .hbtns #plBtn{display:none}
+body.playing .hbtns #plBtn,body.playing .hbtns .navbtn{display:none}
+.navbtn:disabled{opacity:.4;cursor:default}
+.hbtns{flex-wrap:wrap;justify-content:flex-end}.hbtns button{white-space:nowrap}.hbtns .navbtn{padding-left:10px;padding-right:10px}
 #plNext{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(30,25,20,.45)}
 #plNext[hidden]{display:none}
 #plNext .card2{background:var(--card);border-radius:14px;padding:22px 26px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25);font:15px "Noto Sans KR"}
