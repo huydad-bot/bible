@@ -197,6 +197,7 @@ body.playing .parts{margin-bottom:0}
 <div class="helpdlg" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
+<li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 2박).</li>
 <li><b>스페이스바</b>: 연주 중 누르면 그 자리에서 일시정지(화면 유지), 다시 누르면 이어서 연주. <b>■ 정지</b> 또는 Esc로 처음 화면으로.</li>
 <li>연주 화면 아래 막대: <b>⏮</b> 처음 · <b>⏪</b> 2마디 뒤로 · <b>⏸/▶</b> 일시정지/계속 · <b>⏩</b> 2마디 앞으로 · <b>⏭</b> 마지막 줄 · <b>■</b> 정지 (키보드 ←/→도 같음). 이동한 음표는 잠깐 주황색으로 빛나고, 위쪽에 몇 마디인지 표시됩니다. 곡이 끝나도 악보 화면이 유지되며 ▶ 다시 연주, ■ 처음 화면으로.</li>
 <li>악보의 <b>음표나 가사를 누르면</b> 그 음부터 바로 연주합니다.</li>
@@ -275,6 +276,7 @@ body.playing .parts{margin-bottom:0}
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
+        <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (교회 반주에서는 보통 2박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value="1">1박 쉼</option><option value="2" selected>2박 쉼</option><option value="3">3박 쉼</option><option value="4">4박 쉼</option></select></label>
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
         <input id="follow" type="checkbox" checked hidden>
         <input id="scoreOnly" type="checkbox" checked hidden>
@@ -968,6 +970,7 @@ function fermataSpans(){                     // 늘임표가 붙은 소프라노
   const S=VOICES[0].tokens;
   return [...FERM].map(t=>{const n=S.find(x=>Math.abs(x.t-t)<1e-6);return n?[t,t+n.dur]:null;}).filter(Boolean);
 }
+let VGAPS=[];                               // 절 사이 쉼이 들어가는 연주 박 위치
 function buildWarp(total){
   const K=+(($('ferm')&&$('ferm').value)||1);
   const fs=fermataSpans();
@@ -978,6 +981,9 @@ function buildWarp(total){
     curIntro.forEach(([a,b])=>{fs.forEach(([x,y])=>{const s0=Math.max(a,x),e0=Math.min(b,y);if(e0>s0)mark(off+s0-a,off+e0-a,K);});off+=b-a;});
     FORM.forEach(sg=>fs.forEach(([x,y])=>{const s0=Math.max(sg.a,x),e0=Math.min(sg.b,y);if(e0>s0)mark(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,K);}));
   }
+  const gb=+(($('vgap')&&$('vgap').value)||0);VGAPS=[];   // 절 사이 쉼: 앞 절 마지막 음을 끊고 gb박 쉰 뒤 다음 절
+  if(gb>0)FORM.forEach((sg,k)=>{if(k===FORM.length-1)return;const B=introLen+sg.off+(sg.b-sg.a),i=Math.round(B*RES)-1;
+    if(i>=0&&i<fac.length){fac[i]+=gb*RES;VGAPS.push(B);}});
   if(ritOn)for(let i=Math.round(ritG0*RES);i<Math.round(introLen*RES);i++){const u=(i+.5)/RES-ritG0;fac[i]*=1+RIT_K*u/RIT_BEATS;}
   CUM=new Float64Array(fac.length+1);
   for(let i=0;i<fac.length;i++)CUM[i+1]=CUM[i]+fac[i]*spb/RES;
@@ -1206,7 +1212,7 @@ function start(m,beat=0,intro=curIntro){
     const play=(t,e,midi,rb)=>{
       if(e<=beat+0.05)return;
       const t0=Math.max(t,beat);
-      const w=T(t0)-base,L=T(e)-T(t0),ins=TIMBRE[v.k],m=midi+tr;
+      const w=T(t0)-base,L=(VGAPS.some(B=>Math.abs(e-B)<1e-6)?T(e-1/RES):T(e))-T(t0),ins=TIMBRE[v.k],m=midi+tr;
       const tl=rb>0?Math.min(2.5,T(e+rb)-T(e)):0;
       const lg=PLAYN?{o:!!PLAYN.legOut&&Math.abs(e-t-PLAYN.dur)<1e-6,i:!!PLAYN.legIn}:{};
       EVQ.push({w,f:()=>{NOTE_TAIL=tl;NOTE_LEG=lg.o;NOTE_SOFT=lg.i;try{noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L);}finally{NOTE_TAIL=0;NOTE_LEG=NOTE_SOFT=false;}}});
@@ -1414,6 +1420,9 @@ document.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>{
 $('play').onclick=()=>{if(playing){stop();fromBeat=0;}else if(PAUSE)resumeNow();else start(mode,0,getIntro());};
 $('practice').onchange=applyMix;
 if(!FERM.size)$('fermBox').style.display='none';
+try{const vg=localStorage.getItem('hymn_vgap');if(vg!==null)$('vgap').value=vg;}catch(e){}
+$('vgap').onchange=()=>{try{localStorage.setItem('hymn_vgap',$('vgap').value);}catch(e){}if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
+if(NUM_VERSES<2)$('vgapBox').style.display='none';
 try{const f=localStorage.getItem('hymn_ferm');if(f)$('ferm').value=f;}catch(e){}
 $('ferm').onchange=()=>{try{localStorage.setItem('hymn_ferm',$('ferm').value);}catch(e){}if(playing)start(mode,Math.max(0,curBeat()),curIntro);};
 $('accChk').onchange=()=>{
