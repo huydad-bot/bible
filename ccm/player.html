@@ -451,15 +451,19 @@ VOICES.forEach(v=>{
 let NOTE_TAIL=0;                              // 다음에 만드는 음의 여운(초)
 let NOTE_LEG=false,NOTE_SOFT=false,PLAYN=null; // 이음줄(슬러): 앞 음은 끊지 않고 다음 음에 이어, 이어지는 음은 부드럽게(텅잉 없이)
 let LEG_DONE=false;
+function legList(src,mel){                        // 이어 부르는 음: 같은 음이면 한 소리로 합치고, 다른 음이면 끊지 않고 부드럽게 이음
+  const isM=t=>mel.some(x=>Math.abs(x-t)<1e-6),out=[];
+  src.forEach(n=>{const pv=out[out.length-1];
+    if(pv&&isM(n.t)&&pv.midi===n.midi&&Math.abs(pv.t+pv.dur-n.t)<1e-6){pv.dur=Math.round((pv.dur+n.dur)*48)/48;pv.restAfter=n.restAfter;}
+    else out.push(Object.assign({},n));});
+  out.forEach((n,i)=>{const nx=out[i+1];n.legIn=isM(n.t);n.legOut=!!nx&&Math.abs(nx.t-(n.t+n.dur))<1e-6&&isM(nx.t);});
+  return out;}
 function markLegato(){if(LEG_DONE)return;LEG_DONE=true;
+  const base=[...MEL],vm=(typeof VMEL==='object'&&VMEL)||{};
   VOICES.forEach(v=>{if(!(v.k==='S'||v.k==='A'))return;
-    const out=[];                                   // 같은 음이 이음줄로 이어지면 한 소리로 합침 (다시 치지 않음)
-    v.notes.forEach(n=>{const pv=out[out.length-1];
-      if(pv&&isMel({t:n.t})&&pv.midi===n.midi&&Math.abs(pv.t+pv.dur-n.t)<1e-6){pv.dur=Math.round((pv.dur+n.dur)*48)/48;pv.restAfter=n.restAfter;}
-      else out.push(Object.assign({},n));});
-    v.notes=out;
-    v.notes.forEach((n,i)=>{const nx=v.notes[i+1];
-      n.legIn=isMel({t:n.t});n.legOut=!!nx&&Math.abs(nx.t-(n.t+n.dur))<1e-6&&isMel({t:nx.t});});});}
+    const orig=v.notes;v.vNotes={};
+    if(v.k==='S')Object.keys(vm).forEach(k=>{v.vNotes[(+k)-1]=legList(orig,base.concat((vm[k]||[]).map(Number)));});   // 절마다 다른 이어 부르기
+    v.notes=legList(orig,base);});}
 
 /* ===== ABC 악보 생성 ===== */
 function abcPitch(p,state){
@@ -1505,7 +1509,7 @@ function start(m,beat=0,intro=curIntro){
       v.notes.forEach(n=>{PLAYN=n;const s0=Math.max(n.t,a),e0=Math.min(n.t+n.dur,b);if(e0>s0&&!(v.noTr&&n.t<a-1e-6))play(off+s0-a,off+e0-a,n.midi,n.vel,e0===n.t+n.dur?n.restAfter:0);});
       off+=b-a;
     });
-    FORM.forEach(sg=>v.notes.forEach(n=>{PLAYN=n;       // 연주 순서의 구간마다 (경계에서 음을 잘라 붙임)
+    FORM.forEach(sg=>((v.vNotes&&v.vNotes[sg.v])||v.notes).forEach(n=>{PLAYN=n;       // 연주 순서의 구간마다 (경계에서 음을 잘라 붙임)
       const s0=Math.max(n.t,sg.a),e0=Math.min(n.t+n.dur,sg.b);
       if(e0>s0&&!(v.noTr&&n.t<sg.a-1e-6))play(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,n.midi,n.vel,e0===n.t+n.dur?n.restAfter:0);
     }));
