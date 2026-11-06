@@ -1572,6 +1572,17 @@ function lineBox(li){
   const els=document.querySelectorAll('#score svg .abcjs-l'+li);
   let top=Infinity,bot=-Infinity;
   els.forEach(e=>{const r=e.getBoundingClientRect();if(r.height||r.width){top=Math.min(top,r.top);bot=Math.max(bot,r.bottom);}});
+  if(!isFinite(top))return null;
+  /* 엉뚱한 위치로 잡히는 글자(빈 가사·보이지 않는 마디줄 등)가 있어도 줄 높이가 부풀지 않도록: 앞뒤 줄의 오선 사이로 제한 */
+  const sw=swBox(li);
+  if(sw){const pv=swBox(li-1),nx=swBox(li+1);
+    if(pv)top=Math.max(top,pv.bot+1);top=Math.min(top,sw.top);
+    if(nx)bot=Math.min(bot,nx.top-1);bot=Math.max(bot,sw.bot);}
+  return {top,bot};
+}
+function swBox(li){
+  if(li<0)return null;let top=Infinity,bot=-Infinity;
+  document.querySelectorAll('#score svg .abcjs-staff-wrapper.abcjs-l'+li).forEach(e=>{const r=e.getBoundingClientRect();if(r.height){top=Math.min(top,r.top);bot=Math.max(bot,r.bottom);}});
   return isFinite(top)?{top,bot}:null;
 }
 function followLine(li,nowLi){
