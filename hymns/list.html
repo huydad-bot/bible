@@ -8,8 +8,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="찬송가 연습">
-<style>body{padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}.lhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-#fsBtn.lfs{border:1px solid #d9d2c3;background:#fff;border-radius:10px;padding:8px 14px;font:600 14px "Noto Sans KR",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+<style>body{padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}.lhead{flex-wrap:wrap}@media(max-width:600px){.lbtns{justify-content:flex-start}.lb,#fsBtn.lfs{padding:6px 10px!important;font-size:13px!important}}
+.lbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.lb:hover,#fsBtn.lfs:hover{background:#f7f4fb}
+.lhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#fsBtn.lfs,.lb{border:1px solid #d9d2c3;background:#fff;border-radius:10px;padding:8px 14px;font:600 14px "Noto Sans KR",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
 html.fs .wrap{padding-top:calc(env(safe-area-inset-top) + 8px)}
 </style>
 <title>찬송가 파트 연습</title>
@@ -50,7 +53,11 @@ li a:hover{background:#f3eefb}
 </head>
 <body>
 <div class="wrap">
-  <div class="lhead"><h1>찬송가 파트 연습</h1><span id="lfs"></span></div>
+  <div class="lhead"><h1>찬송가 파트 연습</h1><div class="lbtns">
+    <button class="lb" id="exp" title="가사 백업: 모든 곡에 입력한 가사를 파일 하나로 저장합니다 (다른 기기로 옮길 때)">⤓ 가사 백업</button>
+    <button class="lb" id="imp" title="가사 불러오기: 백업해 둔 가사 파일을 이 기기로 가져옵니다">⤒ 가사 불러오기</button>
+    <input type="file" id="file" accept=".json,application/json" hidden>
+  </div></div>
   <p class="sub">장 번호나 제목으로 찾아 누르면 4성부 악보와 파트별 연주 화면이 열립니다.</p>
 
   <div class="card">
@@ -61,15 +68,6 @@ li a:hover{background:#f3eefb}
     <ul id="list"></ul>
   </div>
 
-  <div class="card backup">
-    <h2>가사 전체 백업</h2>
-    <p>각 곡에 입력한 가사는 이 브라우저에 저장됩니다. 모든 곡의 가사를 파일 하나로 내보내 두었다가, 다른 컴퓨터나 휴대폰에서 불러오면 그대로 옮겨집니다.</p>
-    <div class="btns">
-      <button class="pri" id="exp">전체 가사 내보내기</button>
-      <button id="imp">전체 가사 불러오기</button>
-      <input type="file" id="file" accept=".json,application/json" hidden>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -143,7 +141,7 @@ $('file').onchange=e=>{
 <script>/* 전체화면 버튼: 프로그램 틀(index.html)의 전체화면을 켜고 끔 */
 (function(){
 let T=null;try{if(window.top!==window&&top.FS)T=top.FS;}catch(e){}
-const d=document,el=d.documentElement,hb=d.querySelector('.lhead');if(!hb)return;
+const d=document,el=d.documentElement,hb=d.querySelector('.lbtns');if(!hb)return;
 const can=T?T.can:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
 const cur=()=>T?T.is():!!(d.fullscreenElement||d.webkitFullscreenElement);
 const b=d.createElement('button');b.className='lfs';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (해제: Esc, iPad는 아래로 쓸기)';
