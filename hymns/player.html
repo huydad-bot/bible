@@ -663,6 +663,7 @@ function renderScore(){
 let schedTimer=null;
 /* 아멘: 여러 절을 이어 부를 때 아멘은 마지막 절 끝에만 — SONG.amenAt(아멘 시작 박), 없으면 곡 끝 직전 겹세로줄 위치 */
 const AMEN_AT=(()=>{if(SONG.amenAt!=null)return SONG.amenAt;const d=(SONG.doubleBars||[]).filter(x=>x<SONG_LEN-1e-6&&x>SONG_LEN-12);return d.length?Math.max(...d):SONG_LEN;})();
+const END_HOLD=AMEN_AT>=SONG_LEN-1e-6?1.5:0;   // 아멘이 없는 곡: 마지막 음을 1.5초 더 길게
 let FORM=[],PERF_LEN=0;
 function buildForm(nv){
   nv=Math.max(1,nv|0);FORM=[];let off=0;
@@ -1219,7 +1220,7 @@ function start(m,beat=0,intro=curIntro){
     const play=(t,e,midi,rb)=>{
       if(e<=beat+0.05)return;
       const t0=Math.max(t,beat);
-      const w=T(t0)-base,L=(VGAPS.some(B=>Math.abs(e-B)<1e-6)?T(e-1/RES):T(e))-T(t0),ins=TIMBRE[v.k],m=midi+tr;
+      const w=T(t0)-base,L=(VGAPS.some(B=>Math.abs(e-B)<1e-6)?T(e-1/RES):T(e))-T(t0)+(Math.abs(e-totalBeats)<1e-6?END_HOLD:0),ins=TIMBRE[v.k],m=midi+tr;
       const tl=rb>0?Math.min(2.5,T(e+rb)-T(e)):0;
       const lg=PLAYN?{o:!!PLAYN.legOut&&Math.abs(e-t-PLAYN.dur)<1e-6,i:!!PLAYN.legIn}:{};
       EVQ.push({w,f:()=>{NOTE_TAIL=tl;NOTE_LEG=lg.o;NOTE_SOFT=lg.i;try{noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L);}finally{NOTE_TAIL=0;NOTE_LEG=NOTE_SOFT=false;}}});
@@ -1245,7 +1246,7 @@ function start(m,beat=0,intro=curIntro){
   const pump=()=>{const lim=ctx.currentTime-startAt+.6;
     while(qi<EVQ.length&&EVQ[qi].w<lim){try{EVQ[qi].f();}catch(e){console.warn(e);}qi++;}};
   pump();clearInterval(schedTimer);schedTimer=setInterval(pump,40);
-  endTimer=setTimeout(()=>{songEnded();if(window.onSongEnd)onSongEnd();},(T(totalBeats)-base+.6)*1000);
+  endTimer=setTimeout(()=>{songEnded();if(window.onSongEnd)onSongEnd();},(T(totalBeats)-base+END_HOLD+.6)*1000);
 }
 var PAUSE=null,KEEPV=false;
 /* 곡이 끝나도 연주 화면 유지: ▶ 처음부터 다시, ■ 처음 화면으로 */
