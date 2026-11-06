@@ -197,7 +197,7 @@ body.playing .parts{margin-bottom:0}
 <div class="helpdlg" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
-<li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 2박).</li>
+<li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 1박).</li>
 <li><b>스페이스바</b>: 연주 중 누르면 그 자리에서 일시정지(화면 유지), 다시 누르면 이어서 연주. <b>■ 정지</b> 또는 Esc로 처음 화면으로.</li>
 <li>연주 화면 아래 막대: <b>⏮</b> 처음 · <b>⏪</b> 2마디 뒤로 · <b>⏸/▶</b> 일시정지/계속 · <b>⏩</b> 2마디 앞으로 · <b>⏭</b> 마지막 줄 · <b>■</b> 정지 (키보드 ←/→도 같음). 이동한 음표는 잠깐 주황색으로 빛나고, 위쪽에 몇 마디인지 표시됩니다. 곡이 끝나도 악보 화면이 유지되며 ▶ 다시 연주, ■ 처음 화면으로.</li>
 <li>악보의 <b>음표나 가사를 누르면</b> 그 음부터 바로 연주합니다.</li>
@@ -276,7 +276,7 @@ body.playing .parts{margin-bottom:0}
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
-        <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (교회 반주에서는 보통 2박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value="1">1박 쉼</option><option value="2" selected>2박 쉼</option><option value="3">3박 쉼</option><option value="4">4박 쉼</option></select></label>
+        <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (기본 1박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value="1" selected>1박 쉼</option><option value="2">2박 쉼</option><option value="3">3박 쉼</option><option value="4">4박 쉼</option></select></label>
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
         <input id="follow" type="checkbox" checked hidden>
         <input id="scoreOnly" type="checkbox" checked hidden>
@@ -1438,7 +1438,7 @@ document.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>{
 $('play').onclick=()=>{if(playing){stop();fromBeat=0;}else if(PAUSE)resumeNow();else start(mode,0,getIntro());};
 $('practice').onchange=applyMix;
 if(!FERM.size)$('fermBox').style.display='none';
-try{const vg=localStorage.getItem('hymn_vgap');if(vg!==null)$('vgap').value=vg;}catch(e){}
+try{if(localStorage.getItem('hymn_vgap_d1')!=='1'){localStorage.removeItem('hymn_vgap');localStorage.setItem('hymn_vgap_d1','1');}const vg=localStorage.getItem('hymn_vgap');if(vg!==null)$('vgap').value=vg;}catch(e){}
 $('vgap').onchange=()=>{try{localStorage.setItem('hymn_vgap',$('vgap').value);}catch(e){}if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
 if(NUM_VERSES<2)$('vgapBox').style.display='none';
 try{const f=localStorage.getItem('hymn_ferm');if(f)$('ferm').value=f;}catch(e){}
