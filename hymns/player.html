@@ -357,7 +357,12 @@ const CHORDS=SONG.chords||{};
 const LINE_BREAKS=SONG.lineBreaks||[];
 /* 소절 끝(숨 쉬는 곳): 악보 각 줄의 끝 + 곡별 추가(SONG.phraseEnds) − 곡별 제외(SONG.noBreath) */
 const PHRASE_ENDS=[...new Set([...LINE_BREAKS,...(SONG.phraseEnds||[])].map(Number))].filter(x=>!(SONG.noBreath||[]).some(y=>Math.abs(y-x)<1e-6));
-const isPhraseEnd=b=>PHRASE_ENDS.some(x=>Math.abs(x-b)<1e-6);
+let PE_OK=null;   // 소절 끝 중, 다른 성부가 이어 주는 곳(멜로디가 끄는 동안 움직이는 음·줄을 넘어가는 붙임음)은 숨 없이 지나감
+function isPhraseEnd(b){
+  if(!PE_OK)PE_OK=PHRASE_ENDS.filter(B=>{
+    const S=VOICES.find(v=>v.k==='S'),ln=S&&S.notes.find(n=>Math.abs(n.t+n.dur-B)<1e-6);if(!ln)return false;
+    return !VOICES.some(v=>v.notes.some(n=>(n.t>ln.t+1e-6&&n.t<B-1e-6)||(n.t<B-1e-6&&n.t+n.dur>B+1e-6)));});
+  return PE_OK.some(x=>Math.abs(x-b)<1e-6);}
 var BREATH=.25;                                 // 소절 끝 숨(박): 마지막 음을 이만큼 일찍 뗌 — 박자는 그대로
 const LS_LYR='hymn'+SONG.n+'_lyrics';
 const BARS=SONG.bars||null;                 // 불규칙 마디(아멘 앞 짧은 마디 등)는 마디선 위치를 직접 지정
