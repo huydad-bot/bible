@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="ko">
 <head>
+<script>/* 바로 연주(auto=1)로 열 때는 연주 화면이 준비될 때까지 가려 둠 — 중간 화면이 깜박이지 않게 */
+if(/[?&]auto=1(&|$)/.test(location.search)){document.documentElement.classList.add("autostart");setTimeout(()=>document.documentElement.classList.remove("autostart"),4000);}
+</script>
+<style>html.autostart body:not(.playing){visibility:hidden}html.autostart{background:#f4f1ea}</style>
 <script>try{if(window.top===window&&/player\.html$/.test(location.pathname))location.replace("index.html#"+"player.html"+location.search);}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -1923,7 +1927,7 @@ const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement;const nv=$('p
   nv.style.left=(tr.left-pr.left-18-nv.offsetWidth)+'px';const pi=$('pInfo');pi.style.visibility='';if(pi.getBoundingClientRect().right>nv.getBoundingClientRect().left-8)pi.style.visibility='hidden';};   // 이전곡·다음곡·목록은 제목 왼쪽 (좁으면 왼쪽 정보칩을 숨김)   // 좁으면 오른쪽 상태 글자를 숨김
 addEventListener('resize',place);
 /* 연주 화면의 이전곡·다음곡: 그 곡을 열어 바로 연주 / 목록: 목록에서 고른 곡을 바로 연주 */
-const leave=u=>{try{stop(true);}catch(e){}location.href=u;};
+const leave=u=>{KEEPV=true;try{stop(true);}catch(e){}location.href=u;};   // 화면은 그대로 둔 채 소리만 멈추고 이동
 const wire=(id,src)=>{const b=$(id),o=$(src);if(!o||o.disabled||!o.dataset.n){b.disabled=true;if(o)b.title=o.title;return;}
   b.title=o.title+' (바로 연주)';b.onclick=()=>leave('player.html?n='+encodeURIComponent(o.dataset.n)+'&auto=1');};
 wire('pPrev','navPrev');wire('pNext','navNext');
@@ -1931,7 +1935,7 @@ $('pList').title='곡 목록 — 고른 곡을 바로 연주';$('pList').onclick
 /* auto=1 로 열린 곡은 바로 시작 (브라우저가 자동 재생을 막으면 한 번 눌러 시작) */
 (()=>{const q=new URLSearchParams(location.search);if(q.get('auto')!=='1'||q.get('pl')!=null)return;
   try{q.delete('auto');history.replaceState(null,'','player.html?'+q.toString());}catch(e){}
-  const tapUI=()=>{const d=document.createElement('div');d.id='autoTap';
+  const tapUI=()=>{document.documentElement.classList.remove('autostart');const d=document.createElement('div');d.id='autoTap';
     d.innerHTML='<button>▶ 눌러서 시작</button><small>브라우저가 자동 재생을 막아 한 번 눌러 주어야 합니다</small>';
     document.body.appendChild(d);d.querySelector('button').onclick=()=>{d.remove();start(mode,0,getIntro());};};
   setTimeout(()=>{try{start(mode,0,getIntro());}catch(e){}
