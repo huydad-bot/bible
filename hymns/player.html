@@ -1938,8 +1938,9 @@ $('pList').title='곡 목록 — 고른 곡을 바로 연주';$('pList').onclick
   const tapUI=()=>{document.documentElement.classList.remove('autostart');const d=document.createElement('div');d.id='autoTap';
     d.innerHTML='<button>▶ 눌러서 시작</button><small>브라우저가 자동 재생을 막아 한 번 눌러 주어야 합니다</small>';
     document.body.appendChild(d);d.querySelector('button').onclick=()=>{d.remove();start(mode,0,getIntro());};};
-  setTimeout(()=>{try{start(mode,0,getIntro());}catch(e){}
-    setTimeout(()=>{if(typeof ctx!=='undefined'&&ctx&&ctx.state!=='running'){stop(true);tapUI();}},500);},400);})();
+  /* 연주 화면을 띄우되 소리는 내지 않고 맨 처음에서 대기 — ▶ 또는 스페이스바로 시작 */
+  setTimeout(()=>{try{start(mode,0,getIntro());pauseNow();if(PAUSE){PAUSE.b=0;fromBeat=0;PAUSE.show=true;}
+    $('pos').textContent='준비 · ▶ 또는 스페이스바로 시작';}catch(e){document.documentElement.classList.remove('autostart');}},300);})();
 sync();new MutationObserver(()=>{if(document.body.classList.contains('playing')){sync();requestAnimationFrame(place);}}).observe(document.body,{attributes:true,attributeFilter:['class']});
 const apply=v=>{KEEPV=true;try{setTempo(v,true);}finally{KEEPV=false;}sync();};
 pt.oninput=()=>{pn.value=pt.value;};pt.onchange=()=>apply(pt.value);
