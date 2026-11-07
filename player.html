@@ -197,7 +197,9 @@ body.playing .parts{margin-bottom:0}
 <div class="helpdlg" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
-<li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 1박).</li>
+<li><b>소절 끝 숨</b>: 각 줄의 마지막 음을 ¼박(또는 ½박) 일찍 떼어 숨 쉴 틈을 줍니다. 박자는 늦추지 않습니다.</li>
+<li><b>쉼표</b>: "짧게"면 1박 이상 쉼표에서 앞 음을 이어 끌고 '소절 끝 숨'에서 고른 길이(¼박 또는 ½박)만 쉽니다. "악보대로"면 쉼표 길이 그대로.</li>
+<li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 ½박).</li>
 <li><b>스페이스바</b>: 연주 중 누르면 그 자리에서 일시정지(화면 유지), 다시 누르면 이어서 연주. <b>■ 정지</b> 또는 Esc로 처음 화면으로.</li>
 <li>연주 화면 아래 막대: <b>⏮</b> 처음 · <b>⏪</b> 2마디 뒤로 · <b>⏸/▶</b> 일시정지/계속 · <b>⏩</b> 2마디 앞으로 · <b>⏭</b> 마지막 줄 · <b>■</b> 정지 (키보드 ←/→도 같음). 이동한 음표는 잠깐 주황색으로 빛나고, 위쪽에 몇 마디인지 표시됩니다. 곡이 끝나도 악보 화면이 유지되며 ▶ 다시 연주, ■ 처음 화면으로.</li>
 <li>악보의 <b>음표나 가사를 누르면</b> 그 음부터 바로 연주합니다.</li>
@@ -276,7 +278,9 @@ body.playing .parts{margin-bottom:0}
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
-        <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (기본 1박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value="1" selected>1박 쉼</option><option value="2">2박 쉼</option><option value="3">3박 쉼</option><option value="4">4박 쉼</option></select></label>
+        <label id="restBox" title="쉼표 짧게: 1박 이상 쉼표에서 앞 음을 늘리고 '소절 끝 숨'에서 고른 길이만 쉬고 이어 감 (반주가 덜 끊김) · 악보대로: 쉼표 길이 그대로"><i class="dot"></i>쉼표 <select id="restMode"><option value="short" selected>짧게(숨만)</option><option value="full">악보대로</option></select></label>
+        <label id="brBox" title="소절 끝 숨: 각 줄(소절)의 마지막 음을 조금 일찍 떼어 회중이 숨 쉴 틈을 줌 — 박자는 늦추지 않음"><i class="dot"></i>소절 끝 숨 <select id="breath"><option value="0">끄기</option><option value=".25" selected>짧게(¼박)</option><option value=".5">보통(½박)</option></select></label>
+        <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (기본 ½박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value=".5" selected>½박 쉼</option><option value="1">1박 쉼</option></select></label>
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
         <input id="follow" type="checkbox" checked hidden>
         <input id="scoreOnly" type="checkbox" checked hidden>
@@ -351,6 +355,10 @@ const HAS_REFRAIN=REFRAIN_AT<SONG_LEN;
 const VKEYS=Array.from({length:NUM_VERSES},(_,i)=>'v'+(i+1));
 const CHORDS=SONG.chords||{};
 const LINE_BREAKS=SONG.lineBreaks||[];
+/* 소절 끝(숨 쉬는 곳): 악보 각 줄의 끝 + 곡별 추가(SONG.phraseEnds) − 곡별 제외(SONG.noBreath) */
+const PHRASE_ENDS=[...new Set([...LINE_BREAKS,...(SONG.phraseEnds||[])].map(Number))].filter(x=>!(SONG.noBreath||[]).some(y=>Math.abs(y-x)<1e-6));
+const isPhraseEnd=b=>PHRASE_ENDS.some(x=>Math.abs(x-b)<1e-6);
+var BREATH=.25;                                 // 소절 끝 숨(박): 마지막 음을 이만큼 일찍 뗌 — 박자는 그대로
 const LS_LYR='hymn'+SONG.n+'_lyrics';
 const BARS=SONG.bars||null;                 // 불규칙 마디(아멘 앞 짧은 마디 등)는 마디선 위치를 직접 지정
 const DBL=new Set(SONG.doubleBars||[]);     // 겹세로줄 위치
@@ -663,8 +671,13 @@ function renderScore(){
 let schedTimer=null;
 /* 아멘: 여러 절을 이어 부를 때 아멘은 마지막 절 끝에만 — SONG.amenAt(아멘 시작 박), 없으면 곡 끝 직전 겹세로줄 위치 */
 const AMEN_AT=(()=>{if(SONG.amenAt!=null)return SONG.amenAt;const d=(SONG.doubleBars||[]).filter(x=>x<SONG_LEN-1e-6&&x>SONG_LEN-12);return d.length?Math.max(...d):SONG_LEN;})();
-const NO_AMEN=AMEN_AT>=SONG_LEN-1e-6;
-function endHold(){return Math.max(0,T(totalBeats)-T(totalBeats-1));}   // 곡의 마지막 음(아멘의 "멘" 포함)을 그 곡의 1박만큼 더 길게
+const NO_AMEN=AMEN_AT>=SONG_LEN-1e-6&&!SONG.amenEnd;   // amenEnd: 겹세로줄 없이 곡 끝에 붙은 아멘 (예: 4장)
+function endHold(){                          // 곡의 마지막 음을 조금 더 끌기
+  const bs=Math.max(0,T(totalBeats)-T(totalBeats-1));   // 끝부분 1박의 길이(초)
+  if(NO_AMEN)return bs;                                 // 아멘이 없는 곡: 1박 더
+  const S=VOICES.find(v=>v.k==='S'),ln=S&&S.notes.filter(n=>Math.abs(n.t+n.dur-SONG_LEN)<1e-6).pop();
+  const d=ln?ln.dur:4;return Math.max(0,4-d)*bs;        // 아멘의 "멘": 4박이 되도록 (3박→+1, 2박→+2, 온음표는 그대로)
+}
 let FORM=[],PERF_LEN=0;
 function buildForm(nv){
   nv=Math.max(1,nv|0);FORM=[];let off=0;
@@ -1218,11 +1231,14 @@ function start(m,beat=0,intro=curIntro){
     if(ctx.createStereoPanner){const pn=ctx.createStereoPanner();pn.pan.value=v.pan;g.connect(pn);pn.connect(master);}
     else g.connect(master);
     vGain[v.k]=g;
-    const play=(t,e,midi,rb)=>{
+    const play=(t,e,midi,rb,pe)=>{
       if(e<=beat+0.05)return;
       const t0=Math.max(t,beat);
-      const w=T(t0)-base,L=(VGAPS.some(B=>Math.abs(e-B)<1e-6)?T(e-1/RES):T(e))-T(t0)+(Math.abs(e-totalBeats)<1e-6?endHold():0),ins=TIMBRE[v.k],m=midi+tr;
-      const tl=rb>0?Math.min(2.5,T(e+rb)-T(e)):0;
+      /* 쉼표 짧게: 1박 이상 쉼표 앞의 음을 늘려 '소절 끝 숨' 길이만 남김(끄기면 ¼박) (절·구간이 바뀌는 곳은 제외) */
+      const ext=(REST_SHORT&&rb>=1-1e-6&&!FORM.some(sg=>{const B=introLen+sg.off+(sg.b-sg.a);return B>e+1e-6&&B<=e+rb+1e-6;}))?Math.max(0,rb-(BREATH>0?BREATH:.25)):0;
+      const br=(pe&&!(rb>0)&&BREATH>0&&e-t>=BREATH*2-1e-6&&!VGAPS.some(B=>Math.abs(e-B)<1e-6)&&Math.abs(e-totalBeats)>1e-6)?BREATH:0;   // 소절 끝 숨
+      const w=T(t0)-base,L=(VGAPS.some(B=>Math.abs(e-B)<1e-6)?T(e-1/RES):T(e+ext-br))-T(t0)+(Math.abs(e-totalBeats)<1e-6?endHold():0),ins=TIMBRE[v.k],m=midi+tr;
+      const tl=rb>0?Math.min(2.5,T(e+rb)-T(e+ext)):0;
       const lg=PLAYN?{o:!!PLAYN.legOut&&Math.abs(e-t-PLAYN.dur)<1e-6,i:!!PLAYN.legIn}:{};
       EVQ.push({w,f:()=>{NOTE_TAIL=tl;NOTE_LEG=lg.o;NOTE_SOFT=lg.i;try{noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L);}finally{NOTE_TAIL=0;NOTE_LEG=NOTE_SOFT=false;}}});
     };
@@ -1233,7 +1249,7 @@ function start(m,beat=0,intro=curIntro){
     });
     FORM.forEach(sg=>((v.vNotes&&v.vNotes[sg.v])||v.notes).forEach(n=>{PLAYN=n;       // 절마다 (마지막 절이 아니면 아멘 앞에서 다음 절로)
       const s0=Math.max(n.t,sg.a),e0=Math.min(n.t+n.dur,sg.b);if(e0<=s0)return;
-      play(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,n.midi,e0===n.t+n.dur?n.restAfter:0);
+      play(introLen+sg.off+s0-sg.a,introLen+sg.off+e0-sg.a,n.midi,e0===n.t+n.dur?n.restAfter:0,e0===n.t+n.dur&&isPhraseEnd(e0));
     }));
   });
   {const sel=id=>{const e=$(id);return e&&e.selectedOptions[0]?e.selectedOptions[0].text:'';};   // 연주 화면: 제목 옆에 템포·전주·선택 표시
@@ -1440,7 +1456,13 @@ document.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>{
 $('play').onclick=()=>{if(playing){stop();fromBeat=0;}else if(PAUSE)resumeNow();else start(mode,0,getIntro());};
 $('practice').onchange=applyMix;
 if(!FERM.size)$('fermBox').style.display='none';
-try{if(localStorage.getItem('hymn_vgap_d1')!=='1'){localStorage.removeItem('hymn_vgap');localStorage.setItem('hymn_vgap_d1','1');}const vg=localStorage.getItem('hymn_vgap');if(vg!==null)$('vgap').value=vg;}catch(e){}
+/* 쉼표 설정은 곡 중간에 1박 이상 쉼표가 있는 곡에서만 보임 (절 끝·아멘 앞 쉼표는 제외) */
+if(!VOICES.some(v=>v.notes.some(n=>n.restAfter>=1-1e-6&&n.t+n.dur+n.restAfter<AMEN_AT-1e-6)))$('restBox').style.display='none';
+try{const bv=localStorage.getItem('hymn_breath');if(bv!==null)$('breath').value=bv;}catch(e){}BREATH=+$('breath').value;
+$('breath').onchange=()=>{BREATH=+$('breath').value;try{localStorage.setItem('hymn_breath',$('breath').value);}catch(e){}if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
+var REST_SHORT=true;try{const rm=localStorage.getItem('hymn_rest');if(rm)$('restMode').value=rm;}catch(e){}REST_SHORT=$('restMode').value==='short';
+$('restMode').onchange=()=>{REST_SHORT=$('restMode').value==='short';try{localStorage.setItem('hymn_rest',$('restMode').value);}catch(e){}if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
+try{if(localStorage.getItem('hymn_vgap_d2')!=='1'){localStorage.removeItem('hymn_vgap');localStorage.setItem('hymn_vgap_d2','1');}const vg=localStorage.getItem('hymn_vgap');if(vg!==null)$('vgap').value=(vg==='0.5'?'.5':vg);if(!$('vgap').value)$('vgap').value='.5';}catch(e){}
 $('vgap').onchange=()=>{try{localStorage.setItem('hymn_vgap',$('vgap').value);}catch(e){}if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
 if(NUM_VERSES<2)$('vgapBox').style.display='none';
 try{const f=localStorage.getItem('hymn_ferm');if(f)$('ferm').value=f;}catch(e){}
