@@ -201,6 +201,7 @@ body.playing .parts{margin-bottom:0}
 <div class="helpdlg" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
+<li><b>가사</b>: 연주 화면에서 "부르는 절만"은 지금 절 가사 한 줄만, "부르는 절 강조"는 모든 절을 보이되 지금 절만 또렷하게(나머지는 흐리게), "모든 절"은 그대로 보입니다.</li>
 <li><b>🎵 멜로디만 / 🎼 4부 보기</b>: 악보를 소프라노 한 줄만 크게 보거나 4성부 모두 보기 (소리는 그대로).</li>
 <li><b>소절 끝 숨</b>: 각 줄의 마지막 음을 ¼박(또는 ½박) 일찍 떼어 숨 쉴 틈을 줍니다. 박자는 늦추지 않습니다.</li>
 <li><b>쉼표</b>: "짧게"면 1박 이상 쉼표에서 앞 음을 이어 끌고 '소절 끝 숨'에서 고른 길이(¼박 또는 ½박)만 쉽니다. "악보대로"면 쉼표 길이 그대로.</li>
@@ -284,6 +285,7 @@ body.playing .parts{margin-bottom:0}
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
+        <label id="lyrOneBox" title="연주 화면의 가사 — 부르는 절만: 지금 절 한 줄만 · 부르는 절 강조: 모든 절을 보이되 지금 절만 또렷하게 · 모든 절: 그대로"><i class="dot"></i>가사 <select id="lyrMode"><option value="one">부르는 절만</option><option value="dim">부르는 절 강조</option><option value="all">모든 절</option></select></label>
         <label id="restBox" title="쉼표 짧게: 1박 이상 쉼표에서 앞 음을 늘리고 '소절 끝 숨'에서 고른 길이만 쉬고 이어 감 (반주가 덜 끊김) · 악보대로: 쉼표 길이 그대로"><i class="dot"></i>쉼표 <select id="restMode"><option value="short" selected>짧게(숨만)</option><option value="full">악보대로</option></select></label>
         <label id="brBox" title="소절 끝 숨: 각 줄(소절)의 마지막 음을 조금 일찍 떼어 회중이 숨 쉴 틈을 줌 — 박자는 늦추지 않음"><i class="dot"></i>소절 끝 숨 <select id="breath"><option value="0">끄기</option><option value=".25" selected>짧게(¼박)</option><option value=".5">보통(½박)</option></select></label>
         <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (기본 ½박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value=".5" selected>½박 쉼</option><option value="1">1박 쉼</option></select></label>
@@ -576,6 +578,14 @@ function sylFor(n,sy){                        // 붙임줄로 나뉜 뒷조각�
   const extra=splitDur(n.dur).length-1;
   return extra>0?[x].concat(Array(extra).fill(x===undefined?undefined:'_')):[x];
 }
+let LYR_VERSE=null;                         // 연주 화면에서 보여 줄 절 (null=모든 절)
+let LYR_MODE='one';try{const m=localStorage.getItem('hymn_lyrMode');if(m)LYR_MODE=m;else if(localStorage.getItem('hymn_lyrOne')==='0')LYR_MODE='all';}catch(e){}   // all: 모든 절 · one: 부르는 절만 · dim: 부르는 절 또렷, 나머지 흐리게
+var DIM_V=null;
+function applyDim(v){DIM_V=v;const filled=VKEYS.filter(k=>sylls(LYR[k]).length);
+  document.querySelectorAll('#score text.abcjs-lyric').forEach(tx=>{const ts=tx.querySelectorAll('tspan');if(ts.length<2)return;
+    ts.forEach((t,i)=>t.classList.toggle('lyr-dim',v!=null&&filled[i]!==VKEYS[v]));});}
+function setLyrVerse(v){if(LYR_VERSE===v)return;LYR_VERSE=v;renderScore();PAGES=null;CURPAGE=null;curLine=-1;
+  if(document.body.classList.contains('playing'))fitTwoLines();}
 function lyricLinesFor(i){
   const line=SL[i];if(!line||!line.length)return '';
   const isRef=line[0].t>=REFRAIN_AT;
@@ -586,6 +596,7 @@ function lyricLinesFor(i){
   }else{
     const multi=VKEYS.filter(k=>lyrSy(k).length).length>1;
     VKEYS.forEach((k,vi)=>{
+      if(LYR_VERSE!=null&&vi!==LYR_VERSE)return;      // 연주 중: 부르는 절 가사만
       const sy=lyrSy(k);if(!sy.length)return;
       const arr=line.flatMap(n=>sylFor(n,sy));
       for(let i=0;i<arr.length&&arr[i]==='_';i++)arr[i]='\u200b';   // 줄 첫머리의 '_'(가사 없는 음)는 빈칸으로
@@ -631,7 +642,7 @@ let showAcc=false;try{showAcc=(localStorage.getItem('hymn_acc')??localStorage.ge
 let noteMap=[];               // {k,start,dur,els}
 let elemStart=new Map();
 function renderScore(){
-  noteMap=[];elemStart=new Map();lit=[];
+  DIM_V=null;noteMap=[];elemStart=new Map();lit=[];
   if(!window.ABCJS){$('score').innerHTML='<div class="err">악보 라이브러리를 불러오지 못했습니다 (인터넷 연결 확인). 연주 버튼은 그대로 작동합니다.</div>';return;}
   const vis=window._vis=ABCJS.renderAbc('score',buildABC(),{
     responsive:'resize',add_classes:true,visualTranspose:+$('trans').value,staffwidth:880,scale:1,
@@ -701,6 +712,7 @@ function perfPos(p){                        // 연주 박(전주 뒤) → {악�
 }
 /* 누른 가사가 몇 절 줄인지 → 그 절의 그 자리부터 연주 (음표를 누르면 지금 부르는 절, 멈춰 있으면 1절) */
 function clickedVerse(el,ev,b){
+  if(LYR_VERSE!=null)return LYR_VERSE;              // 한 절만 보일 때는 그 절
   const filled=VKEYS.filter(k=>sylls(LYR[k]).length);
   let cur=0;if(playing){const g=curBeat();if(g>=introLen)cur=perfPos(g-introLen).v;}
   if(!ev||b>=REFRAIN_AT||filled.length<2)return cur;
@@ -1287,7 +1299,7 @@ function stop(silent){
   clearTimeout(endTimer);clearInterval(schedTimer);
   if(master){const m=master;m.gain.setTargetAtTime(0,ctx.currentTime,.03);setTimeout(()=>m.disconnect(),200);master=null;}
   playing=false;if(!KEEPV)clearHL();showCount(0);$('midiLive').className='';fadeTok++;$('score').classList.remove('fading');
-  if(!KEEPV){PAUSE=null;document.body.classList.remove('paused');document.body.classList.remove('playing');fitTwoLines();exitLandscape();}
+  if(!KEEPV){PAUSE=null;document.body.classList.remove('paused');document.body.classList.remove('playing');if(LYR_VERSE!=null){LYR_VERSE=null;renderScore();PAGES=null;}if(DIM_V!=null)applyDim(null);fitTwoLines();exitLandscape();}
   if(!silent){$('pos').textContent='정지됨';}
   applyMix();
 }
@@ -1450,6 +1462,10 @@ function tick(){
         }
       });
       const PV=document.body.classList.contains('playing');
+      if(PV&&LYR_MODE!=='all'&&VKEYS.filter(k=>lyrSy(k).length).length>1){   // 다음에 부를 절로 가사 바꿈 (페이지가 넘어가는 때에 맞춰)
+        let a=Ginv(T(g)+PAGE_AHEAD_SEC);if(a>=totalBeats||a<g)a=g;
+        const vv=a>=introLen?perfPos(a-introLen).v:(FORM[0]?FORM[0].v:0);
+        if(LYR_MODE==='one'){if(vv!==LYR_VERSE)setLyrVerse(vv);}else if(vv!==DIM_V)applyDim(vv);}
       if(inIntro){if(PV)followFlow(0,0);else followLine(0);}      // 전주 동안은 1절 첫 줄을 보여 줌
       else if(PV){let a=Ginv(T(g)+PAGE_AHEAD_SEC);if(a>=totalBeats||a<g)a=g;followFlow(aheadLine(g,ib,true),a-introLen);}   // 곡의 흐름대로 페이지 넘김   // 화면 페이지 단위(2~3줄)로 넘김
       else followLine(aheadLine(g,ib),LINE_BREAKS.filter(x=>ib>=x).length);
@@ -1970,6 +1986,15 @@ const nav=$('pNav');if(nav){const b=document.createElement('button');b.id='pView
 const vb=$('viewBtn');if(vb)vb.onclick=toggle;
 lab();
 })();
+</script>
+<style>#score tspan.lyr-dim{fill-opacity:.25}</style>
+<script>/* 연주 화면 가사 보기 설정 */
+(function(){const c=$('lyrMode');if(!c)return;c.value=LYR_MODE;
+  if(NUM_VERSES<2)$('lyrOneBox').style.display='none';
+  c.onchange=()=>{LYR_MODE=c.value;try{localStorage.setItem('hymn_lyrMode',LYR_MODE);}catch(e){}
+    if(LYR_MODE!=='one'&&LYR_VERSE!=null){LYR_VERSE=null;renderScore();PAGES=null;CURPAGE=null;curLine=-1;if(document.body.classList.contains('playing'))fitTwoLines();}
+    if(LYR_MODE!=='dim'&&DIM_V!=null)applyDim(null);
+    if(PAUSE)PAUSE.show=true;};})();
 </script>
 </body>
 </html>
