@@ -12,6 +12,7 @@ registerSong({
   tempoText: '보통으로',
   verses: 1,
   lineBreaks: [28],
+  amenEnd: true,       // 마지막 '아-멘'이 곡 안에 들어 있음(겹세로줄 없음) — 끝음 처리에서 아멘으로 봄
   melisma: [47, 51],   // 영(E♭–F)·아(G–F) 를 두 음에 이어 부름, 멘은 마지막 E♭
   chords: {0:'Eb',4:'Bb',7:'Eb',8:'Bb',12:'Eb',14:'Bb',18:'F7',20:'Bb',24:'Eb',
            28:'Bb',36:'Eb',40:'Bb',44:'Eb',50:'Bb',52:'Eb'},
