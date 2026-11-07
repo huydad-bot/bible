@@ -1706,8 +1706,8 @@ E('hPlay').before(btn);
  const mk=(id,txt,tip,fn)=>{const b=document.createElement('button');b.className='setbtn navbtn';b.id=id;b.textContent=txt;b.title=tip;if(fn)b.onclick=fn;else b.disabled=true;btn.before(b);return b;};
  const pv=ix>0?LIST[ix-1]:null,nx=ix>=0&&ix<LIST.length-1?LIST[ix+1]:null;
  const goN=n=>()=>{try{stop(true);}catch(e){}location.href='player.html?n='+n;};
- mk('navPrev','◀ 이전곡',pv?`이전 곡: ${pv.n} ${pv.title}`:'첫 곡입니다',pv&&goN(pv.n));
- mk('navNext','다음곡 ▶',nx?`다음 곡: ${nx.n} ${nx.title}`:'마지막 곡입니다',nx&&goN(nx.n));
+ mk('navPrev','◀ 이전곡',pv?`이전 곡: ${pv.n} ${pv.title}`:'첫 곡입니다',pv&&goN(pv.n)).dataset.n=pv?pv.n:'';
+ mk('navNext','다음곡 ▶',nx?`다음 곡: ${nx.n} ${nx.title}`:'마지막 곡입니다',nx&&goN(nx.n)).dataset.n=nx?nx.n:'';
  mk('navList','☰ 목록','곡 목록으로 돌아가기',()=>{try{stop(true);}catch(e){}location.href='list.html';});
  const back=document.getElementById('back');if(back)back.style.display='none';}
 const st=document.createElement('style');st.textContent=`
@@ -1901,6 +1901,9 @@ document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEdita
 body.playing .pnav{display:inline-flex}
 .pnav button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 11px;font:600 13px inherit;font-family:inherit;cursor:pointer;color:var(--ink)}
 .pnav button:disabled{opacity:.4;cursor:default}
+#autoTap{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(250,248,243,.85)}
+#autoTap button{font:700 22px inherit;font-family:inherit;padding:16px 34px;border-radius:14px;border:0;background:#1f7a4c;color:#fff;cursor:pointer}
+#autoTap small{color:var(--mute);font-size:13px}
 .pctl{display:none;align-items:center;gap:12px;font-size:13px;color:var(--mute);white-space:nowrap}
 body.playing .pctl{display:inline-flex}
 .pctl label{display:inline-flex;align-items:center;gap:5px;cursor:default}
@@ -1919,8 +1922,20 @@ const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement;const nv=$('p
   const ps=$('pos');ps.style.visibility='';if(c.getBoundingClientRect().right>ps.getBoundingClientRect().left-8)ps.style.visibility='hidden';
   nv.style.left=(tr.left-pr.left-18-nv.offsetWidth)+'px';const pi=$('pInfo');pi.style.visibility='';if(pi.getBoundingClientRect().right>nv.getBoundingClientRect().left-8)pi.style.visibility='hidden';};   // 이전곡·다음곡·목록은 제목 왼쪽 (좁으면 왼쪽 정보칩을 숨김)   // 좁으면 오른쪽 상태 글자를 숨김
 addEventListener('resize',place);
-const wire=(id,src)=>{const b=$(id),o=$(src);if(!o){b.disabled=true;return;}b.disabled=o.disabled;b.title=o.title;b.onclick=()=>o.click();};
-wire('pPrev','navPrev');wire('pNext','navNext');wire('pList','navList');
+/* 연주 화면의 이전곡·다음곡: 그 곡을 열어 바로 연주 / 목록: 목록에서 고른 곡을 바로 연주 */
+const leave=u=>{try{stop(true);}catch(e){}location.href=u;};
+const wire=(id,src)=>{const b=$(id),o=$(src);if(!o||o.disabled||!o.dataset.n){b.disabled=true;if(o)b.title=o.title;return;}
+  b.title=o.title+' (바로 연주)';b.onclick=()=>leave('player.html?n='+encodeURIComponent(o.dataset.n)+'&auto=1');};
+wire('pPrev','navPrev');wire('pNext','navNext');
+$('pList').title='곡 목록 — 고른 곡을 바로 연주';$('pList').onclick=()=>leave('list.html?auto=1');
+/* auto=1 로 열린 곡은 바로 시작 (브라우저가 자동 재생을 막으면 한 번 눌러 시작) */
+(()=>{const q=new URLSearchParams(location.search);if(q.get('auto')!=='1'||q.get('pl')!=null)return;
+  try{q.delete('auto');history.replaceState(null,'','player.html?'+q.toString());}catch(e){}
+  const tapUI=()=>{const d=document.createElement('div');d.id='autoTap';
+    d.innerHTML='<button>▶ 눌러서 시작</button><small>브라우저가 자동 재생을 막아 한 번 눌러 주어야 합니다</small>';
+    document.body.appendChild(d);d.querySelector('button').onclick=()=>{d.remove();start(mode,0,getIntro());};};
+  setTimeout(()=>{try{start(mode,0,getIntro());}catch(e){}
+    setTimeout(()=>{if(typeof ctx!=='undefined'&&ctx&&ctx.state!=='running'){stop(true);tapUI();}},500);},400);})();
 sync();new MutationObserver(()=>{if(document.body.classList.contains('playing')){sync();requestAnimationFrame(place);}}).observe(document.body,{attributes:true,attributeFilter:['class']});
 const apply=v=>{KEEPV=true;try{setTempo(v,true);}finally{KEEPV=false;}sync();};
 pt.oninput=()=>{pn.value=pt.value;};pt.onchange=()=>apply(pt.value);

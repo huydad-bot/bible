@@ -1,7 +1,9 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<script>try{if(window.top===window)location.replace("index.html");}catch(e){}</script>
+<script>
+/* 연주 화면의 ☰ 목록으로 왔으면(list.html?auto=1) 고른 곡을 바로 연주 */
+const AUTO=new URLSearchParams(location.search).get('auto')==='1'?'&auto=1':'';try{if(window.top===window)location.replace("index.html");}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -81,7 +83,7 @@ function draw(){
   const q=$('q').value.trim().toLowerCase().replace(/\s+/g,'');
   const items=LIST.filter(s=>!q||String(s.n).startsWith(q)||(s.title+(s.tune||'')).toLowerCase().replace(/\s+/g,'').includes(q));
   $('cnt').textContent=items.length+' / '+LIST.length+'곡';
-  $('list').innerHTML=items.length?items.map(s=>`<li><a href="player.html?n=${encodeURIComponent(s.n)}">
+  $('list').innerHTML=items.length?items.map(s=>`<li><a href="player.html?n=${encodeURIComponent(s.n)}${AUTO}">
     <span class="no">${esc(s.n)}</span>
     <span class="t">${esc(s.title)}<small>${esc(s.tune||'')}</small></span>
     <span class="badges">${s.key?`<span class="b">${esc(s.key)}</span>`:''}${hasLyrics(s.n)?'<span class="b ly">가사</span>':''}</span>
