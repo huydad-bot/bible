@@ -201,6 +201,7 @@ body.playing .parts{margin-bottom:0}
 <div class="helpdlg" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
+<li><b>🎵 멜로디만 / 🎼 4부 보기</b>: 악보를 소프라노 한 줄만 크게 보거나 4성부 모두 보기 (소리는 그대로).</li>
 <li><b>소절 끝 숨</b>: 각 줄의 마지막 음을 ¼박(또는 ½박) 일찍 떼어 숨 쉴 틈을 줍니다. 박자는 늦추지 않습니다.</li>
 <li><b>쉼표</b>: "짧게"면 1박 이상 쉼표에서 앞 음을 이어 끌고 '소절 끝 숨'에서 고른 길이(¼박 또는 ½박)만 쉽니다. "악보대로"면 쉼표 길이 그대로.</li>
 <li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 ½박).</li>
@@ -615,11 +616,12 @@ function echoLineFor(i){
   const arr=line.filter(n=>n.p!=='r').flatMap(n=>{const x=echoSyl(n,sy);const ex=splitDur(n.dur).length-1;return [x].concat(Array(ex).fill(x===undefined?undefined:'_'));});
   return 'w: '+arr.map(x=>x===undefined?'\u200b':x).join(' ')+'\n';   // 빈칸은 폭 없는 글자로(맨 앞 * 가 무시되는 문제 회피)
 }
+let MEL_ONLY=false;try{MEL_ONLY=localStorage.getItem('hymn_view')==='mel';}catch(e){}   // 악보 보기: 멜로디(소프라노)만 / 4부
 function buildABC(){
-  let abc=`X:1\nM:${SONG.meter||'4/4'}\nL:1/16\nK:${SONG.key}\n%%score (S A) (T B)\n`+
-    `V:S clef=treble\nV:A clef=treble\nV:T clef=bass\nV:B clef=bass\n`;
+  let abc=`X:1\nM:${SONG.meter||'4/4'}\nL:1/16\nK:${SONG.key}\n`+(MEL_ONLY?`%%score S\nV:S clef=treble\n`:`%%score (S A) (T B)\n`+
+    `V:S clef=treble\nV:A clef=treble\nV:T clef=bass\nV:B clef=bass\n`);
   const L=Object.fromEntries(VOICES.map(v=>[v.k,abcLines(v)]));
-  for(let i=0;i<L.S.length;i++)VOICES.forEach(v=>{abc+=`[V:${v.k}] ${L[v.k][i]}\n`;if(v.k==='S')abc+=lyricLinesFor(i);if(EV&&v.k===ECHO_V)abc+=echoLineFor(i);});
+  for(let i=0;i<L.S.length;i++)VOICES.forEach(v=>{if(MEL_ONLY&&v.k!=='S')return;abc+=`[V:${v.k}] ${L[v.k][i]}\n`;if(v.k==='S')abc+=lyricLinesFor(i);if(EV&&v.k===ECHO_V)abc+=echoLineFor(i);});
   return abc;
 }
 
@@ -1706,7 +1708,8 @@ document.body.appendChild(dlg);
 const btn=document.createElement('button');btn.className='setbtn';btn.id='plBtn';btn.title='여러 곡을 순서대로 이어서 연주';btn.textContent='📋 예약';
 E('hPlay').before(btn);
 /* 이전 곡 · 다음 곡 · 목록 (← 목록 링크 대신) */
-{const ix=LIST.findIndex(x=>String(x.n)===String(SONG.n));
+{{const vb=document.createElement('button');vb.className='setbtn navbtn viewbtn';vb.id='viewBtn';btn.before(vb);}
+const ix=LIST.findIndex(x=>String(x.n)===String(SONG.n));
  const mk=(id,txt,tip,fn)=>{const b=document.createElement('button');b.className='setbtn navbtn';b.id=id;b.textContent=txt;b.title=tip;if(fn)b.onclick=fn;else b.disabled=true;btn.before(b);return b;};
  const pv=ix>0?LIST[ix-1]:null,nx=ix>=0&&ix<LIST.length-1?LIST[ix+1]:null;
  const goN=n=>()=>{try{stop(true);}catch(e){}location.href='player.html?n='+n;};
@@ -1948,6 +1951,24 @@ pn.onchange=()=>apply(pn.value);pn.onkeydown=e=>{if(e.key==='Enter'){e.preventDe
 pm.oninput=()=>{const m=mv();if(!m)return;m.value=pm.value;m.dispatchEvent(new Event('input'));};
 pm.onchange=()=>{const m=mv();if(m)m.dispatchEvent(new Event('change'));};
 [pt,pn,pm].forEach(x=>x.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();}));
+})();
+</script>
+<script>/* 악보 보기 전환: 멜로디(소프라노 한 줄) ↔ 4부(SATB) */
+(function(){
+const lab=()=>{const t=MEL_ONLY?'🎼 4부 보기':'🎵 멜로디만';const tip=MEL_ONLY?'4성부(SATB) 악보를 모두 보기':'소프라노(멜로디) 악보만 크게 보기 — 소리는 그대로';
+  ['viewBtn','pView'].forEach(id=>{const b=$(id);if(b){b.textContent=t;b.title=tip;}});};
+function toggle(){
+  MEL_ONLY=!MEL_ONLY;try{localStorage.setItem('hymn_view',MEL_ONLY?'mel':'satb');}catch(e){}lab();
+  const was=playing,b=was?curBeat():0,it=curIntro;
+  if(was){KEEPV=true;try{stop(true);}finally{KEEPV=false;}}
+  renderScore();PAGES=null;CURPAGE=null;curLine=-1;
+  if(document.body.classList.contains('playing'))fitTwoLines();
+  if(was){KEEPV=true;try{start(mode,Math.max(0,b),it);}finally{KEEPV=false;}}
+  else if(PAUSE){PAUSE.show=true;}
+}
+const nav=$('pNav');if(nav){const b=document.createElement('button');b.id='pView';nav.insertBefore(b,nav.firstChild);b.onclick=toggle;}
+const vb=$('viewBtn');if(vb)vb.onclick=toggle;
+lab();
 })();
 </script>
 </body>
