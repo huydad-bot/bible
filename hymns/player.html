@@ -1727,7 +1727,7 @@ document.body.appendChild(dlg);
 const btn=document.createElement('button');btn.className='setbtn';btn.id='plBtn';btn.title='여러 곡을 순서대로 이어서 연주';btn.textContent='📋 예약';
 E('hPlay').before(btn);
 /* 이전 곡 · 다음 곡 · 목록 (← 목록 링크 대신) */
-{{const vb=document.createElement('button');vb.className='setbtn navbtn viewbtn';vb.id='viewBtn';btn.before(vb);}
+{
 const ix=LIST.findIndex(x=>String(x.n)===String(SONG.n));
  const mk=(id,txt,tip,fn)=>{const b=document.createElement('button');b.className='setbtn navbtn';b.id=id;b.textContent=txt;b.title=tip;if(fn)b.onclick=fn;else b.disabled=true;btn.before(b);return b;};
  const pv=ix>0?LIST[ix-1]:null,nx=ix>=0&&ix<LIST.length-1?LIST[ix+1]:null;
