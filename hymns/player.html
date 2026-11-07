@@ -197,6 +197,7 @@ body.playing .parts{margin-bottom:0}
 <div class="helpdlg" id="help" hidden><div class="hbox" role="dialog" aria-label="사용법"><button class="hclose" id="helpClose" title="닫기">✕</button><h2>사용법</h2><h3>기본 사용</h3>
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
+<li><b>쉼표</b>: "짧게"면 1박 이상 쉼표에서 숨 쉴 0.5박만 쉬고 앞 음을 이어 끕니다. "악보대로"면 쉼표 길이 그대로.</li>
 <li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 1박).</li>
 <li><b>스페이스바</b>: 연주 중 누르면 그 자리에서 일시정지(화면 유지), 다시 누르면 이어서 연주. <b>■ 정지</b> 또는 Esc로 처음 화면으로.</li>
 <li>연주 화면 아래 막대: <b>⏮</b> 처음 · <b>⏪</b> 2마디 뒤로 · <b>⏸/▶</b> 일시정지/계속 · <b>⏩</b> 2마디 앞으로 · <b>⏭</b> 마지막 줄 · <b>■</b> 정지 (키보드 ←/→도 같음). 이동한 음표는 잠깐 주황색으로 빛나고, 위쪽에 몇 마디인지 표시됩니다. 곡이 끝나도 악보 화면이 유지되며 ▶ 다시 연주, ■ 처음 화면으로.</li>
@@ -276,6 +277,7 @@ body.playing .parts{margin-bottom:0}
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
+        <label id="restBox" title="쉼표 짧게: 1박 이상 쉼표에서 앞 음을 늘려 숨 쉴 0.5박만 쉬고 이어 감 (반주가 덜 끊김) · 악보대로: 쉼표 길이 그대로"><i class="dot"></i>쉼표 <select id="restMode"><option value="short" selected>짧게(숨 0.5박)</option><option value="full">악보대로</option></select></label>
         <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (기본 1박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value="1" selected>1박 쉼</option><option value="2">2박 쉼</option><option value="3">3박 쉼</option><option value="4">4박 쉼</option></select></label>
         <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
         <input id="follow" type="checkbox" checked hidden>
@@ -1226,8 +1228,10 @@ function start(m,beat=0,intro=curIntro){
     const play=(t,e,midi,rb)=>{
       if(e<=beat+0.05)return;
       const t0=Math.max(t,beat);
-      const w=T(t0)-base,L=(VGAPS.some(B=>Math.abs(e-B)<1e-6)?T(e-1/RES):T(e))-T(t0)+(Math.abs(e-totalBeats)<1e-6?endHold():0),ins=TIMBRE[v.k],m=midi+tr;
-      const tl=rb>0?Math.min(2.5,T(e+rb)-T(e)):0;
+      /* 쉼표 짧게: 1박 이상 쉼표 앞의 음을 늘려 숨 쉴 0.5박만 남김 (절·구간이 바뀌는 곳은 제외) */
+      const ext=(REST_SHORT&&rb>=1-1e-6&&!FORM.some(sg=>{const B=introLen+sg.off+(sg.b-sg.a);return B>e+1e-6&&B<=e+rb+1e-6;}))?rb-.5:0;
+      const w=T(t0)-base,L=(VGAPS.some(B=>Math.abs(e-B)<1e-6)?T(e-1/RES):T(e+ext))-T(t0)+(Math.abs(e-totalBeats)<1e-6?endHold():0),ins=TIMBRE[v.k],m=midi+tr;
+      const tl=rb>0?Math.min(2.5,T(e+rb)-T(e+ext)):0;
       const lg=PLAYN?{o:!!PLAYN.legOut&&Math.abs(e-t-PLAYN.dur)<1e-6,i:!!PLAYN.legIn}:{};
       EVQ.push({w,f:()=>{NOTE_TAIL=tl;NOTE_LEG=lg.o;NOTE_SOFT=lg.i;try{noteOn(ctx,ins,v,g,lfoG,m,startAt+w,L);}finally{NOTE_TAIL=0;NOTE_LEG=NOTE_SOFT=false;}}});
     };
@@ -1445,6 +1449,8 @@ document.querySelectorAll('.pbtn').forEach(b=>b.onclick=()=>{
 $('play').onclick=()=>{if(playing){stop();fromBeat=0;}else if(PAUSE)resumeNow();else start(mode,0,getIntro());};
 $('practice').onchange=applyMix;
 if(!FERM.size)$('fermBox').style.display='none';
+var REST_SHORT=true;try{const rm=localStorage.getItem('hymn_rest');if(rm)$('restMode').value=rm;}catch(e){}REST_SHORT=$('restMode').value==='short';
+$('restMode').onchange=()=>{REST_SHORT=$('restMode').value==='short';try{localStorage.setItem('hymn_rest',$('restMode').value);}catch(e){}if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
 try{if(localStorage.getItem('hymn_vgap_d1')!=='1'){localStorage.removeItem('hymn_vgap');localStorage.setItem('hymn_vgap_d1','1');}const vg=localStorage.getItem('hymn_vgap');if(vg!==null)$('vgap').value=vg;}catch(e){}
 $('vgap').onchange=()=>{try{localStorage.setItem('hymn_vgap',$('vgap').value);}catch(e){}if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
 if(NUM_VERSES<2)$('vgapBox').style.display='none';
