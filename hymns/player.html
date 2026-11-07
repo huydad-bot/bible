@@ -1390,12 +1390,16 @@ function pageFade(y,li){
 }
 /* 전주 끝 카운트 (4·3·2·1) — 1절 첫 음 직전 4박 */
 const COUNT_N=4;let lastCount=0;
-function placeCount(el){                        // 1절 첫 음 바로 위 빈칸에 표시
+function placeCount(el){                        // 첫 줄 앞머리(음자리표와 박자표 사이) 위에 표시
   const pb=Math.max(0,document.querySelector('.panel').getBoundingClientRect().bottom);
   const first=noteMap.filter(n=>n.k==='S'&&n.els&&n.els[0]).sort((a,b)=>a.start-b.start)[0];
   let x=window.innerWidth/2,y=pb+10;
   if(first){const r=first.els[0].getBoundingClientRect();
     if(r.width||r.height){x=r.left+r.width/2;y=r.top-44-4;}}
+  /* 첫 줄 높은음자리표와 박자표 사이(조표 자리) 위에 — 코드·빠르기 글자와 겹치지 않게 */
+  const q=c=>{const e=document.querySelector('#score svg '+c+'.abcjs-l0');if(!e)return null;const r=e.getBoundingClientRect();return (r.width||r.height)?r:null;};
+  const cl=q('.abcjs-clef'),ts=q('.abcjs-time-signature')||q('.abcjs-key-signature');
+  if(cl){const rx=ts?ts.left:cl.right+30;x=(cl.right+rx)/2;y=cl.top-44-4;}
   x=Math.min(Math.max(x,26),window.innerWidth-26);
   el.style.left=x+'px';el.style.top=Math.max(pb+2,y)+'px';
 }
