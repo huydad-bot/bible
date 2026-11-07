@@ -260,6 +260,7 @@ body.playing .parts{margin-bottom:0}
         <button class="pbtn" data-v="T" title="테너">Ten</button>
         <button class="pbtn" data-v="B" title="베이스">Bas</button>
         <button class="pbtn on" data-v="ALL" title="4성부 모두">All</button>
+        <label class="accopt" title="선택한 파트는 크게, 다른 파트는 작게 들립니다">연습 모드 <input id="practice" type="checkbox"></label>
         <label class="keybtn" title="이조 (조 바꾸기)">이조<select id="trans"></select></label>
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <span class="sp"></span>
@@ -281,7 +282,6 @@ body.playing .parts{margin-bottom:0}
         <label id="restBox" title="쉼표 짧게: 1박 이상 쉼표에서 앞 음을 늘리고 '소절 끝 숨'에서 고른 길이만 쉬고 이어 감 (반주가 덜 끊김) · 악보대로: 쉼표 길이 그대로"><i class="dot"></i>쉼표 <select id="restMode"><option value="short" selected>짧게(숨만)</option><option value="full">악보대로</option></select></label>
         <label id="brBox" title="소절 끝 숨: 각 줄(소절)의 마지막 음을 조금 일찍 떼어 회중이 숨 쉴 틈을 줌 — 박자는 늦추지 않음"><i class="dot"></i>소절 끝 숨 <select id="breath"><option value="0">끄기</option><option value=".25" selected>짧게(¼박)</option><option value=".5">보통(½박)</option></select></label>
         <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (기본 ½박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value=".5" selected>½박 쉼</option><option value="1">1박 쉼</option></select></label>
-        <label title="선택한 파트는 크게, 다른 파트는 작게 들립니다"><i class="dot"></i>연습 모드 <input id="practice" type="checkbox"></label>
         <input id="follow" type="checkbox" checked hidden>
         <input id="scoreOnly" type="checkbox" checked hidden>
       </div>
