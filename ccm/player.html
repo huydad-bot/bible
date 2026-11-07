@@ -181,7 +181,7 @@ body:not(.playing) #curtain{display:none!important}
 body.playing .pinfo{display:inline-flex}
 @media (max-width:560px){body.playing .pinfo{display:none}}
 @media (max-height:500px){body.playing .panel{padding:2px 0;margin-bottom:2px}body.playing .play{padding:3px 12px;font-size:13px}body.playing .card{border-radius:8px}}
-body.playing .panel{position:sticky;top:0;padding:6px 0;margin-bottom:6px}
+body.playing .panel{position:sticky;top:0;padding:18px 0;margin-bottom:6px}   /* 연주 화면 위쪽 막대: 세로로 넉넉하게 */
 body.playing .parts{margin-bottom:0}
 /* 카운트 숫자 */
 .count{position:fixed;left:50%;top:8px;z-index:20;width:44px;height:44px;margin-left:-22px;border-radius:50%;
@@ -265,7 +265,7 @@ body.playing .parts{margin-bottom:0}
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
-        <span class="pinfo" id="pInfo"></span><span class="pctl" id="pCtl"><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">♩<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디<input id="pMel" type="range" min="0" max="100"></label></span>
+        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀ 이전곡</button><button id="pNext" title="다음 곡">다음곡 ▶</button><button id="pList" title="곡 목록으로">☰ 목록</button></span><span class="pctl" id="pCtl"><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">♩<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디<input id="pMel" type="range" min="0" max="100"></label></span>
         <span id="midiLive"></span>
         <span class="status" id="pos">▶ 시작을 누르세요</span>
       </div>
@@ -2180,23 +2180,30 @@ document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEdita
 })();
 </script>
 <style>
+.pnav{display:none;gap:6px;white-space:nowrap}
+body.playing .pnav{display:inline-flex}
+.pnav button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 11px;font:600 13px inherit;font-family:inherit;cursor:pointer;color:var(--ink)}
+.pnav button:disabled{opacity:.4;cursor:default}
 .pctl{display:none;align-items:center;gap:12px;font-size:13px;color:var(--mute);white-space:nowrap}
 body.playing .pctl{display:inline-flex}
 .pctl label{display:inline-flex;align-items:center;gap:5px;cursor:default}
 .pctl input[type=range]{width:80px}
 .pctl input[type=number]{width:52px;padding:2px 4px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff}
 @media (max-width:1000px){.pctl input[type=range]{width:60px}}
-@media (min-width:700px){body.playing .pctl{position:absolute;top:50%;transform:translateY(-50%)}}
-@media (max-width:640px){.pctl{display:none!important}}
+@media (min-width:700px){body.playing .pctl,body.playing .pnav{position:absolute;top:50%;transform:translateY(-50%)}}
+@media (max-width:640px){.pctl,.pnav{display:none!important}}
 </style>
 <script>/* 연주 화면 위쪽: 템포·멜로디 음량 (설정의 같은 항목과 연동) */
 (function(){
 const pt=$('pTempo'),pn=$('pTempoN'),pm=$('pMel'),mv=()=>document.querySelector('input.vol[data-vk=S]');
 const sync=()=>{pt.value=$('tempo').value;pn.value=$('tempoN').value;const m=mv();if(m)pm.value=m.value;};
-const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement;if(innerWidth<700||!document.body.classList.contains('playing')){c.style.left='';$('pos').style.visibility='';return;}
+const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement;const nv=$('pNav');if(innerWidth<700||!document.body.classList.contains('playing')){c.style.left='';nv.style.left='';$('pos').style.visibility='';$('pInfo').style.visibility='';return;}
   const pr=P.getBoundingClientRect(),tr=t.getBoundingClientRect();c.style.left=(tr.right-pr.left+18)+'px';
-  const ps=$('pos');ps.style.visibility='';if(c.getBoundingClientRect().right>ps.getBoundingClientRect().left-8)ps.style.visibility='hidden';};   // 좁으면 오른쪽 상태 글자를 숨김
+  const ps=$('pos');ps.style.visibility='';if(c.getBoundingClientRect().right>ps.getBoundingClientRect().left-8)ps.style.visibility='hidden';
+  nv.style.left=(tr.left-pr.left-18-nv.offsetWidth)+'px';const pi=$('pInfo');pi.style.visibility='';if(pi.getBoundingClientRect().right>nv.getBoundingClientRect().left-8)pi.style.visibility='hidden';};   // 이전곡·다음곡·목록은 제목 왼쪽 (좁으면 왼쪽 정보칩을 숨김)   // 좁으면 오른쪽 상태 글자를 숨김
 addEventListener('resize',place);
+const wire=(id,src)=>{const b=$(id),o=$(src);if(!o){b.disabled=true;return;}b.disabled=o.disabled;b.title=o.title;b.onclick=()=>o.click();};
+wire('pPrev','navPrev');wire('pNext','navNext');wire('pList','navList');
 sync();new MutationObserver(()=>{if(document.body.classList.contains('playing')){sync();requestAnimationFrame(place);}}).observe(document.body,{attributes:true,attributeFilter:['class']});
 const apply=v=>{KEEPV=true;try{setTempo(v,true);}finally{KEEPV=false;}sync();};
 pt.oninput=()=>{pn.value=pt.value;};pt.onchange=()=>apply(pt.value);
