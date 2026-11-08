@@ -318,6 +318,75 @@ body.playing .parts{margin-bottom:0}
         <span class="midinote" id="sfStat"></span>
       </div>
     </div>
+<style>
+/* 설정 패널 정리: 줄마다 제목 + 항목 */
+.srow{display:grid;grid-template-columns:86px 1fr;gap:6px 12px;align-items:start;padding:11px 0;border-top:1px solid #e3dccd}
+.srow.first{border-top:0;padding-top:4px}
+.srow>.sh{font:700 13.5px "Noto Sans KR",system-ui,sans-serif;color:#5b4fa3;padding-top:8px;white-space:nowrap}
+.srow>.sb{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:14px;min-width:0}
+.srow>.sb .dot{display:none}
+.srow>.sb label{display:inline-flex;align-items:center;gap:6px}
+.srow .grp{display:inline-flex;align-items:center;gap:8px}
+.srow .br{flex-basis:100%;height:0}
+.srow select{max-width:165px}
+.srow #timbre select[data-k]{width:120px}
+.srow .accopt{display:inline-flex;align-items:center;gap:5px;font:600 14px "Noto Sans KR";color:var(--ink);white-space:nowrap;cursor:pointer}
+.srow .pbtns{display:inline-flex;gap:6px;flex-wrap:wrap}
+.srow .vitem{display:inline-flex;align-items:center;gap:6px}
+.srow .vitem input[type=range]{width:110px}
+.srow .midinote{font-size:12.5px}
+body:not(.playing) .card>.panel>.parts{display:none}
+body.playing .srow{display:none}
+@media (max-width:640px){.srow{grid-template-columns:1fr}.srow>.sh{padding-top:0}.srow .vitem input[type=range]{width:90px}}
+</style>
+<script>/* 설정 패널을 줄별로 다시 배치 (파트 / 음원·악기 / 음량 / 연주 / 숨·쉼 / 화면 / MIDI) — 기존 요소를 옮기기만 하므로 동작은 그대로 */
+(function(){
+const E1=id=>document.getElementById(id),q=s=>document.querySelector(s);
+const P=q('.card>.panel');if(!P)return;
+const lab=el=>el&&(el.closest('label')||el);
+const row=(title,tip)=>{const r=document.createElement('div');r.className='srow';r.innerHTML='<span class="sh" title="'+(tip||'')+'">'+title+'</span><div class="sb"></div>';return r;};
+const grp=(...els)=>{const g=document.createElement('span');g.className='grp';els.filter(Boolean).forEach(e=>g.appendChild(e));return g;};
+const put=(r,...els)=>{const b=r.querySelector('.sb');els.filter(Boolean).forEach(e=>b.appendChild(e));};
+const br=()=>{const d=document.createElement('span');d.className='br';return d;};
+const rename=(el,re,txt)=>{if(el)el.childNodes.forEach(n=>{if(n.nodeType===3&&re.test(n.textContent))n.textContent=txt;});};
+const parts=q('.card>.panel>.parts');
+// 1) 파트
+const r0=row('🎚 파트','연주할 파트 고르기 — 연습 모드면 고른 파트만 크게');r0.classList.add('first');
+const pb=document.createElement('span');pb.className='pbtns';parts.querySelectorAll('.pbtn').forEach(b=>pb.appendChild(b));
+put(r0,pb,lab(E1('practice')));
+// 2) 음원·악기 / 3) 음량
+const r1=row('🎵 음원·악기','소리의 출처(SF2)와 파트별 악기');
+const r2=row('🔊 음량','파트별 음량 (0 = 소리 없음)');
+const cols=[...document.querySelectorAll('#timbre .pcol')];
+const insEls=[],volEls=[];
+cols.forEach(c=>{const l=c.querySelector('label'),v=c.querySelector('.pvol'),k=l&&l.dataset.v;
+  if(l)insEls.push(l);
+  if(v){const it=document.createElement('span');it.className='vitem';const b=l&&l.querySelector('.pk');if(b)it.appendChild(b.cloneNode(true));it.appendChild(v);volEls.push(it);}
+  c.remove();});
+const tall=q('#timbre .tall');
+const oldT=E1('timbre');if(oldT)oldT.id='timbreOld';r1.querySelector('.sb').id='timbre';   // 악기 선택을 찾는 기존 코드(#timbre select)가 그대로 동작하도록
+put(r1,grp(lab(E1('sfSel')),E1('sfLoad'),E1('sfDel')),E1('sfStat'),br(),...insEls,tall);
+put(r2,...volEls);
+// 4) 연주
+const r3=row('▶ 연주','빠르기·전주·부를 절·조');
+const vl=lab(E1('verses'));rename(vl,/선택/,'악보 선택 ');
+put(r3,lab(E1('tempo')),E1('fermBox'),lab(E1('intro')),vl,parts.querySelector('.keybtn'));
+// 5) 숨·쉼
+const r4=row('🌬 숨·쉼','회중이 따라 부르기 쉽게 숨 쉴 곳 다듬기');
+put(r4,E1('restBox'),E1('brBox'),E1('vgapBox'));
+// 6) 화면
+const r5=row('👀 화면','연주 화면에서 보이는 가사·악보');
+put(r5,E1('lyrOneBox'),E1('viewBox'),lab(E1('accChk')));
+// 7) MIDI
+const r6=row('🎹 MIDI','MIDI 악기(유선·블루투스)로 직접 연주');
+const mr=E1('midiRow');if(mr)[...mr.children].forEach(c=>put(r6,c));
+let last=parts;[r0,r1,r2,r3,r4,r5,r6].forEach(r=>{last.after(r);last=r;});
+// 비어 있는 줄·옛 줄 숨김
+[r4,r5].forEach(r=>{if(![...r.querySelectorAll('.sb>*')].some(e=>getComputedStyle(e).display!=='none'&&e.style.display!=='none'))r.style.display='none';});
+['#timbreOld','#midiRow','#sfRow'].forEach(id=>{const e=q(id);if(e&&!e.querySelector('select,input:not([hidden]),button'))e.style.display='none';});
+const ct=q('.card>.panel>.ctrl');if(ct&&!ct.querySelector('select,input:not([hidden])'))ct.style.display='none';
+})();
+</script>
     <div id="score"></div>
     <details class="lyr" id="lyrBox">
       <summary>가사 입력</summary>
