@@ -322,6 +322,59 @@ body.playing .parts{margin-bottom:0}
         <span class="midinote" id="sfStat"></span>
       </div>
     </div>
+<style>
+/* 설정 패널 정리: 줄마다 제목 + 항목 */
+.srow{display:grid;grid-template-columns:86px 1fr;gap:6px 12px;align-items:start;padding:11px 0;border-top:1px solid #e3dccd}
+.srow:first-of-type{border-top:0;padding-top:4px}
+.srow>.sh{font:700 13.5px "Noto Sans KR",system-ui,sans-serif;color:#5b4fa3;padding-top:8px;white-space:nowrap}
+.srow>.sb{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:14px;min-width:0}
+.srow>.sb .dot{display:none}
+.srow>.sb label{display:inline-flex;align-items:center;gap:6px}
+.srow .grp{display:inline-flex;align-items:center;gap:8px}
+.srow .br{flex-basis:100%;height:0}
+.srow select{max-width:165px}
+.srow .dcol{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:10px}
+.srow input.vol{width:110px}
+.srow .midinote{font-size:12.5px}
+.srow .drumdesc{flex-basis:100%;margin-top:-2px}
+body:not(.playing) .card>.panel>.parts{display:none}
+body.playing .srow{display:none}
+@media (max-width:640px){.srow{grid-template-columns:1fr}.srow>.sh{padding-top:0}.srow input.vol{width:90px}}
+</style>
+<script>/* 설정 패널을 4줄(음원·악기 / 음량 / 연주 / MIDI)로 다시 배치 — 기존 요소를 옮기기만 하므로 동작은 그대로 */
+(function(){
+const E1=id=>document.getElementById(id);
+const P=document.querySelector('.card>.panel')||document.querySelector('.panel');if(!P)return;
+const lab=el=>el&&(el.closest('label')||el);
+const row=(title,tip)=>{const r=document.createElement('div');r.className='srow';r.innerHTML='<span class="sh" title="'+(tip||'')+'">'+title+'</span><div class="sb"></div>';return r;};
+const grp=(...els)=>{const g=document.createElement('span');g.className='grp';els.filter(Boolean).forEach(e=>g.appendChild(e));return g;};
+const put=(r,...els)=>{const b=r.querySelector('.sb');els.filter(Boolean).forEach(e=>b.appendChild(e));};
+const q=s=>document.querySelector(s);
+// 1) 음원·악기
+const r1=row('🎵 음원·악기','소리의 출처(SF2)와 파트별 악기');
+const melIns=lab(q('.parts select[data-k="S"]'));if(melIns){melIns.firstChild&&melIns.childNodes.forEach(n=>{if(n.nodeType===3&&/멜로디 악기/.test(n.textContent))n.textContent='멜로디 ';});}
+const acc=lab(E1('accIns'));if(acc)acc.childNodes.forEach(n=>{if(n.nodeType===3&&/반주 악기/.test(n.textContent))n.textContent='반주 ';});
+const pat=lab(E1('accPat'));if(pat)pat.childNodes.forEach(n=>{if(n.nodeType===3&&/반주/.test(n.textContent))n.textContent='';});
+const br=()=>{const d=document.createElement('span');d.className='br';return d;};
+put(r1,grp(lab(E1('sfSel')),E1('sfLoad'),E1('sfDel')),E1('sfStat'),br(),
+       grp(melIns),grp(acc,pat),grp(lab(E1('bassIns'))),grp(q('.dcol')),E1('drumDesc'));
+// 2) 음량
+const r2=row('🔊 음량','파트별 음량 — 멜로디를 0으로 하면 반주만(MR)');
+const mix=E1('mixRow');if(mix){const tl=mix.querySelector('.tl');if(tl)tl.remove();[...mix.children].forEach(c=>put(r2,c));}
+// 3) 연주
+const r3=row('▶ 연주','빠르기·전주·엔딩·부를 절·조');
+const vl=lab(E1('verses'));if(vl)vl.childNodes.forEach(n=>{if(n.nodeType===3&&/선택/.test(n.textContent))n.textContent='악보 선택 ';});
+put(r3,lab(E1('tempo')),E1('fermBox'),lab(E1('intro')),lab(E1('ending')),vl,q('.parts .keybtn'),q('.parts .accopt'));
+// 4) MIDI
+const r4=row('🎹 MIDI','MIDI 악기(유선·블루투스)로 직접 연주');
+const mr=E1('midiRow');if(mr)[...mr.children].forEach(c=>put(r4,c));
+// 넣기: .parts 다음에 차례로, 빈 옛 줄은 숨김
+const anchor=q('.card>.panel>.parts')||P.firstElementChild;
+let last=anchor;[r1,r2,r3,r4].forEach(r=>{last.after(r);last=r;});
+['#timbre','#mixRow','#midiRow','#sfRow'].forEach(id=>{const e=q(id);if(e&&!e.querySelector('select,input:not([hidden]),button'))e.style.display='none';});
+const ct=q('.panel>.ctrl');if(ct&&!ct.querySelector('select,input:not([hidden])'))ct.style.display='none';
+})();
+</script>
     <div id="score"></div>
     <details class="lyr" id="lyrBox">
       <summary>가사 입력</summary>
