@@ -1532,11 +1532,12 @@ function tick(){
           n.els.forEach(el=>{const tx=el&&el.querySelector&&el.querySelector('text.abcjs-lyric');const ts=tx&&tx.querySelector('tspan');
             if(ts){ts.classList.add('hl-ly');lit.push([ts,'hl-ly']);}});
         }
-        if(n.k==='S'&&!inIntro){                                  // 지금 부르는 절의 가사만 표시
-          const idx=n.start>=REFRAIN_AT?0:filled.indexOf('v'+(verse+1));
+        const LK=VIEW==='satb'?'S':VIEW;                         // 가사가 붙은 성부 (한 파트 보기면 그 파트)
+        if(n.k===LK&&!inIntro){                                   // 지금 부르는 절의 가사만 표시
+          const idx=(n.start>=REFRAIN_AT||LYR_VERSE!=null)?0:filled.indexOf('v'+(verse+1));
           if(idx<0)return;
           let src=n;                                              // 슬러 음이면 앞 글자를 계속 강조
-          if(MEL.has(n.start)||TIEC.has(n.start)){const prev=noteMap.filter(m=>m.k==='S'&&m.start<n.start&&!MEL.has(m.start)&&!TIEC.has(m.start));if(prev.length)src=prev[prev.length-1];}
+          if(MEL.has(n.start)||TIEC.has(n.start)){const prev=noteMap.filter(m=>m.k===LK&&m.start<n.start&&!MEL.has(m.start)&&!TIEC.has(m.start));if(prev.length)src=prev[prev.length-1];}
           src.els.forEach(el=>{
             const tx=el&&el.querySelector&&el.querySelector('text.abcjs-lyric');
             const ts=tx&&tx.querySelectorAll('tspan')[idx];
