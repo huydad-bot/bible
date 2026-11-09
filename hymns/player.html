@@ -739,7 +739,7 @@ function renderScore(){
       start(mode,scoreToPerf(b,cv),[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
     }
   })[0];
-  const keyOf={'0-0':'S','0-1':'A','1-0':'T','1-1':'B'};
+  const keyOf=VIEW==='satb'?{'0-0':'S','0-1':'A','1-0':'T','1-1':'B'}:{'0-0':VIEW};   // 한 파트만 보일 때는 그 파트
   const clock={},tri={};
   const keyAcc={};
   vis.lines.forEach(line=>{
@@ -1526,7 +1526,7 @@ function tick(){
       const filled=VKEYS.filter(k=>sylls(LYR[k]).length);
       noteMap.forEach(n=>{
         if(!(ib>=n.start&&ib<n.start+n.dur))return;
-        if(mixFor(n.k)>0)
+        if(mixFor(n.k)>0||VIEW!=='satb')   // 한 파트만 보일 때는 소리를 꺼도 그 파트 진행 표시
           n.els.forEach(el=>{if(el&&el.classList){const c='hl-'+n.k;el.classList.add(c);lit.push([el,c]);if(FL){el.classList.add('hl-seek');lit.push([el,'hl-seek']);}}});
         if(EV&&n.k===ECHO_V&&!inIntro&&inEcho(n.start)&&sylls(LYR.e).length){   // 메아리 가사
           n.els.forEach(el=>{const tx=el&&el.querySelector&&el.querySelector('text.abcjs-lyric');const ts=tx&&tx.querySelector('tspan');
