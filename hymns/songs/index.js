@@ -12,6 +12,7 @@ window.SONG_LIST = [
   { n: 10,  title: '하나님의 크신 사랑',   key: 'Bb', tune: 'BEECHER' },
   { n: 11,  title: '찬송하는 소리 있어', key: 'G',  tune: 'HARWELL' },
   { n: 29,  title: '내게 있는 모든 것을',   key: 'D',  tune: 'SURRENDER' },
+  { n: 35,  title: '기뻐하며 경배하세',   key: 'G',  tune: 'HYMN TO JOY' },
   { n: 91,  title: '주 어느 때 다시 오실는지', key: 'Bb', tune: 'WILL JESUS FIND US WATCHING' },
   { n: 92,  title: '하나님의 나팔 소리',   key: 'G',  tune: 'ROLL CALL' },
   { n: 143, title: '변찮는 주님의 사랑과', key: 'G',  tune: 'SWEET BY AND BY' },
