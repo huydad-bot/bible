@@ -2100,7 +2100,7 @@ lab();
 </script>
 <style>#score tspan.lyr-dim{fill-opacity:.25}</style>
 <script>/* 연주 화면 가사 보기 설정 */
-(function(){const c=$('lyrMode');if(!c)return;c.value=LYR_MODE;
+(function(){const c=$('lyrMode');if(!c)return;c.value=LYR_MODE;{const ps=$('pLyr');if(ps)ps.value=LYR_MODE;}   // 연주 화면 선택 상자도 실제 값으로
   if(NUM_VERSES<2)$('lyrOneBox').style.display='none';
   c.onchange=()=>{LYR_MODE=c.value;const ps=$('pLyr');if(ps)ps.value=c.value;try{localStorage.setItem('hymn_lyrMode',LYR_MODE);}catch(e){}
     if(LYR_MODE!=='one'&&LYR_VERSE!=null){LYR_VERSE=null;renderScore();PAGES=null;CURPAGE=null;curLine=-1;if(document.body.classList.contains('playing'))fitTwoLines();}
