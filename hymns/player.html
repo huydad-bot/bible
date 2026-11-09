@@ -592,6 +592,9 @@ function abcLines(v){
 const ECHO=SONG.echo||null;                   // 남성부 메아리 가사 {voice:'T', spans:[[시작,끝],...]}
 const ECHO_V=ECHO?ECHO.voice||'T':null;
 const inEcho=t=>!!ECHO&&ECHO.spans.some(([a,b])=>t>=a-1e-6&&t<b-1e-6);
+const spanV=s=>s[2]||ECHO_V;                   // 구간마다 성부를 따로 줄 수 있음 [시작,끝,'B'] (43장: 테너→베이스)
+const inEchoV=(k,t)=>!!ECHO&&ECHO.spans.some(s=>spanV(s)===k&&t>=s[0]-1e-6&&t<s[1]-1e-6);
+const ECHO_VS=new Set(ECHO?ECHO.spans.map(spanV):[]);
 const LYR_KEYS=VKEYS.map((k,i)=>[k,(i+1)+'절']).concat(HAS_REFRAIN?[['r','후렴']]:[]).concat(ECHO?[['e','메아리']]:[]);
 const EMBEDDED_LYRICS=null;//@@EMBED@@
 let LYR=Object.fromEntries(VKEYS.concat('r','e').map(k=>[k,'']));
@@ -686,10 +689,11 @@ function lyricLinesFor(i){
 /* 메아리 가사: 메아리 구간의 테너(또는 지정 성부) 음표에 글자를 배정.
    입력 글자 수가 한 구간 음표 수와 같으면 모든 구간에 반복 */
 const EV=ECHO?VOICES.find(v=>v.k===ECHO_V):null;
-const ECHO_LINES=(()=>{if(!EV)return [];const res=[[]];EV.tokens.forEach(n=>{res[res.length-1].push(n);if(LINE_BREAKS.includes(n.t+n.dur))res.push([]);});return res;})();
-const ECHO_NOTES=EV?EV.tokens.filter(n=>n.p!=='r'&&inEcho(n.t)):[];
-const ECHO_SPAN_N=ECHO?ECHO_NOTES.filter(n=>n.t>=ECHO.spans[0][0]-1e-6&&n.t<ECHO.spans[0][1]-1e-6).length:0;
-const ECHO_COUNTS=ECHO?ECHO.spans.map(([a,b])=>ECHO_NOTES.filter(n=>n.t>=a-1e-6&&n.t<b-1e-6).length):[];
+const ECHO_LINES={};VOICES.forEach(v=>{if(!ECHO_VS.has(v.k))return;const res=[[]];v.tokens.forEach(n=>{res[res.length-1].push(n);if(LINE_BREAKS.includes(n.t+n.dur))res.push([]);});ECHO_LINES[v.k]=res;});
+const spanNotes=s=>{const v=VOICES.find(x=>x.k===spanV(s));return v?v.tokens.filter(n=>n.p!=='r'&&n.t>=s[0]-1e-6&&n.t<s[1]-1e-6):[];};
+const ECHO_NOTES=EV?[].concat(...ECHO.spans.map(spanNotes)):[];
+const ECHO_COUNTS=ECHO?ECHO.spans.map(s=>spanNotes(s).length):[];
+const ECHO_SPAN_N=ECHO_COUNTS[0]||0;
 const ECHO_SAME=ECHO_COUNTS.every(c=>c===ECHO_COUNTS[0]);      // 구간마다 음 수가 같으면 한 번 입력으로 반복 가능
 const ECHO_TOTAL=ECHO_NOTES.length;
 const ECHO_IDX=new Map();ECHO_NOTES.forEach((n,i)=>ECHO_IDX.set(n,i));
@@ -698,9 +702,9 @@ function echoSyl(n,sy){
   if(ECHO_SAME&&sy.length===ECHO_SPAN_N&&ECHO_SPAN_N>0)return sy[i%ECHO_SPAN_N];
   return sy[i];
 }
-function echoLineFor(i){
+function echoLineFor(i,k){
   if(!EV)return '';const sy=sylls(LYR.e);if(!sy.length)return '';
-  const line=ECHO_LINES[i];if(!line||!line.some(n=>ECHO_IDX.has(n)))return '';
+  const line=(ECHO_LINES[k||ECHO_V]||[])[i];if(!line||!line.some(n=>ECHO_IDX.has(n)))return '';
   const arr=line.filter(n=>n.p!=='r').flatMap(n=>{const x=echoSyl(n,sy);const ex=splitDur(n.dur).length-1;return [x].concat(Array(ex).fill(x===undefined?undefined:'_'));});
   return 'w: '+arr.map(x=>x===undefined?'\u200b':x).join(' ')+'\n';   // 빈칸은 폭 없는 글자로(맨 앞 * 가 무시되는 문제 회피)
 }
@@ -715,7 +719,7 @@ function buildABC(){
   let abc=`X:1\nM:${SONG.meter||'4/4'}\nL:1/16\nK:${SONG.key}\n`+(PV?`%%score ${PV}\nV:${PV} clef=${PV==='S'||PV==='A'?'treble':'bass'}\n`:`%%score (S A) (T B)\n`+
     `V:S clef=treble\nV:A clef=treble\nV:T clef=bass\nV:B clef=bass\n`);
   const L=Object.fromEntries(VOICES.map(v=>[v.k,abcLines(v)]));
-  for(let i=0;i<L.S.length;i++)VOICES.forEach(v=>{if(PV&&v.k!==PV)return;abc+=`[V:${v.k}] ${L[v.k][i]}\n`;if(v.k===(PV||'S')&&(v.k==='S'||sameRhythm(v.k,i)))abc+=lyricLinesFor(i);if(EV&&v.k===ECHO_V)abc+=echoLineFor(i);});
+  for(let i=0;i<L.S.length;i++)VOICES.forEach(v=>{if(PV&&v.k!==PV)return;abc+=`[V:${v.k}] ${L[v.k][i]}\n`;if(v.k===(PV||'S')&&(v.k==='S'||sameRhythm(v.k,i)))abc+=lyricLinesFor(i);if(EV&&ECHO_VS.has(v.k))abc+=echoLineFor(i,v.k);});
   return abc;
 }
 
@@ -1528,7 +1532,7 @@ function tick(){
         if(!(ib>=n.start&&ib<n.start+n.dur))return;
         if(mixFor(n.k)>0||VIEW!=='satb')   // 한 파트만 보일 때는 소리를 꺼도 그 파트 진행 표시
           n.els.forEach(el=>{if(el&&el.classList){const c='hl-'+n.k;el.classList.add(c);lit.push([el,c]);if(FL){el.classList.add('hl-seek');lit.push([el,'hl-seek']);}}});
-        if(EV&&n.k===ECHO_V&&!inIntro&&inEcho(n.start)&&sylls(LYR.e).length){   // 메아리 가사
+        if(EV&&!inIntro&&inEchoV(n.k,n.start)&&sylls(LYR.e).length){   // 메아리 가사
           n.els.forEach(el=>{const tx=el&&el.querySelector&&el.querySelector('text.abcjs-lyric');const ts=tx&&tx.querySelector('tspan');
             if(ts){ts.classList.add('hl-ly');lit.push([ts,'hl-ly']);}});
         }
