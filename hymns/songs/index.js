@@ -18,6 +18,7 @@ window.SONG_LIST = [
   { n: 43,  title: '내가 늘 의지하는 예수', key: 'G',  tune: 'THE BEST FRIEND' },
   { n: 44,  title: '내 진정 사모하는',     key: 'F',  tune: 'THE LILY OF THE VALLEY' },
   { n: 45,  title: '샤론의 꽃 예수',      key: 'D',  tune: 'GABRIEL' },
+  { n: 46,  title: '슬픈 마음 있는 사람', key: 'Ab', tune: 'PRECIOUS NAME' },
   { n: 91,  title: '주 어느 때 다시 오실는지', key: 'Bb', tune: 'WILL JESUS FIND US WATCHING' },
   { n: 92,  title: '하나님의 나팔 소리',   key: 'G',  tune: 'ROLL CALL' },
   { n: 143, title: '변찮는 주님의 사랑과', key: 'G',  tune: 'SWEET BY AND BY' },
