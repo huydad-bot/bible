@@ -202,7 +202,7 @@ body.playing .parts{margin-bottom:0}
 <ol>
 <li><b>▶ 시작</b>을 누르면 연주가 시작되고 화면에는 악보만 남습니다. 연주 중에는 화면 아래 막대(⏪ ⏸ ⏩ ■)로 조작합니다.</li>
 <li><b>가사</b>: 연주 화면에서 "부르는 절만"은 지금 절 가사 한 줄만, "부르는 절 강조"는 모든 절을 보이되 지금 절만 또렷하게(나머지는 흐리게), "모든 절"은 그대로 보입니다.</li>
-<li><b>🎵 멜로디만 / 🎼 4부 보기</b>: 악보를 소프라노 한 줄만 크게 보거나 4성부 모두 보기 (소리는 그대로).</li>
+<li><b>악보</b>: 4부(SATB 모두) 또는 멜로디·알토·테너·베이스 중 한 파트만 크게 보기 (소리는 그대로). 그 파트의 리듬이 멜로디와 같은 줄에는 가사도 함께 보입니다.</li>
 <li><b>소절 끝 숨</b>: 각 줄의 마지막 음을 ¼박(또는 ½박) 일찍 떼어 숨 쉴 틈을 줍니다. 박자는 늦추지 않습니다.</li>
 <li><b>쉼표</b>: "짧게"면 1박 이상 쉼표에서 앞 음을 이어 끌고 '소절 끝 숨'에서 고른 길이(¼박 또는 ½박)만 쉽니다. "악보대로"면 쉼표 길이 그대로.</li>
 <li><b>절 사이</b>: 한 절이 끝나고 다음 절 전에 쉬는 박 수 (기본 ½박).</li>
@@ -287,7 +287,7 @@ body.playing .parts{margin-bottom:0}
         <label><i class="dot"></i>선택 <select id="verses"></select></label>
         
         <label id="lyrOneBox" title="연주 화면의 가사 — 부르는 절만: 지금 절 한 줄만 · 부르는 절 강조: 모든 절을 보이되 지금 절만 또렷하게 · 모든 절: 그대로"><i class="dot"></i>가사 <select id="lyrMode"><option value="one">부르는 절만</option><option value="dim">부르는 절 강조</option><option value="all">모든 절</option></select></label>
-        <label id="viewBox" title="악보 보기 — 4부: SATB 모두 · 멜로디만: 소프라노 한 줄 (소리는 그대로)"><i class="dot"></i>악보 <select id="viewMode"><option value="satb">4부</option><option value="mel">멜로디만</option></select></label>
+        <label id="viewBox" title="악보 보기 — 4부: SATB 모두 · 멜로디/알토/테너/베이스: 그 파트 한 줄만 크게 (소리는 그대로)"><i class="dot"></i>악보 <select id="viewMode"><option value="satb">4부</option><option value="S">멜로디</option><option value="A">알토</option><option value="T">테너</option><option value="B">베이스</option></select></label>
         <label id="restBox" title="쉼표 짧게: 1박 이상 쉼표에서 앞 음을 늘리고 '소절 끝 숨'에서 고른 길이만 쉬고 이어 감 (반주가 덜 끊김) · 악보대로: 쉼표 길이 그대로"><i class="dot"></i>쉼표 <select id="restMode"><option value="short" selected>짧게(숨만)</option><option value="full">악보대로</option></select></label>
         <label id="brBox" title="소절 끝 숨: 각 줄(소절)의 마지막 음을 조금 일찍 떼어 회중이 숨 쉴 틈을 줌 — 박자는 늦추지 않음"><i class="dot"></i>소절 끝 숨 <select id="breath"><option value="0">끄기</option><option value=".25" selected>짧게(¼박)</option><option value=".5">보통(½박)</option></select></label>
         <label id="vgapBox" title="한 절이 끝나고 다음 절을 시작하기 전에 쉬는 시간 — 부르는 사람이 숨을 쉬고 준비할 여유 (기본 ½박)"><i class="dot"></i>절 사이 <select id="vgap"><option value="0">바로</option><option value=".5" selected>½박 쉼</option><option value="1">1박 쉼</option></select></label>
@@ -561,7 +561,7 @@ function abcLines(v){
     let s='';
     const slurV=v.k==='S'||v.k==='A', nx=v.tokens[idx+1];
     if(slurV&&nx&&nx.p!=='r'&&n.p!=='r'&&MEL.has(nx.t)&&!MEL.has(n.t))s+='(';      // 슬러 시작
-    if(v.k==='S'){
+    if(v.k===TOPV()){
       if(n.t===0&&SONG.tempoText)s+=`"^${SONG.tempoText}"`;
       if(HAS_REFRAIN&&n.t===REFRAIN_AT&&SONG.refrainLabel!=='')s+=`"^${SONG.refrainLabel||'후렴'}"`;
       if(FERM.has(n.t))s+='!fermata!';
@@ -704,12 +704,18 @@ function echoLineFor(i){
   const arr=line.filter(n=>n.p!=='r').flatMap(n=>{const x=echoSyl(n,sy);const ex=splitDur(n.dur).length-1;return [x].concat(Array(ex).fill(x===undefined?undefined:'_'));});
   return 'w: '+arr.map(x=>x===undefined?'\u200b':x).join(' ')+'\n';   // 빈칸은 폭 없는 글자로(맨 앞 * 가 무시되는 문제 회피)
 }
-let MEL_ONLY=false;try{MEL_ONLY=localStorage.getItem('hymn_view')==='mel';}catch(e){}   // 악보 보기: 멜로디(소프라노)만 / 4부
+let VIEW='satb';try{const v=localStorage.getItem('hymn_view');VIEW=v==='mel'?'S':(/^(S|A|T|B|satb)$/.test(v||'')?v:'satb');}catch(e){}   // 악보 보기: 4부 / 한 파트만
+const TOPV=()=>VIEW==='satb'?'S':VIEW;                      // 코드·빠르기·늘임표를 붙일 성부
+function sameRhythm(k,i){                                    // 그 줄에서 이 성부 리듬이 소프라노와 같으면 가사를 그 아래에 붙임
+  const a=i?LINE_BREAKS[i-1]:0,b=i<LINE_BREAKS.length?LINE_BREAKS[i]:SONG_LEN;
+  const on=v=>v.tokens.filter(n=>n.p!=='r'&&n.t>=a-1e-6&&n.t<b-1e-6).map(n=>n.t+(n.tie?'~':'')).join(',');
+  const S=VOICES.find(v=>v.k==='S'),V=VOICES.find(v=>v.k===k);return on(S)===on(V);}
 function buildABC(){
-  let abc=`X:1\nM:${SONG.meter||'4/4'}\nL:1/16\nK:${SONG.key}\n`+(MEL_ONLY?`%%score S\nV:S clef=treble\n`:`%%score (S A) (T B)\n`+
+  const PV=VIEW==='satb'?null:VIEW;
+  let abc=`X:1\nM:${SONG.meter||'4/4'}\nL:1/16\nK:${SONG.key}\n`+(PV?`%%score ${PV}\nV:${PV} clef=${PV==='S'||PV==='A'?'treble':'bass'}\n`:`%%score (S A) (T B)\n`+
     `V:S clef=treble\nV:A clef=treble\nV:T clef=bass\nV:B clef=bass\n`);
   const L=Object.fromEntries(VOICES.map(v=>[v.k,abcLines(v)]));
-  for(let i=0;i<L.S.length;i++)VOICES.forEach(v=>{if(MEL_ONLY&&v.k!=='S')return;abc+=`[V:${v.k}] ${L[v.k][i]}\n`;if(v.k==='S')abc+=lyricLinesFor(i);if(EV&&v.k===ECHO_V)abc+=echoLineFor(i);});
+  for(let i=0;i<L.S.length;i++)VOICES.forEach(v=>{if(PV&&v.k!==PV)return;abc+=`[V:${v.k}] ${L[v.k][i]}\n`;if(v.k===(PV||'S')&&(v.k==='S'||sameRhythm(v.k,i)))abc+=lyricLinesFor(i);if(EV&&v.k===ECHO_V)abc+=echoLineFor(i);});
   return abc;
 }
 
@@ -1759,7 +1765,7 @@ function readCfg(){
   const pv={};document.querySelectorAll('input[data-pv]').forEach(r=>pv[r.dataset.pv]=+r.value);
   return {mode,timbre:Object.assign({},TIMBRE),trans:E('trans').value,tempo:E('tempo').value,intro:E('intro').value,rit:E('rit').checked,
     verses:E('verses').value,practice:E('practice').checked,ferm:E('ferm').value,pv,
-    lyr:E('lyrMode')&&E('lyrMode').value,view:MEL_ONLY?'mel':'satb',rest:E('restMode')&&E('restMode').value,breath:E('breath')&&E('breath').value,vgap:E('vgap')&&E('vgap').value};
+    lyr:E('lyrMode')&&E('lyrMode').value,view:VIEW,rest:E('restMode')&&E('restMode').value,breath:E('breath')&&E('breath').value,vgap:E('vgap')&&E('vgap').value};
 }
 function cfgSummary(c){
   if(!c)return '기본 설정';
@@ -1781,7 +1787,7 @@ function applyCfg(c){
     if(c.mode){const b=document.querySelector('.pbtn[data-v='+c.mode+']');if(b)b.click();}
     if(c.trans!=null&&E('trans').value!==String(c.trans)&&setSel(E('trans'),String(c.trans)))E('trans').onchange();
     if(c.lyr&&setSel(E('lyrMode'),c.lyr)&&E('lyrMode').onchange)E('lyrMode').onchange();
-    if(c.view&&window.setView)setView(c.view==='mel');
+    if(c.view&&window.setView)setView(c.view==='mel'?'S':c.view);
     ['restMode:rest','breath:breath','vgap:vgap'].forEach(p=>{const [id,k]=p.split(':');if(c[k]!=null&&E(id)&&setSel(E(id),String(c[k]))&&E(id).onchange)E(id).onchange();});
   }catch(e){console.warn('설정 적용 실패',e);}
 }
@@ -2068,27 +2074,26 @@ pm.onchange=()=>{const m=mv();if(m)m.dispatchEvent(new Event('change'));};
 [pt,pn,pm].forEach(x=>x.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();}));
 })();
 </script>
-<script>/* 악보 보기 전환: 멜로디(소프라노 한 줄) ↔ 4부(SATB) */
+<script>/* 악보 보기 전환: 4부(SATB) ↔ 한 파트(멜로디·알토·테너·베이스) */
 (function(){
-const lab=()=>{const vm=$('viewMode');if(vm)vm.value=MEL_ONLY?'mel':'satb';const t=MEL_ONLY?'🎼 4부 보기':'🎵 멜로디만';const tip=MEL_ONLY?'4성부(SATB) 악보를 모두 보기':'소프라노(멜로디) 악보만 크게 보기 — 소리는 그대로';
-  ['viewBtn','pView'].forEach(id=>{const b=$(id);if(b){b.textContent=t;b.title=tip;}});};
-function setView(mel){if(!!mel!==MEL_ONLY)toggle();}
-window.setView=setView;
-function toggle(){
-  MEL_ONLY=!MEL_ONLY;try{localStorage.setItem('hymn_view',MEL_ONLY?'mel':'satb');}catch(e){}lab();
+const OPTS='<option value="satb">4부</option><option value="S">멜로디</option><option value="A">알토</option><option value="T">테너</option><option value="B">베이스</option>';
+const lab=()=>{['viewMode','pViewSel'].forEach(id=>{const e=$(id);if(e)e.value=VIEW;});};
+function setView(v){v=v||'satb';if(v===VIEW)return;
+  VIEW=v;try{localStorage.setItem('hymn_view',VIEW);}catch(e){}lab();
   const was=playing,b=was?curBeat():0,it=curIntro;
   if(was){KEEPV=true;try{stop(true);}finally{KEEPV=false;}}
   renderScore();PAGES=null;CURPAGE=null;curLine=-1;
   if(document.body.classList.contains('playing'))fitTwoLines();
   if(was){KEEPV=true;try{start(mode,Math.max(0,b),it);}finally{KEEPV=false;}}
-  else if(PAUSE){PAUSE.show=true;}
-}
-const nav=$('pNav');if(nav){const b=document.createElement('button');b.id='pView';nav.insertBefore(b,nav.firstChild);b.onclick=toggle;
+  else if(PAUSE){PAUSE.show=true;}}
+window.setView=setView;
+const nav=$('pNav');if(nav){const vl=document.createElement('label');vl.className='plyr';vl.id='pView';vl.title=$('viewBox').title;
+  vl.innerHTML='악보 <select id="pViewSel">'+OPTS+'</select>';nav.insertBefore(vl,nav.firstChild);
+  $('pViewSel').onchange=()=>setView($('pViewSel').value);
   if(NUM_VERSES>1){const lb=document.createElement('label');lb.className='plyr';lb.title=$('lyrOneBox').title;
-    lb.innerHTML='가사 <select id="pLyr">'+$('lyrMode').innerHTML+'</select>';nav.insertBefore(lb,b);
-    const ps=$('pLyr');ps.value=$('lyrMode').value;ps.onchange=()=>{$('lyrMode').value=ps.value;$('lyrMode').onchange();};}}   // 연주 화면 위쪽 막대에도 같은 가사 선택
-const vb=$('viewBtn');if(vb)vb.onclick=toggle;
-const vm=$('viewMode');if(vm)vm.onchange=()=>setView(vm.value==='mel');
+    lb.innerHTML='가사 <select id="pLyr">'+$('lyrMode').innerHTML+'</select>';nav.insertBefore(lb,vl);
+    const ps=$('pLyr');ps.value=$('lyrMode').value;ps.onchange=()=>{$('lyrMode').value=ps.value;$('lyrMode').onchange();};}}   // 연주 화면 위쪽 막대에도 같은 선택
+const vm=$('viewMode');if(vm)vm.onchange=()=>setView(vm.value);
 lab();
 })();
 </script>
