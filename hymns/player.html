@@ -496,8 +496,8 @@ function parseTokens(s){
   const out=[];let t=0;
   s.trim().split(/\s+/).forEach(tok=>{
     if(tok==='|')return;
-    const [p,d]=tok.split(':');const dur=parseFloat(d);
-    out.push({p,t,dur});t+=dur;
+    const [p,d]=tok.split(':');const dur=parseFloat(d),tie=/~$/.test(d);   // '~' = 다음 음과 붙임줄
+    out.push({p,t,dur,tie});t+=dur;
   });
   return out;
 }
@@ -513,7 +513,9 @@ const VOICES=[
 ];
 VOICES.forEach(v=>{
   v.tokens=parseTokens(SCORE[v.k]);
-  v.notes=v.tokens.filter(n=>n.p!=='r').map(n=>({t:n.t,dur:n.dur,midi:toMidi(n.p)}));
+  v.notes=[];v.tokens.forEach((n,i)=>{if(n.p==='r')return;const pv=v.tokens[i-1],last=v.notes[v.notes.length-1];
+    if(pv&&pv.tie&&pv.p===n.p&&last){last.dur=Math.round((last.dur+n.dur)*48)/48;return;}   // 붙임줄: 한 소리로
+    v.notes.push({t:n.t,dur:n.dur,midi:toMidi(n.p)});});
   const len=v.tokens.reduce((a,n)=>a+n.dur,0);
   if(Math.abs(len-SONG_LEN)>1e-6)console.warn(v.k,'박 수가 소프라노와 다름',len,SONG_LEN);
 });
@@ -569,7 +571,7 @@ function abcLines(v){
     {                                         // 한 음표로 못 그리는 길이(예: 5박)는 붙임줄로 나눔
       const parts=splitDur(n.dur);
       if(n.p==='r')s+=parts.map(q=>'z'+q).join(' ');
-      else{const pp=abcPitch(n.p,state);s+=parts.map(q=>pp+q).join('-');}
+      else{const pp=abcPitch(n.p,state);s+=parts.map(q=>pp+q).join('-')+(n.tie?'-':'');}
     }
     if(slurV&&MEL.has(n.t)&&!(nx&&MEL.has(nx.t)))s+=')';                                   // 슬러 끝
     {                                         // 8분·16분음표는 한 박 안에서 빔으로 묶음 (박 경계·쉼표·4분음표 이상에서는 띄움)
@@ -626,7 +628,8 @@ function sNoteLines(){
 const SL=sNoteLines();
 /* 슬러(한 글자를 여러 음에): 곡 데이터 melisma 에 적힌 소프라노 음은 앞 글자를 이어 부르므로 가사를 배정하지 않음 */
 const MEL=new Set((SONG.melisma||[]).map(Number));
-const isMel=n=>[...MEL].some(t=>Math.abs(t-n.t)<1e-6);
+const TIEC=new Set();{const S=VOICES.find(v=>v.k==='S');S.tokens.forEach((n,i)=>{const pv=S.tokens[i-1];if(pv&&pv.tie&&pv.p===n.p)TIEC.add(n.t);});}   // 붙임줄로 이어지는 음(가사 없음)
+const isMel=n=>TIEC.has(n.t)||[...MEL].some(t=>Math.abs(t-n.t)<1e-6);
 const SYL_IDX=new Map();                     // 소프라노 음 → 가사 글자 순번 (구역별: 절/후렴)
 [false,true].forEach(ref=>{let k=0;SL.flat().filter(n=>(n.t>=REFRAIN_AT)===ref).forEach(n=>{SYL_IDX.set(n,isMel(n)?-1:k++);});});
 const VERSE_N=SL.flat().filter(n=>n.t<REFRAIN_AT&&!isMel(n)).length;
@@ -1527,7 +1530,7 @@ function tick(){
           const idx=n.start>=REFRAIN_AT?0:filled.indexOf('v'+(verse+1));
           if(idx<0)return;
           let src=n;                                              // 슬러 음이면 앞 글자를 계속 강조
-          if(MEL.has(n.start)){const prev=noteMap.filter(m=>m.k==='S'&&m.start<n.start&&!MEL.has(m.start));if(prev.length)src=prev[prev.length-1];}
+          if(MEL.has(n.start)||TIEC.has(n.start)){const prev=noteMap.filter(m=>m.k==='S'&&m.start<n.start&&!MEL.has(m.start)&&!TIEC.has(m.start));if(prev.length)src=prev[prev.length-1];}
           src.els.forEach(el=>{
             const tx=el&&el.querySelector&&el.querySelector('text.abcjs-lyric');
             const ts=tx&&tx.querySelectorAll('tspan')[idx];
