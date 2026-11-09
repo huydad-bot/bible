@@ -17,7 +17,7 @@ if(/[?&]auto=1(&|$)/.test(location.search)){document.documentElement.classList.a
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script id="abcjsLib" src="abcjs-basic-min.js"></script>
 <script id="loader">
-/* 곡 데이터 불러오기: player.html?n=143 → songs/143.js (번호 없으면 목록으로) */
+/* 곡 데이터 불러오기: player.html?n=270 → songs/270.js (번호 없으면 목록으로) */
 window.registerSong=function(s){window.SONG=s;};
 (function(){
   var n=(new URLSearchParams(location.search).get('n')||'').replace(/[^0-9A-Za-z_-]/g,'');
@@ -592,7 +592,7 @@ function abcLines(v){
 const ECHO=SONG.echo||null;                   // 남성부 메아리 가사 {voice:'T', spans:[[시작,끝],...]}
 const ECHO_V=ECHO?ECHO.voice||'T':null;
 const inEcho=t=>!!ECHO&&ECHO.spans.some(([a,b])=>t>=a-1e-6&&t<b-1e-6);
-const spanV=s=>s[2]||ECHO_V;                   // 구간마다 성부를 따로 줄 수 있음 [시작,끝,'B'] (43장: 테너→베이스)
+const spanV=s=>s[2]||ECHO_V;                   // 구간마다 성부를 따로 줄 수 있음 [시작,끝,'B'] (86장: 테너→베이스)
 const inEchoV=(k,t)=>!!ECHO&&ECHO.spans.some(s=>spanV(s)===k&&t>=s[0]-1e-6&&t<s[1]-1e-6);
 const ECHO_VS=new Set(ECHO?ECHO.spans.map(spanV):[]);
 const LYR_KEYS=VKEYS.map((k,i)=>[k,(i+1)+'절']).concat(HAS_REFRAIN?[['r','후렴']]:[]).concat(ECHO?[['e','메아리']]:[]);
@@ -675,7 +675,7 @@ function lyricLinesFor(i){
     out+=wLine(line.flatMap(n=>sylFor(n,sy)))+'\n';
   }else{
     const multi=VKEYS.filter(k=>lyrSy(k).length).length>1;
-    const rsy=sylls(LYR.r);let refDone=false;        // 줄 중간에서 후렴이 시작되면(45장) 후렴 가사는 첫 줄에만
+    const rsy=sylls(LYR.r);let refDone=false;        // 줄 중간에서 후렴이 시작되면(89장) 후렴 가사는 첫 줄에만
     VKEYS.forEach((k,vi)=>{
       if(LYR_VERSE!=null&&vi!==LYR_VERSE)return;      // 연주 중: 부르는 절 가사만
       const sy=lyrSy(k);if(!sy.length)return;
@@ -1684,7 +1684,7 @@ function applyLyr(o){LYR=cleanLyr(o);saveLyr();buildLyricUI();renderScore();}
 if(HAS_EDITOR){
 $('lyrExport').onclick=async()=>{
   if(!hasLyr())return toast('먼저 가사를 입력하세요');
-  if(await saveFile('찬송가'+SONG.n+'_가사.json',JSON.stringify({hymn:SONG.n,lyrics:LYR},null,2),'application/json')==='cancel')return;
+  if(await saveFile('찬송가'+SONG.n+'_가사.json',JSON.stringify({hymn:SONG.n,numbering:2,lyrics:LYR},null,2),'application/json')==='cancel')return;
   toast('가사 파일을 저장했습니다');
 };
 $('lyrImport').onclick=()=>$('lyrFile').click();
@@ -1693,6 +1693,7 @@ $('lyrFile').onchange=e=>{
   f.text().then(t=>{
     const o=JSON.parse(t);
     if(o.all)return toast('전체 백업 파일은 목록 화면에서 불러오세요');
+    if(o.hymn&&!o.numbering&&window.SONG_RENUM&&window.SONG_RENUM[o.hymn])o.hymn=window.SONG_RENUM[o.hymn];   // 번호 변경 전 파일
     if(o.hymn&&String(o.hymn)!==String(SONG.n)&&!confirm(o.hymn+'장 가사 파일입니다. 그래도 불러올까요?'))return;
     const l=o.lyrics||o;
     if(hasLyr()&&!confirm('지금 입력된 가사를 불러온 가사로 바꿀까요?'))return;

@@ -5,7 +5,7 @@ index.html            목록 화면 (여기서 시작)
 player.html           악보·연주 화면 (모든 곡이 공통으로 사용)
 abcjs-basic-min.js    악보 그리기 라이브러리 (인터넷 없이 작동하도록 포함)
 songs/index.js        목록에 보일 곡 목록
-songs/143.js          곡 데이터 (곡마다 파일 1개)
+songs/270.js          곡 데이터 (곡마다 파일 1개)
 
 사용
 ----
@@ -15,12 +15,12 @@ songs/143.js          곡 데이터 (곡마다 파일 1개)
 
 곡 추가
 -------
-1. songs/143.js 를 복사해 songs/번호.js 로 저장
+1. songs/270.js 를 복사해 songs/번호.js 로 저장
 2. 안의 번호·제목·조·박자·절 수·후렴 위치·코드·4성부 음표를 새 곡에 맞게 수정
    (선택) bars: 마디선 위치를 직접 지정 (아멘 앞 마디가 짧은 곡 등)
           doubleBars: 겹세로줄 위치,  fermatas: 늘임표 위치,  intro: 전주 구간
           melisma: 앞 글자를 이어 부르는 소프라노 음 위치 (가사 자동 건너뜀)
-          echo: 후렴 남성부 메아리 구간 {voice:'T', spans:[[시작,끝],...]} (29장 참고)
+          echo: 후렴 남성부 메아리 구간 {voice:'T', spans:[[시작,끝],...]} (50장 참고)
 3. songs/index.js 에 한 줄 추가
      { n: 번호, title: '제목', key: '조', tune: '곡명' },
 

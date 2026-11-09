@@ -64,7 +64,7 @@ li a:hover{background:#f3eefb}
 
   <div class="card">
     <div class="search">
-      <input id="q" type="search" placeholder="장 번호 또는 제목 (예: 143, 사랑)" autocomplete="off">
+      <input id="q" type="search" placeholder="장 번호 또는 제목 (예: 270, 사랑)" autocomplete="off">
       <span class="count" id="cnt"></span>
     </div>
     <ul id="list"></ul>
@@ -119,7 +119,7 @@ $('exp').onclick=async()=>{
     if(m){const o=JSON.parse(localStorage.getItem(k));if(o&&Object.values(o).some(x=>x&&String(x).trim()))all[m[1]]=o;}}}catch(e){}
   const n=Object.keys(all).length;if(!n)return toast('저장된 가사가 없습니다');
   const d=new Date(),ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
-  const r=await saveFile('찬송가_가사_전체_'+ds+'.json',JSON.stringify({all:true,saved:d.toISOString(),hymns:all},null,1),'application/json');
+  const r=await saveFile('찬송가_가사_전체_'+ds+'.json',JSON.stringify({all:true,numbering:2,saved:d.toISOString(),hymns:all},null,1),'application/json');
   if(r==='cancel')return;
   toast(n+'곡의 가사를 '+(r==='picked'?'지정한 위치에 저장했습니다':'다운로드 폴더에 저장했습니다'));
 };
@@ -131,6 +131,7 @@ $('file').onchange=e=>{
     if(o.all&&o.hymns)map=o.hymns;
     else if(o.hymn&&o.lyrics)map={[o.hymn]:o.lyrics};          // 한 곡짜리 가사 파일도 허용
     else throw 0;
+    if(!o.numbering&&window.SONG_RENUM){const R=window.SONG_RENUM,m2={};Object.keys(map).forEach(n=>{m2[R[n]||n]=map[n];});map=m2;}   // 번호 변경 전 파일 → 새 번호로
     const ns=Object.keys(map).filter(n=>/^\d+$/.test(n));
     const over=ns.filter(hasLyrics);
     if(over.length&&!confirm(`${ns.length}곡 중 ${over.length}곡은 이미 가사가 있습니다. 불러온 가사로 바꿀까요?`))return;
