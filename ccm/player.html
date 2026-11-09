@@ -218,7 +218,7 @@ body.playing .parts{margin-bottom:0}
 <li><b>멜로디 악기</b>: 악보의 멜로디(주선율)를 자동 연주하는 악기.</li>
 <li><b>이조</b>: 조를 반음 단위로 올리고 내립니다. <b>조표색 적용</b>: ♯ 음은 빨강, ♭ 음은 파랑으로 표시합니다.</li>
 <li><b>템포</b>: 빠르기(BPM). <b>전주</b>: 시작 전 전주(<b>rit.</b>를 켜면 점점 느려짐). 전주 끝에 <b>4·3·2·1</b> 카운트가 첫 음 위에 표시됩니다.</li>
-<li><b>선택</b>: 몇 절까지 연주할지. 되돌이표·D.C.·D.S. 곡은 '전곡 (악보 순서)'로 정해진 순서대로 연주합니다.</li>
+<li><b>재생</b>: 몇 절까지 연주할지(연주 화면 위쪽 막대에서도 바꿀 수 있음). 되돌이표·D.C.·D.S. 곡은 '전곡 (악보 순서)'로 정해진 순서대로 연주합니다.</li>
 </ul>
 <h3>반주 · 드럼</h3>
 <ul>
@@ -269,7 +269,7 @@ body.playing .parts{margin-bottom:0}
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
-        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀ 이전곡</button><button id="pNext" title="다음 곡">다음곡 ▶</button><button id="pList" title="곡 목록으로">☰ 목록</button></span><span class="pctl" id="pCtl"><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디 음량<input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주 음량<input id="pAcc" type="range" min="0" max="100"></label></span>
+        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀ 이전곡</button><button id="pNext" title="다음 곡">다음곡 ▶</button><button id="pList" title="곡 목록으로">☰ 목록</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select id="pVerses"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디 음량<input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주 음량<input id="pAcc" type="range" min="0" max="100"></label></span>
         <span id="midiLive"></span>
         <span class="status" id="pos">▶ 시작을 누르세요</span>
       </div>
@@ -281,7 +281,7 @@ body.playing .parts{margin-bottom:0}
           <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디" selected>끝4마디</option>
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
-        <label><i class="dot"></i>선택 <select id="verses"></select></label>
+        <label><i class="dot"></i>재생 <select id="verses"></select></label>
         <label title="곡을 끝내는 방법"><i class="dot"></i>엔딩 <select id="ending">
           <option value="roll" title="마지막 음 앞 한 박 드럼 롤('촤라라라') → 심벌, 반주는 마지막 화음을 펼쳐 길게 울림. 대부분의 곡에 무난">롤 엔딩</option>
           <option value="cut" title="마지막 음에서 모두 함께 '탁' 치고 바로 멈춤. 빠르고 경쾌한 곡">컷 오프</option>
@@ -363,7 +363,7 @@ const r2=row('🔊 음량','파트별 음량 — 멜로디를 0으로 하면 반
 const mix=E1('mixRow');if(mix){const tl=mix.querySelector('.tl');if(tl)tl.remove();[...mix.children].forEach(c=>put(r2,c));}
 // 3) 연주
 const r3=row('▶ 연주','빠르기·전주·엔딩·부를 절·조');
-const vl=lab(E1('verses'));if(vl)vl.childNodes.forEach(n=>{if(n.nodeType===3&&/선택/.test(n.textContent))n.textContent='악보 선택 ';});
+const vl=lab(E1('verses'));if(vl)vl.childNodes.forEach(n=>{if(n.nodeType===3&&/선택|재생/.test(n.textContent))n.textContent='재생 ';});
 put(r3,lab(E1('tempo')),E1('fermBox'),lab(E1('intro')),lab(E1('ending')),vl,q('.parts .keybtn'),q('.parts .accopt'));
 // 4) MIDI
 const r4=row('🎹 MIDI','MIDI 악기(유선·블루투스)로 직접 연주');
@@ -2030,7 +2030,7 @@ if(saved)applyCfg(saved);
 const dlg=document.createElement('div');dlg.className='helpdlg';dlg.id='plDlg';dlg.hidden=true;
 dlg.innerHTML=`<div class="hbox plbox" role="dialog" aria-label="연주 예약"><button class="hclose" id="plClose" title="닫기">✕</button>
 <h2>연주 예약</h2>
-<p class="plhelp">곡마다 설정(템포·전주·선택·엔딩·악기·반주·드럼·음량·이조)을 맞춘 뒤 <b>이 곡 설정 저장</b>을 누르세요. 저장한 설정은 그 곡을 열 때마다 적용되고, 예약 연주에도 쓰입니다.</p>
+<p class="plhelp">곡마다 설정(템포·전주·재생·엔딩·악기·반주·드럼·음량·이조)을 맞춘 뒤 <b>이 곡 설정 저장</b>을 누르세요. 저장한 설정은 그 곡을 열 때마다 적용되고, 예약 연주에도 쓰입니다.</p>
 <div class="plrow"><b id="plCur"></b><span class="plsum" id="plCurSum"></span></div>
 <div class="plrow"><button class="plb pri" id="plSave">💾 이 곡 설정 저장</button><button class="plb" id="plAddCur">＋ 이 곡 예약에 추가</button><button class="plb" id="plDelCfg">설정 지우기</button></div>
 <div class="plrow"><select id="plPick"></select><button class="plb" id="plAdd">＋ 추가</button></div>
@@ -2248,6 +2248,7 @@ body.playing .pnav{display:inline-flex}
 body.playing .pctl{display:inline-flex}
 .pctl label{display:inline-flex;align-items:center;gap:5px;cursor:default}
 .pctl input[type=range]{width:80px}
+.pctl select{font-size:13px;padding:1px 2px;border:1px solid var(--line);border-radius:6px;background:#fff}
 .pctl input[type=number]{width:52px;padding:2px 4px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff}
 @media (max-width:1000px){.pctl input[type=range]{width:60px}}
 .pctl.tight{gap:8px;font-size:12px}.pctl.tight input[type=range]{width:56px}.pctl.tight input[type=number]{width:44px}
@@ -2259,7 +2260,12 @@ body.playing .pctl{display:inline-flex}
 (function(){
 const pt=$('pTempo'),pn=$('pTempoN'),pm=$('pMel'),mv=()=>document.querySelector('input.vol[data-vk=S]');
 const pa=$('pAcc'),av=()=>document.querySelector('input.vol[data-vk=AC]');
-const sync=()=>{pt.value=$('tempo').value;pn.value=$('tempoN').value;const m=mv();if(m)pm.value=m.value;const a=av();if(a&&pa)pa.value=a.value;};
+const pvv=$('pVerses'),vv=$('verses');
+const syncV=()=>{if(pvv.innerHTML!==vv.innerHTML)pvv.innerHTML=vv.innerHTML;pvv.value=vv.value;};
+pvv.onchange=()=>{vv.value=pvv.value;vv.dispatchEvent(new Event('change'));if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
+vv.addEventListener('change',syncV);
+pvv.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();});
+const sync=()=>{syncV();pt.value=$('tempo').value;pn.value=$('tempoN').value;const m=mv();if(m)pm.value=m.value;const a=av();if(a&&pa)pa.value=a.value;};
 const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement,nv=$('pNav');
   t.style.marginLeft='';c.classList.remove('tight');nv.classList.remove('tight');
   if(innerWidth<700||!document.body.classList.contains('playing')){c.style.left='';nv.style.left='';$('pos').style.visibility='';$('pInfo').style.visibility='';return;}
