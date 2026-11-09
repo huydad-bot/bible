@@ -557,6 +557,7 @@ function splitDur(d){                          // 한 음표로 못 그리는 �
 }
 function abcLines(v){
   const lines=[];let cur='';let state={};
+  const SYL_ON=new Set();{const S0=VOICES.find(x=>x.k==='S');if(S0)S0.tokens.forEach(n=>{if(n.p!=='r'&&!MEL.has(n.t))SYL_ON.add(n.t);});}   // 가사가 붙는 박(소프라노 기준)
   v.tokens.forEach((n,idx)=>{
     let s='';
     const slurV=v.k==='S'||v.k==='A', nx=v.tokens[idx+1];
@@ -577,7 +578,7 @@ function abcLines(v){
     {                                         // 8분·16분음표는 한 박 안에서 빔으로 묶음 (박 경계·쉼표·4분음표 이상에서는 띄움)
       const [mn,md]=(SONG.meter||'4/4').split('/').map(Number),G=md===8&&mn%3===0?1.5:4/md;
       const e=n.t+n.dur,onBeat=Math.abs(((e-PICKUP)/G)-Math.round((e-PICKUP)/G))<1e-6;
-      const join=n.p!=='r'&&n.dur<G-1e-6&&nx&&nx.p!=='r'&&nx.dur<G-1e-6&&!onBeat;
+      const join=n.p!=='r'&&n.dur<G-1e-6&&nx&&nx.p!=='r'&&nx.dur<G-1e-6&&!onBeat&&!SYL_ON.has(nx.t);   // 찬송가 악보처럼: 글자마다 꼬리를 따로, 한 글자를 여러 음에 부를 때만 묶음
       cur+=s+(join?'':' ');
     }
     const end=n.t+n.dur;
