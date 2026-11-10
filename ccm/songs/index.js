@@ -24,4 +24,7 @@ window.SONG_LIST = [
   { n: 296, title: '손을 높이 들고',     key: 'E', tune: 'John Kennett' },
   { n: 298, title: '시선',           key: 'E', tune: '김명선' },
   { n: 312, title: '우리 함께 기도해', key: 'E', tune: '고형원' },
+  { n: 316, title: '우리에게 향하신', key: 'E', tune: '김진호' },
+  { n: 320, title: '일어나 걸어라',   key: 'E', tune: '최용덕' },
+  { n: 322, title: '좋으신 하나님',   key: 'E', tune: 'Graham Kendrick' },
 ];
