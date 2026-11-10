@@ -27,4 +27,9 @@ window.SONG_LIST = [
   { n: 316, title: '우리에게 향하신', key: 'E', tune: '김진호' },
   { n: 320, title: '일어나 걸어라',   key: 'E', tune: '최용덕' },
   { n: 322, title: '좋으신 하나님',   key: 'E', tune: 'Graham Kendrick' },
+  { n: 331, title: '주께서 높은 보좌에', key: 'E', tune: '김국인' },
+  { n: 333, title: '주는 평화',         key: 'E', tune: 'Kandela Groves' },
+  { n: 343, title: '찬송하라 여호와의 종들아', key: 'E', tune: '' },
+  { n: 344, title: '축복의 통로',       key: 'E', tune: '이민섭' },
+  { n: 347, title: '크신 주께 영광돌리세', key: 'E', tune: 'Robert Ewing' },
 ];
