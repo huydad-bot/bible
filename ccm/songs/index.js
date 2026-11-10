@@ -32,4 +32,9 @@ window.SONG_LIST = [
   { n: 343, title: '찬송하라 여호와의 종들아', key: 'E', tune: '' },
   { n: 344, title: '축복의 통로',       key: 'E', tune: '이민섭' },
   { n: 347, title: '크신 주께 영광돌리세', key: 'E', tune: 'Robert Ewing' },
+  { n: 349, title: '평화 하나님의 평강이', key: 'E', tune: '김창석' },
+  { n: 351, title: '하나님은 너를 지키시는 자', key: 'E', tune: '정성실' },
+  { n: 352, title: '해 뜨는 데부터',   key: 'E', tune: 'Paul S. Deming' },
+  { n: 355, title: '흙으로 사람을',     key: 'E', tune: '' },
+  { n: 363, title: '주님 고대가',       key: 'Cm', tune: '손양원' },
 ];
