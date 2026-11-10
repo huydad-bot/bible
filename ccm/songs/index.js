@@ -16,9 +16,12 @@ window.SONG_LIST = [
   { n: 60,  title: '약한 나로 강하게', key: 'C', tune: 'Reuben Morgan' },
   { n: 66,  title: '오 신실하신 주',   key: 'C', tune: '최용덕' },
   { n: 166, title: '모든 이름 위에 뛰어난 이름', key: 'D', tune: '고형원' },
+  { n: 274, title: '날마다 숨쉬는 순간마다', key: 'E', tune: 'Oscar Ahnfelt' },
   { n: 282, title: '내가 어둠 속에서', key: 'E', tune: '문경일' },
   { n: 284, title: '너는 시냇가에',   key: 'E', tune: '박윤호' },
   { n: 286, title: '두 손 들고 찬양합니다', key: 'E', tune: 'Andre Kempen' },
+  { n: 292, title: '사랑해요 목소리 높여', key: 'E', tune: 'Laurie Klein' },
+  { n: 296, title: '손을 높이 들고',     key: 'E', tune: 'John Kennett' },
   { n: 298, title: '시선',           key: 'E', tune: '김명선' },
   { n: 312, title: '우리 함께 기도해', key: 'E', tune: '고형원' },
 ];
