@@ -37,4 +37,9 @@ window.SONG_LIST = [
   { n: 352, title: '해 뜨는 데부터',   key: 'E', tune: 'Paul S. Deming' },
   { n: 355, title: '흙으로 사람을',     key: 'E', tune: '' },
   { n: 363, title: '주님 고대가',       key: 'Cm', tune: '손양원' },
+  { n: 366, title: '거룩하신 하나님',   key: 'F', tune: 'Henry Smith' },
+  { n: 367, title: '광야를 지나며',     key: 'F', tune: '장진숙' },
+  { n: 369, title: '그의 생각',         key: 'F', tune: '조준모' },
+  { n: 372, title: '나 주의 믿음 갖고', key: 'F', tune: 'John W. Peterson' },
+  { n: 374, title: '나는 예배자입니다', key: 'F', tune: '송세라 & 전종혁' },
 ];
