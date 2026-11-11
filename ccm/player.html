@@ -632,6 +632,9 @@ function lyrSy(k){
   });
   return sy;
 }
+
+/* 절별 슬러(verseMelisma): 그 절에서 앞 글자를 이어 부르는 음인지 — 연주 중 가사 강조가 다른 절 글자로 넘어가지 않게 함 */
+function vmelHas(v,t){return ((VMEL[v]||[]).map(Number)).some(x=>Math.abs(x-t)<1e-6);}
 function wLine(arr){return 'w: '+arr.map(x=>x===undefined?'*':x).join(' ');}
 function sylFor(n,sy){                        // 붙임줄로 나뉜 뒷조각에는 '_'(이어 부름)를 채워 다음 글자가 밀리지 않게 함
   const k=SYL_IDX.get(n);const x=k<0?'_':sy[k];
@@ -1763,7 +1766,8 @@ function tick(){
           const idx=n.start>=REFRAIN_AT?0:filled.indexOf('v'+(verse+1));
           if(idx<0)return;
           let src=n;                                              // 슬러 음이면 앞 글자를 계속 강조
-          if(MEL.has(n.start)){const prev=noteMap.filter(m=>m.k==='S'&&m.start<n.start&&!MEL.has(m.start));if(prev.length)src=prev[prev.length-1];}
+          const vk=verse+1,skip=t=>MEL.has(t)||(t<REFRAIN_AT&&vmelHas(vk,t));
+          if(skip(n.start)){const prev=noteMap.filter(m=>m.k==='S'&&m.start<n.start&&!skip(m.start));if(prev.length)src=prev[prev.length-1];}
           src.els.forEach(el=>{
             const tx=el&&el.querySelector&&el.querySelector('text.abcjs-lyric');
             const ts=tx&&tx.querySelectorAll('tspan')[idx];
