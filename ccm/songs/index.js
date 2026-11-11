@@ -42,4 +42,9 @@ window.SONG_LIST = [
   { n: 369, title: '그의 생각',         key: 'F', tune: '조준모' },
   { n: 372, title: '나 주의 믿음 갖고', key: 'F', tune: 'John W. Peterson' },
   { n: 374, title: '나는 예배자입니다', key: 'F', tune: '송세라 & 전종혁' },
+  { n: 375, title: '나의 모습 나의 소유', key: 'F', tune: 'Claire Cloninger & Don Moen' },
+  { n: 379, title: '눈물 없는 곳',     key: 'F', tune: 'Joyce Lee' },
+  { n: 380, title: '돈으로도 못 가요', key: 'F', tune: '백광제 & 임승원' },
+  { n: 381, title: '들풀에 깃든 사랑', key: 'F', tune: '노진규' },
+  { n: 382, title: '마음이 상한 자를', key: 'F', tune: 'Stacy Swalley' },
 ];
