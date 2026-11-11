@@ -52,4 +52,9 @@ window.SONG_LIST = [
   { n: 391, title: '세 개의 못',       key: 'F', tune: 'J. Davis' },
   { n: 393, title: '소원',             key: 'F', tune: '한웅재' },
   { n: 394, title: '아버지 사랑합니다', key: 'F', tune: 'Scott Brenner' },
+  { n: 399, title: '예배합니다',         key: 'F', tune: 'Rose Lee' },
+  { n: 408, title: '왕이신 나의 하나님', key: 'F', tune: 'Stephen Hah' },
+  { n: 415, title: '은혜의 강가로',       key: 'F', tune: '오성주' },
+  { n: 417, title: '이런 교회 되게 하소서', key: 'F', tune: '김인식' },
+  { n: 423, title: '주 은혜임을',         key: 'F', tune: '정선경 & 소진영' },
 ];
