@@ -535,10 +535,20 @@ function splitDur(d){                          // 한 음표로 못 그리는 �
   if(ONE.includes(L))parts.push(L);else while(L>0){const q=OK.find(x=>x<=L);parts.push(q);L-=q;}
   return parts;
 }
+/* 1·2번 괄호: 줄 끝에서 시작하면 다음 줄 첫머리로 옮기고, 괄호 선은 시작 후 둘째 마디 첫 음까지만 그음 (끝까지 이어지지 않게) */
+const ENDSTOP=(()=>{const st=new Set(SONG.endingStop||[]);if(SONG.endingStop)return st;
+  const S=(VOICES.find(x=>x.k==='S')||{tokens:[]}).tokens;
+  Object.keys(BARX).forEach(k=>{const e=+k;if(!/\d$/.test(BARX[k]))return;
+    const bl=[];for(const n of S){const t=n.t+n.dur;if(t>e+1e-6&&isBar(t))bl.push(t);if(bl.length>=2)break;}
+    if(bl.length<2)return;const b2=bl[1];const f=S.find(n=>Math.abs(n.t-b2)<1e-6);if(!f)return;const stop=f.t+f.dur;
+    if(stop>=SONG_LEN-1e-6||isBar(stop))return;
+    if(Object.keys(BARX).some(x=>+x>e+1e-6&&+x<=stop+1e-6))return;st.add(Math.round(stop*48)/48);});
+  return st;})();
 function abcLines(v){
-  const lines=[];let cur='';let state={};let slurOpen=false;
+  const lines=[];let cur='';let state={};let slurOpen=false;let carry='';
   v.tokens.forEach((n,idx)=>{
     let s='';
+    if(carry){s+=carry+' ';carry='';}
     const slurV=v.k==='S'||v.k==='A', nx=v.tokens[idx+1];
     const pv=v.tokens[idx-1];
     if(slurV&&nx&&nx.p!=='r'&&n.p!=='r'&&MEL.has(nx.t)&&!MEL.has(n.t)&&!n.tie){s+='(';slurOpen=true;}      // 슬러 시작 (붙임줄이면 생략)      // 슬러 시작
@@ -567,7 +577,10 @@ function abcLines(v){
       cur+=s+(join?'':' ');
     }
     const end=Math.round((n.t+n.dur)*48)/48;
-    if(BARX[end]!==undefined){cur+=BARX[end]+' ';state={};}
+    if(BARX[end]!==undefined){const bx=BARX[end],m=bx.match(/^(.*?)(\d)$/);
+      if(m&&LINE_BREAKS.includes(end)){cur+=(m[1]===''?'|':m[1].replace(/\[$/,''))+' ';if(v.k==='S')carry='['+m[2];}
+      else cur+=bx+' ';state={};}
+    else if(ENDSTOP.has(end)&&v.k==='S')cur+='[|] ';
     else if(end===SONG_LEN)cur+='|]';
     else if(DBL.has(end)){cur+='|| ';state={};}
     else if(isBar(end)){cur+='| ';state={};}
