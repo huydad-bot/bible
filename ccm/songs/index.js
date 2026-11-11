@@ -47,4 +47,9 @@ window.SONG_LIST = [
   { n: 380, title: '돈으로도 못 가요', key: 'F', tune: '백광제 & 임승원' },
   { n: 381, title: '들풀에 깃든 사랑', key: 'F', tune: '노진규' },
   { n: 382, title: '마음이 상한 자를', key: 'F', tune: 'Stacy Swalley' },
+  { n: 383, title: '만족함이 없었네', key: 'F', tune: '최영택' },
+  { n: 386, title: '부르신 곳에서',   key: 'F', tune: '김준영 & 송은정' },
+  { n: 391, title: '세 개의 못',       key: 'F', tune: 'J. Davis' },
+  { n: 393, title: '소원',             key: 'F', tune: '한웅재' },
+  { n: 394, title: '아버지 사랑합니다', key: 'F', tune: 'Scott Brenner' },
 ];
