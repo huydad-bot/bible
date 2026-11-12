@@ -57,4 +57,10 @@ window.SONG_LIST = [
   { n: 415, title: '은혜의 강가로',       key: 'F', tune: '오성주' },
   { n: 417, title: '이런 교회 되게 하소서', key: 'F', tune: '김인식' },
   { n: 423, title: '주 은혜임을',         key: 'F', tune: '정선경 & 소진영' },
+  { n: 425, title: '주께서 내 길 예비하시네', key: 'F', tune: '조일상' },
+  { n: 432, title: '주의 사랑으로 사랑합니다', key: 'F', tune: 'James M. Gilbert' },
+  { n: 441, title: '사막에 샘이 넘쳐 흐르리라', key: 'Dm', tune: '히브리 민요' },
+  { n: 447, title: '겟세마네 동산에서',   key: 'G', tune: '조용기 & 김주영' },
+  { n: 450, title: '그 사랑',             key: 'G', tune: '박희정' },
+  { n: 451, title: '그 사랑 얼마나',       key: 'G', tune: '설경욱' },
 ];
