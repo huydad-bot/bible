@@ -1463,8 +1463,88 @@ function midiNoteOff(m,quick){
   try{g.cancelScheduledValues(now);g.setValueAtTime(g.value,now);g.setTargetAtTime(0,now,quick?.01:.07);}catch(e){}
   h.oscs.forEach(o=>{try{o.stop(now+(quick?.08:.6));}catch(e){}});
 }
+/* ===== 🎼 조표 (KeySig) — 관악 MIDI 악기를 C장조(다장조) 운지로 불어도 곡의 조표 ♯/♭이 붙어서 나게 함 =====
+   KeySig MIDI(huydad-bot.github.io/KeySig) 의 음 계산과 같음: 흰 음 운지 → 조표 적용, 반음 키 운지 → 자동 해석,
+   ✱1·✱2(악기 키, 기본 CC80·81)를 누르는 동안은 ♮(조표 해제). 설정은 이 브라우저에 저장. */
+const KS=(()=>{
+  const LET_OF={0:'C',2:'D',4:'E',5:'F',7:'G',9:'A',11:'B'};
+  const SH='FCGDAEB',FL='BEADGCF';
+  const MAJ5={C:0,G:1,D:2,A:3,E:4,B:5,'F#':6,'C#':7,F:-1,Bb:-2,Eb:-3,Ab:-4,Db:-5,Gb:-6,Cb:-7};
+  const MIN5={A:0,E:1,B:2,'F#':3,'C#':4,'G#':5,'D#':6,'A#':7,D:-1,G:-2,C:-3,F:-4,Bb:-5,Eb:-6,Ab:-7};
+  const MAJ={0:'C',1:'G',2:'D',3:'A',4:'E',5:'B',6:'F♯',7:'C♯','-1':'F','-2':'B♭','-3':'E♭','-4':'A♭','-5':'D♭','-6':'G♭','-7':'C♭'};
+  const ksShort=k=>k===0?'조표 없음':Math.abs(k)+(k>0?'♯':'♭');
+  const acc1=(L,k)=>k>0&&SH.slice(0,k).includes(L)?1:k<0&&FL.slice(0,-k).includes(L)?-1:0;
+  let st={on:false,ks:'auto',semi:'auto',cc:[80,81]};
+  try{Object.assign(st,JSON.parse(localStorage.getItem('ks_midi')||'{}'));}catch(e){}
+  const save=()=>{try{localStorage.setItem('ks_midi',JSON.stringify(st));}catch(e){}};
+  const nat=new Set();let learning=-1;const active=new Map();   // 들어온 음 → 낸 음
+  function autoKs(){                                             // 지금 보이는 악보의 조 (이조 반영)
+    const tr=+((document.getElementById('trans')||{}).value||0);
+    const nm=keyName(KEY_PC+tr).replace('♭','b').replace('♯','#').replace(/m$/,'');
+    return (KEY_MINOR?MIN5:MAJ5)[nm]??0;
+  }
+  const curKs=()=>st.ks==='auto'?autoKs():+st.ks;
+  function map(n){
+    const ks=curKs();let L=LET_OF[n%12],base=n,inst=0;
+    if(L===undefined){let m=st.semi;if(m==='auto')m=ks<0?'sharp':ks>0?'flat':'off';
+      if(m==='sharp'){base=n-1;inst=1;}else if(m==='flat'){base=n+1;inst=-1;}
+      if(m==='off')return n;L=LET_OF[((base%12)+12)%12];}
+    return Math.max(0,Math.min(127,base+(nat.size?0:acc1(L,ks))+inst));
+  }
+  function remap(){active.forEach((out,inp)=>{const m=map(inp);if(m!==out){midiNoteOff(out,true);active.set(inp,m);midiNoteOn(m,100);}});}
+  /* onMidiMsg 맨 앞에서 부름 — 처리했으면 true */
+  function filter(d){
+    const [s,d1,d2]=d,cmd=s&0xf0;
+    if(cmd===0xB0){
+      if(learning>=0&&d2>=64&&![1,2,5,7,11,64,65,74,120,121,123].includes(d1)){st.cc[learning]=d1;learning=-1;save();ui();toast&&toast('✱ 키 = CC'+d1+' 로 지정');return true;}
+      const i=st.cc.indexOf(d1);
+      if(st.on&&i>=0){if(d2>=64)nat.add(i);else nat.delete(i);remap();ui();return true;}
+      return false;
+    }
+    if(!st.on)return false;
+    if(cmd===0x90&&d2>0){const m=map(d1);if(active.has(d1))midiNoteOff(active.get(d1),true);active.set(d1,m);midiNoteOn(m,d2);return true;}
+    if(cmd===0x80||(cmd===0x90&&d2===0)){const m=active.has(d1)?active.get(d1):map(d1);active.delete(d1);midiNoteOff(m);return true;}
+    return false;
+  }
+  /* 설정 줄: MIDI 줄 바로 아래 */
+  let el={};
+  function build(){
+    const mrow=document.getElementById('midiBtn')&&document.getElementById('midiBtn').closest('.srow');
+    const r=document.createElement('div');r.className='srow';r.id='ksRow';
+    r.innerHTML='<span class="sh" title="관악 MIDI 악기를 C장조 운지로 불면 곡의 조표 ♯/♭이 붙어서 납니다 (KeySig)">🎼 조표</span><div class="sb">'+
+      '<label title="켜면 MIDI 악기의 음에 조표를 붙임 — C장조(다장조) 운지로 연주"><input type="checkbox" id="ksOn"> 조표 적용</label>'+
+      '<label title="붙일 조표 — 자동이면 지금 악보의 조(이조 반영)">조표 <select id="ksSel"></select></label>'+
+      '<label title="반음 키(LP1 등) 운지의 해석 — 관악기는 자동, MIDI 건반은 해석 안 함">반음 키 <select id="ksSemi">'+
+        '<option value="auto">자동 (♭조: ♯키 / ♯조: ♭키)</option><option value="sharp">항상 ♯키</option><option value="flat">항상 ♭키</option><option value="off">해석 안 함 (건반)</option></select></label>'+
+      '<span class="grp" title="악기 키(✱)를 누르는 동안 ♮ — 조표를 뗌. [학습]을 누른 뒤 악기의 키를 누르면 지정">♮ 키 '+
+        '<button class="midibtn" id="ksL0">✱1 CC80</button><button class="midibtn" id="ksL1">✱2 CC81</button></span>'+
+      '<span class="midinote" id="ksStat"></span></div>';
+    if(mrow)mrow.after(r);else{const p=document.getElementById('midiRow');p&&p.after(r);}
+    el={on:r.querySelector('#ksOn'),sel:r.querySelector('#ksSel'),semi:r.querySelector('#ksSemi'),l:[r.querySelector('#ksL0'),r.querySelector('#ksL1')],stat:r.querySelector('#ksStat')};
+    el.sel.add(new Option('자동 (악보 조)','auto'));
+    for(let k=-7;k<=7;k++)el.sel.add(new Option(ksShort(k)+' ('+MAJ[k]+' 장조)',k));
+    el.on.checked=st.on;el.sel.value=String(st.ks);el.semi.value=st.semi;
+    el.on.onchange=()=>{st.on=el.on.checked;active.clear();nat.clear();save();ui();};
+    el.sel.onchange=()=>{st.ks=el.sel.value==='auto'?'auto':+el.sel.value;save();remap();ui();};
+    el.semi.onchange=()=>{st.semi=el.semi.value;save();};
+    el.l.forEach((b,i)=>b.onclick=()=>{learning=i;b.textContent='✱'+(i+1)+' 대기…';
+      toast&&toast('악기에서 ✱'+(i+1)+'로 쓸 키를 누르세요');});
+    const tr=document.getElementById('trans');if(tr)tr.addEventListener('change',()=>ui());
+    ui();
+  }
+  function ui(){
+    if(!el.on)return;
+    el.l.forEach((b,i)=>{if(learning!==i)b.textContent='✱'+(i+1)+' CC'+st.cc[i];b.classList.toggle('on',nat.has(i));});
+    const k=curKs();
+    el.stat.textContent=st.on?('적용 중: '+ksShort(k)+(k?' ('+MAJ[k]+' 장조 조표)':'')+(nat.size?'  · ♮ 해제 중':'')):'';
+    el.stat.className='midinote'+(st.on?' ok':'');
+    el.sel.options[0].textContent='자동 (악보 조: '+ksShort(autoKs())+')';
+  }
+  return {filter,build,ui};
+})();
 function onMidiMsg(e){
   if(MIDI_DEV!=='all'&&e.currentTarget&&e.currentTarget.id!==MIDI_DEV)return;
+  if(KS.filter(e.data))return;                                              // 🎼 조표 적용
   const [st,d1,d2]=e.data,cmd=st&0xf0;
   if(cmd===0x90&&d2>0)midiNoteOn(d1,d2);
   else if(cmd===0x80||(cmd===0x90&&d2===0))midiNoteOff(d1);
@@ -1473,6 +1553,7 @@ function onMidiMsg(e){
   else if(cmd===0xE0){bendCents=(((d2<<7)|d1)-8192)/8192*200;                                                   // 피치벤드 ±2반음
     liveNotes.forEach(h=>h.oscs.forEach(o=>o.detune.setTargetAtTime(o._d+bendCents,ctx.currentTime,.01)));}
 }
+KS.build();
 function refreshMidiDevices(){
   const sel=$('midiDev');const cur=MIDI_DEV;sel.innerHTML='<option value="all">모든 장치</option>';
   if(!midiAccess)return;
