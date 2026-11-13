@@ -63,4 +63,9 @@ window.SONG_LIST = [
   { n: 447, title: '겟세마네 동산에서',   key: 'G', tune: '조용기 & 김주영' },
   { n: 450, title: '그 사랑',             key: 'G', tune: '박희정' },
   { n: 451, title: '그 사랑 얼마나',       key: 'G', tune: '설경욱' },
+  { n: 457, title: '기도하자 우리 마음 합하여', key: 'G', tune: 'Maori Tune' },
+  { n: 458, title: '기도할 수 있는데',     key: 'G', tune: '고광삼' },
+  { n: 462, title: '나 주님의 기쁨되기 원하네', key: 'G', tune: 'Teresa Muller' },
+  { n: 465, title: '나의 가는 길',         key: 'G', tune: 'Don Moen' },
+  { n: 466, title: '나를 통하여',           key: 'G', tune: '이권희' },
 ];
