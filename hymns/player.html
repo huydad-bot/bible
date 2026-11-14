@@ -1198,7 +1198,7 @@ function ensureCtx(){
   if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();
   if(ctx.state!=='running')ctx.resume();
   if(!liveBus){liveBus=ctx.createGain();liveExpr=ctx.createGain();liveExpr.connect(liveBus);
-    const comp=ctx.createDynamicsCompressor();liveBus.connect(comp);comp.connect(ctx.destination);setLiveVol();}
+    const comp=ctx.createDynamicsCompressor();liveBus.connect(comp);comp.connect(ctx.destination);comp.connect(REC.tap());setLiveVol();}
 }
 function setLiveVol(){if(liveBus)liveBus.gain.setTargetAtTime(.32*LIVE_VOL/80,ctx.currentTime,.03);}
 const NN=['도','도#','레','레#','미','파','파#','솔','솔#','라','라#','시'];
@@ -1322,6 +1322,168 @@ const KS=(()=>{
   }
   return {filter,build,ui};
 })();
+/* ===== ⏺ 녹음 — 반주·멜로디(플레이어 소리) + MIDI 연주 + 마이크/악기 입력(선택)을 한 파일로 녹음 =====
+   브라우저 안에서만 녹음(서버로 보내지 않음). 크롬·엣지·안드로이드: .webm, 사파리: .mp4 — [WAV 저장]으로 변환 가능 */
+const REC=(()=>{
+  let bus=null,dest=null,pDel=null,mDel=null,mr=null,chunks=[],t0=0,tick=null,mic=null,micSrc=null,micGain=null,monGain=null,withPlay=false,sawPlay=false,url=null,blob=null;
+  let opt={mic:false,dev:'',mvol:80,mon:false,play:true,auto:true,meas:null,adj:0};
+  try{Object.assign(opt,JSON.parse(localStorage.getItem('rec_opt')||'{}'));}catch(e){}
+  const save=()=>{try{localStorage.setItem('rec_opt',JSON.stringify(opt));}catch(e){}};
+  function ac(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();if(ctx.state!=='running')ctx.resume();return ctx;}
+  function tap(){                                   // 플레이어의 모든 출력이 여기로도 흐름 (스피커 출력은 그대로)
+    ac();if(!bus){bus=ctx.createGain();dest=ctx.createMediaStreamDestination();pDel=ctx.createDelay(1.5);mDel=ctx.createDelay(1.5);bus.connect(pDel);pDel.connect(dest);mDel.connect(dest);}return bus;
+  }
+  async function openMic(){
+    closeMic();
+    mic=await navigator.mediaDevices.getUserMedia({audio:{deviceId:opt.dev?{exact:opt.dev}:undefined,echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    micSrc=ctx.createMediaStreamSource(mic);micGain=ctx.createGain();monGain=ctx.createGain();
+    micSrc.connect(micGain);tap();micGain.connect(mDel);micGain.connect(monGain);monGain.connect(ctx.destination);setMic();
+    fillDevs();
+  }
+  function closeMic(){if(mic){mic.getTracks().forEach(t=>t.stop());mic=null;}try{micSrc&&micSrc.disconnect();micGain&&micGain.disconnect();monGain&&monGain.disconnect();}catch(e){}micSrc=micGain=monGain=null;}
+  function setMic(){if(micGain)micGain.gain.value=Math.pow(opt.mvol/80,1.5);if(monGain)monGain.gain.value=opt.mon?1:0;}
+  async function fillDevs(){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
+    const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');
+    const s=el.dev;const cur=opt.dev;s.innerHTML='<option value="">기본 입력</option>';
+    ds.forEach((d,i)=>{if(d.deviceId&&d.deviceId!=='default')s.add(new Option(d.label||('입력 '+(i+1)),d.deviceId));});
+    s.value=[...s.options].some(o=>o.value===cur)?cur:'';
+  }
+
+  /* 싱크 보정: 녹음 파일에서 목소리가 반주보다 늦는 만큼(출력+입력 지연) 반주 쪽을 늦춰 넣음 */
+  function autoLat(){
+    let o=(ctx&&(ctx.outputLatency||0)+(ctx.baseLatency||0))||0,i=0;
+    try{const tr=mic&&mic.getAudioTracks()[0];const l=tr&&tr.getSettings&&tr.getSettings().latency;if(typeof l==='number')i=l;}catch(e){}
+    return Math.round((o+i)*1000);
+  }
+  const syncMs=()=>(opt.meas!=null?opt.meas:autoLat())+(+opt.adj||0);
+  function applySync(){const ms=syncMs();if(pDel){pDel.delayTime.value=Math.max(0,ms)/1000;mDel.delayTime.value=Math.max(0,-ms)/1000;}syncUi();}
+  function syncUi(){if(!el.sync)return;const base=opt.meas!=null?'측정 '+opt.meas+'ms':'자동 '+autoLat()+'ms';
+    el.sync.textContent=base+((+opt.adj)?((opt.adj>0?' +':' ')+opt.adj+'ms'):'')+' → 반주를 '+syncMs()+'ms 늦춰 녹음';
+    el.reset.style.display=opt.meas!=null?'':'none';el.adjv.textContent=(opt.adj>0?'+':'')+opt.adj+'ms';}
+  /* 지연 측정: 스피커로 '틱' 3번 → 마이크로 되받아 왕복 시간을 잼 (녹음 때와 같은 경로) */
+  async function measure(){
+    if(mr&&mr.state==='recording')return;
+    el.meas.disabled=true;el.meas.textContent='📏 측정 중… (조용히)';
+    let ok=false;
+    try{
+      ac();const was=!!mic;if(!mic)await openMic();
+      const sr=ctx.sampleRate,N=Math.round(sr*2.4);const cap=[new Float32Array(N),new Float32Array(N)];let w=0;
+      const merge=ctx.createChannelMerger(2),sp=ctx.createScriptProcessor(2048,2,2),zero=ctx.createGain();zero.gain.value=0;
+      const click=ctx.createGain();click.gain.value=0;const osc=ctx.createOscillator();osc.frequency.value=2000;osc.connect(click);
+      click.connect(ctx.destination);click.connect(merge,0,0);micSrc.connect(merge,0,1);merge.connect(sp);sp.connect(zero);zero.connect(ctx.destination);
+      sp.onaudioprocess=e=>{if(w>=N)return;for(let c=0;c<2;c++){const d=e.inputBuffer.getChannelData(c);const n=Math.min(d.length,N-w);cap[c].set(d.subarray(0,n),w);}w+=e.inputBuffer.length;};
+      const t=ctx.currentTime+.25;osc.start(t);
+      [0,.7,1.4].forEach(k=>{click.gain.setValueAtTime(.8,t+k);click.gain.setValueAtTime(0,t+k+.012);});
+      await new Promise(r=>setTimeout(r,2700));
+      osc.stop();sp.disconnect();merge.disconnect();click.disconnect();micSrc.disconnect(merge);
+      const onsets=(a,from,to,thr)=>{for(let i=from;i<to;i++)if(Math.abs(a[i])>thr)return i;return -1;};
+      const peak=Math.max(...cap[1].map(Math.abs));const res=[];
+      let from=0;for(let k=0;k<3;k++){
+        const a=onsets(cap[0],from,N,.3);if(a<0)break;
+        const b=onsets(cap[1],a,Math.min(N,a+Math.round(sr*.6)),Math.max(.02,peak*.4));
+        if(b>=0)res.push((b-a)/sr*1000);from=a+Math.round(sr*.3);}
+      if(!was)closeMic();
+      if(res.length>=2){res.sort((x,y)=>x-y);opt.meas=Math.round(res[Math.floor(res.length/2)]);save();ok=true;toast('📏 지연 '+opt.meas+'ms — 녹음 때 자동으로 맞춥니다');}
+    }catch(e){console.warn(e);}
+    if(!ok)toast('측정 실패 — 스피커 소리를 키우고(이어폰 말고) 조용한 곳에서 다시 해 보세요');
+    el.meas.disabled=false;el.meas.textContent='📏 지연 측정';applySync();
+  }
+  const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+  async function begin(){
+    ac();tap();
+    if(opt.mic){try{await openMic();}catch(e){toast('마이크를 쓸 수 없습니다 — 주소창의 마이크 권한을 확인하세요');return;}}
+    const types=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'];
+    const type=types.find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||'';
+    if(!window.MediaRecorder){toast('이 브라우저는 녹음을 지원하지 않습니다');return;}
+    chunks=[];mr=new MediaRecorder(dest.stream,type?{mimeType:type,audioBitsPerSecond:192000}:undefined);
+    applySync();mr.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+    mr.onstop=done;mr.start(500);t0=performance.now();sawPlay=false;
+    withPlay=opt.play&&!playing;
+    if(withPlay){const b=document.getElementById('play')||document.getElementById('hPlay');b&&b.click();}
+    tick=setInterval(()=>{const s=(performance.now()-t0)/1000;badge.querySelector('b').textContent=fmt(s);
+      if(playing)sawPlay=true;
+      if(opt.auto&&sawPlay&&!playing&&!stopping){stopping=true;setTimeout(()=>{stopping=false;end();},1800);}   // 연주가 끝나면 여운 뒤 자동 정지
+    },250);
+    document.body.classList.add('recording');ui();toast('⏺ 녹음 시작');
+  }
+  let stopping=false;
+  function end(){if(!mr||mr.state==='inactive')return;mr.stop();clearInterval(tick);tick=null;document.body.classList.remove('recording');ui();}
+  function done(){
+    closeMic();blob=new Blob(chunks,{type:mr.mimeType||'audio/webm'});if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(blob);
+    el.audio.src=url;el.audio.style.display='';el.dl.style.display='';el.wav.style.display='';
+    const ext=/mp4/.test(blob.type)?'m4a':/ogg/.test(blob.type)?'ogg':'webm';
+    el.dl.href=url;el.dl.download=fname()+'.'+ext;
+    el.stat.textContent='녹음 '+fmt((performance.now()-t0)/1000)+' · '+(blob.size/1048576).toFixed(1)+'MB';el.stat.className='midinote ok';
+    toast('⏹ 녹음 끝 — 들어 보고 저장하세요');
+  }
+  function fname(){const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return (document.title.split('·')[0].trim()||'녹음').replace(/[\\/:*?"<>|]/g,'')+'_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());}
+  async function toWav(){
+    if(!blob)return;el.wav.textContent='변환 중…';
+    try{
+      const buf=await ac().decodeAudioData(await blob.arrayBuffer());
+      const ch=Math.min(2,buf.numberOfChannels),sr=buf.sampleRate,n=buf.length,data=new DataView(new ArrayBuffer(44+n*ch*2));
+      const ws=(o,s)=>[...s].forEach((c,i)=>data.setUint8(o+i,c.charCodeAt(0)));
+      ws(0,'RIFF');data.setUint32(4,36+n*ch*2,true);ws(8,'WAVE');ws(12,'fmt ');data.setUint32(16,16,true);data.setUint16(20,1,true);
+      data.setUint16(22,ch,true);data.setUint32(24,sr,true);data.setUint32(28,sr*ch*2,true);data.setUint16(32,ch*2,true);data.setUint16(34,16,true);
+      ws(36,'data');data.setUint32(40,n*ch*2,true);
+      const cs=[...Array(ch)].map((_,i)=>buf.getChannelData(i));let o=44;
+      for(let i=0;i<n;i++)for(let c=0;c<ch;c++){const v=Math.max(-1,Math.min(1,cs[c][i]));data.setInt16(o,v<0?v*32768:v*32767,true);o+=2;}
+      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'audio/wav'}));a.download=fname()+'.wav';a.click();
+    }catch(e){toast('WAV 변환 실패 — 원본 파일로 저장하세요');}
+    el.wav.textContent='WAV 저장';
+  }
+  /* 설정 줄: 🎼 조표 줄 아래 (없으면 MIDI 줄 아래) */
+  let el={},badge=null;
+  function build(){
+    const after=document.getElementById('ksRow')||(document.getElementById('midiBtn')&&document.getElementById('midiBtn').closest('.srow'));
+    const r=document.createElement('div');r.className='srow';r.id='recRow';
+    r.innerHTML='<span class="sh" title="반주 + 내 연주(MIDI·마이크·악기)를 함께 녹음">⏺ 녹음</span><div class="sb">'+
+      '<button class="midibtn" id="recBtn" title="녹음 시작 / 정지">⏺ 녹음 시작</button>'+
+      '<label title="녹음을 시작하면 반주도 처음부터 함께 시작"><input type="checkbox" id="recPlay"> 반주 같이 시작</label>'+
+      '<label title="연주가 끝나면 여운 뒤 녹음도 자동으로 멈춤"><input type="checkbox" id="recAuto"> 연주 끝나면 자동 정지</label>'+
+      '<span class="br"></span>'+
+      '<label title="마이크·노래방 마이크·오디오 인터페이스(악기) 소리도 함께 녹음"><input type="checkbox" id="recMic"> 마이크/악기 입력</label>'+
+      '<label title="녹음할 입력 장치 (USB 마이크, 오디오 인터페이스 등)">입력 <select id="recDev"><option value="">기본 입력</option></select></label>'+
+      '<label title="마이크 입력 크기">마이크 <input id="recVol" type="range" min="0" max="120" value="80" style="width:110px"><b id="recVolV" style="font:400 12px Noto Sans KR;color:#8a7f6e;min-width:24px"></b></label>'+
+      '<label title="내 목소리를 스피커로도 들음 — 스피커를 쓰면 울림(하울링)이 생기므로 이어폰일 때만"><input type="checkbox" id="recMon"> 내 소리 듣기(이어폰)</label>'+
+      '<span class="br"></span>'+
+      '<span class="grp" title="녹음 파일에서 목소리·악기가 반주보다 늦게 들리는 것을 맞춤 (출력+입력 지연)">싱크 '+
+        '<span class="midinote ok" id="recSync"></span>'+
+        '<button class="midibtn" id="recMeas" title="스피커로 틱 소리를 내고 마이크로 다시 받아 지연을 잼 — 스피커 음량을 적당히, 조용한 곳에서 (오디오 인터페이스는 출력→입력을 케이블로 이어도 됨)">📏 지연 측정</button>'+
+        '<button class="midibtn" id="recReset" title="측정값을 지우고 브라우저 자동값 사용" style="display:none">자동으로</button></span>'+
+      '<label title="녹음을 들어 보고 목소리가 늦으면 +, 빠르면 − 쪽으로">미세 조정 <input id="recAdj" type="range" min="-150" max="150" step="5" value="0" style="width:120px"><b id="recAdjV" style="font:400 12px Noto Sans KR;color:#8a7f6e;min-width:48px"></b></label>'+
+      '<span class="br"></span>'+
+      '<audio id="recAudio" controls style="display:none;height:34px;max-width:320px"></audio>'+
+      '<a class="midibtn" id="recDl" style="display:none;text-decoration:none;line-height:30px;color:inherit">💾 저장</a>'+
+      '<button class="midibtn" id="recWav" style="display:none">WAV 저장</button>'+
+      '<span class="midinote" id="recStat"></span></div>';
+    if(after)after.after(r);
+    const g=id=>r.querySelector('#'+id);
+    el={btn:g('recBtn'),play:g('recPlay'),auto:g('recAuto'),mic:g('recMic'),dev:g('recDev'),vol:g('recVol'),volv:g('recVolV'),mon:g('recMon'),audio:g('recAudio'),dl:g('recDl'),wav:g('recWav'),stat:g('recStat'),sync:g('recSync'),meas:g('recMeas'),reset:g('recReset'),adj:g('recAdj'),adjv:g('recAdjV')};
+    el.play.checked=opt.play;el.auto.checked=opt.auto;el.mic.checked=opt.mic;el.vol.value=opt.mvol;el.mon.checked=opt.mon;el.volv.textContent=opt.mvol;
+    el.play.onchange=()=>{opt.play=el.play.checked;save();};
+    el.auto.onchange=()=>{opt.auto=el.auto.checked;save();};
+    el.mic.onchange=async()=>{opt.mic=el.mic.checked;save();if(opt.mic){try{ac();await openMic();closeMic();}catch(e){toast('마이크 권한이 필요합니다');}}};
+    el.dev.onchange=()=>{opt.dev=el.dev.value;save();};
+    el.vol.oninput=()=>{opt.mvol=+el.vol.value;el.volv.textContent=opt.mvol;save();setMic();};
+    el.mon.onchange=()=>{opt.mon=el.mon.checked;save();setMic();};
+    el.btn.onclick=()=>mr&&mr.state==='recording'?end():begin();
+    el.wav.onclick=toWav;
+    el.adj.value=opt.adj;el.adj.oninput=()=>{opt.adj=+el.adj.value;save();applySync();};
+    el.meas.onclick=measure;el.reset.onclick=()=>{opt.meas=null;save();applySync();};
+    syncUi();
+    /* 연주 중에도 보이는 녹음 표시 (누르면 정지) */
+    badge=document.createElement('button');badge.id='recBadge';badge.title='녹음 정지';badge.innerHTML='⏺ 녹음 <b>0:00</b> ■';
+    badge.onclick=end;document.body.appendChild(badge);
+    const css=document.createElement('style');css.textContent='#recBadge{display:none;position:fixed;top:10px;right:12px;z-index:99;border:0;border-radius:999px;padding:6px 14px;background:#c0392b;color:#fff;font:700 14px "Noto Sans KR",sans-serif;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25)}body.recording #recBadge{display:block;animation:recb 1.2s infinite}@keyframes recb{50%{opacity:.6}}#recBtn.on{background:#c0392b;border-color:#c0392b;color:#fff}';
+    document.head.appendChild(css);
+    if(opt.mic)fillDevs();
+  }
+  function ui(){const on=mr&&mr.state==='recording';el.btn.textContent=on?'⏹ 녹음 정지':'⏺ 녹음 시작';el.btn.classList.toggle('on',!!on);if(on){el.stat.textContent='녹음 중…';el.stat.className='midinote no';}}
+  return {tap,build};
+})();
 function onMidiMsg(e){
   if(MIDI_DEV!=='all'&&e.currentTarget&&e.currentTarget.id!==MIDI_DEV)return;
   if(KS.filter(e.data))return;                                              // 🎼 조표 적용
@@ -1333,7 +1495,7 @@ function onMidiMsg(e){
   else if(cmd===0xE0){bendCents=(((d2<<7)|d1)-8192)/8192*200;                                                   // 피치벤드 ±2반음
     liveNotes.forEach(h=>h.oscs.forEach(o=>o.detune.setTargetAtTime(o._d+bendCents,ctx.currentTime,.01)));}
 }
-KS.build();
+KS.build();REC.build();
 function refreshMidiDevices(){
   const sel=$('midiDev');const cur=MIDI_DEV;sel.innerHTML='<option value="all">모든 장치</option>';
   if(!midiAccess)return;
@@ -1420,7 +1582,7 @@ function start(m,beat=0,intro=curIntro){
   const tr=+$('trans').value;const nv=+$('verses').value;buildForm(nv);totalBeats=introLen+PERF_LEN;fromBeat=beat;
   buildWarp(totalBeats);
   master=ctx.createGain();master.gain.value=.9;
-  const comp=ctx.createDynamicsCompressor();master.connect(comp);comp.connect(ctx.destination);
+  const comp=ctx.createDynamicsCompressor();master.connect(comp);comp.connect(ctx.destination);comp.connect(REC.tap());
   const lfo=ctx.createOscillator();lfo.frequency.value=5.2;
   const lfoG=ctx.createGain();lfoG.gain.value=6;lfo.connect(lfoG);
   const base=T(beat);const EVQ=[];
