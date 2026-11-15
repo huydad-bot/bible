@@ -3,7 +3,7 @@
 <head>
 <script>
 /* 연주 화면의 ☰ 목록으로 왔으면(list.html?auto=1) 고른 곡을 바로 연주 */
-const AUTO=new URLSearchParams(location.search).get('auto')==='1'?'&auto=1':'';try{if(window.top===window)location.replace("index.html");}catch(e){}</script>
+const AUTO='&auto=1';   // 곡을 누르면 바로 연주 화면(맨 처음에서 대기)try{if(window.top===window)location.replace("index.html");}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -141,16 +141,13 @@ $('file').onchange=e=>{
   e.target.value='';
 };
 </script>
-<script>/* 전체화면 버튼: 프로그램 틀(index.html)의 전체화면을 켜고 끔 */
+<script>/* ⚙ 설정 버튼: 마지막에 연 곡(없으면 첫 곡)의 연주 화면을 설정을 편 채로 엶 */
 (function(){
-let T=null;try{if(window.top!==window&&top.FS)T=top.FS;}catch(e){}
-const d=document,el=d.documentElement,hb=d.querySelector('.lbtns');if(!hb)return;
-const can=T?T.can:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
-const cur=()=>T?T.is():!!(d.fullscreenElement||d.webkitFullscreenElement);
-const b=d.createElement('button');b.className='lfs';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (해제: Esc, iPad는 아래로 쓸기)';
-const lab=()=>{b.textContent=cur()?'⤢ 전체화면 끄기':'⛶ 전체화면';el.classList.toggle('fs',cur());};lab();
-b.onclick=()=>{if(T){T.toggle();return;}try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
-window.addEventListener('appfs',lab);d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
+const hb=document.querySelector('.lbtns');if(!hb)return;
+const b=document.createElement('button');b.className='lb';b.id='setOpenBtn';b.title='음원·악기·템포·MIDI·녹음 등 설정 화면 열기';b.textContent='⚙ 설정';
+b.onclick=()=>{let n='';try{n=localStorage.getItem('hymn_last')||'';}catch(e){}
+  if(!n){const a=document.querySelector('#list a');if(a)n=new URL(a.href).searchParams.get('n');}
+  if(n)location.href='player.html?n='+encodeURIComponent(n)+'&set=1';};
 hb.appendChild(b);
 })();</script>
 </body>
