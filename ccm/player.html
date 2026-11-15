@@ -200,6 +200,12 @@ body.playing .parts{margin-bottom:0}
   .status{margin-left:0;width:100%}
 }
 </style>
+<style>/* 화면 구분 배경: ① 목록 = 베이지 · ② 연주 = 연한 초록 · ③ 설정 = 연한 하늘 */
+html,body{--bg:#e2eaf4;background:var(--bg)}
+html:has(body.playing),body.playing{--bg:#dcebdc;background:var(--bg)}
+body.playing .card{background:#fbfdf8}
+body{transition:background-color .25s}
+</style>
 </head>
 <body>
 <div class="count" id="count" aria-live="polite"></div>
@@ -264,25 +270,25 @@ body.playing .parts{margin-bottom:0}
   <div class="card">
     <div class="panel">
       <div class="parts">
-        <label class="inst" title="악보의 멜로디(주선율)를 자동 연주할 악기"><i class="dot"></i>멜로디 악기 <select data-k="S"></select></label>
-        <label class="keybtn" title="이조 (조 바꾸기)">이조<select id="trans"></select></label>
+        <label class="inst" title="악보의 멜로디(주선율)를 자동 연주할 악기"><i class="dot"></i>멜로디 악기 <select autocomplete="off" data-k="S"></select></label>
+        <label class="keybtn" title="이조 (조 바꾸기)">이조<select autocomplete="off" id="trans"></select></label>
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
-        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀ 이전곡</button><button id="pNext" title="다음 곡">다음곡 ▶</button><button id="pList" title="곡 목록으로">☰ 목록</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select id="pVerses"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디 음량<input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주 음량<input id="pAcc" type="range" min="0" max="100"></label></span>
+        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀ 이전곡</button><button id="pNext" title="다음 곡">다음곡 ▶</button><button id="pList" title="곡 목록으로">☰ 목록</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디 음량<input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주 음량<input id="pAcc" type="range" min="0" max="100"></label></span>
         <span id="midiLive"></span>
         <span class="status" id="pos">▶ 시작을 누르세요</span>
       </div>
       <div class="ctrl">
         <label title="템포 (BPM)"><i class="dot"></i>템포 <input id="tempo" type="range" min="40" max="160" value="84"> <input id="tempoN" title="BPM (40–160)" type="number" min="40" max="160" value="84" inputmode="numeric"></label>
-        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표<span class="fermi">(<span>𝄐</span>)</span> <select id="ferm">
+        <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표<span class="fermi">(<span>𝄐</span>)</span> <select autocomplete="off" id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
-        <label title="▶ 시작을 누르면 곡 앞에 연주할 전주"><i class="dot"></i>전주 <select id="intro">
+        <label title="▶ 시작을 누르면 곡 앞에 연주할 전주"><i class="dot"></i>전주 <select autocomplete="off" id="intro">
           <option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디" selected>끝4마디</option>
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
-        <label><i class="dot"></i>재생 <select id="verses"></select></label>
-        <label title="곡을 끝내는 방법"><i class="dot"></i>엔딩 <select id="ending">
+        <label><i class="dot"></i>재생 <select autocomplete="off" id="verses"></select></label>
+        <label title="곡을 끝내는 방법"><i class="dot"></i>엔딩 <select autocomplete="off" id="ending">
           <option value="roll" title="마지막 음 앞 한 박 드럼 롤('촤라라라') → 심벌, 반주는 마지막 화음을 펼쳐 길게 울림. 대부분의 곡에 무난">롤 엔딩</option>
           <option value="cut" title="마지막 음에서 모두 함께 '탁' 치고 바로 멈춤. 빠르고 경쾌한 곡">컷 오프</option>
           <option value="rit" title="마지막 줄을 점점 느리게 → 화음을 길게 울림. 느린 경배곡">점점 느리게</option>
@@ -292,11 +298,11 @@ body.playing .parts{margin-bottom:0}
         <input id="scoreOnly" type="checkbox" checked hidden>
       </div>
       <div class="timbre" id="timbre">
-        <label title="곡에 적힌 코드로 자동 반주"><i class="dot"></i>반주 <select id="accPat">
+        <label title="곡에 적힌 코드로 자동 반주"><i class="dot"></i>반주 <select autocomplete="off" id="accPat">
           <option value="none">없음</option><option value="block">화음</option><option value="arp" selected>아르페지오</option><option value="rhythm">리듬</option></select></label>
-        <label title="반주 소리"><i class="dot"></i>반주 악기 <select id="accIns"></select></label>
-        <label title="낮은 음(근음)을 연주할 악기"><i class="dot"></i>베이스 <select id="bassIns"><option value="same">반주 악기와 같게</option><option value="none">없음</option></select></label>
-        <div class="dcol"><label title="드럼 리듬 — 고른 비트의 설명이 옆에 나옵니다"><i class="dot"></i>드럼 <select id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option><option value="shuffle">셔플</option><option value="ballad68">6/8 발라드</option><option value="halftime">하프타임</option></select></label><label title="줄(악구) 끝마다 탐 필인 (롤 엔딩의 드럼 롤 포함)"><input id="drumFill" type="checkbox" checked> 필인</label></div>
+        <label title="반주 소리"><i class="dot"></i>반주 악기 <select autocomplete="off" id="accIns"></select></label>
+        <label title="낮은 음(근음)을 연주할 악기"><i class="dot"></i>베이스 <select autocomplete="off" id="bassIns"><option value="same">반주 악기와 같게</option><option value="none">없음</option></select></label>
+        <div class="dcol"><label title="드럼 리듬 — 고른 비트의 설명이 옆에 나옵니다"><i class="dot"></i>드럼 <select autocomplete="off" id="drum"><option value="none">없음</option><option value="ballad">발라드</option><option value="8beat">8비트</option><option value="16beat">16비트</option><option value="shuffle">셔플</option><option value="ballad68">6/8 발라드</option><option value="halftime">하프타임</option></select></label><label title="줄(악구) 끝마다 탐 필인 (롤 엔딩의 드럼 롤 포함)"><input id="drumFill" type="checkbox" checked> 필인</label></div>
         <span class="drumdesc" id="drumDesc"></span>
       </div>
       <div class="timbre mix" id="mixRow">
@@ -308,14 +314,14 @@ body.playing .parts{margin-bottom:0}
       </div>
       <div class="timbre midi" id="midiRow" style="border-top:1px dashed #cfc3ae;padding-top:12px;margin-top:12px">
         <button class="midibtn" id="midiBtn" title="유선(USB)·무선(블루투스) MIDI 악기를 연결해 멜로디를 직접 연주">🎹 MIDI 연결</button>
-        <label title="연주에 쓸 MIDI 장치">장치 <select id="midiDev"><option value="all">모든 장치</option></select></label>
-        <label title="MIDI로 연주할 때 나는 악기 소리 — 악기 자체에서 소리가 나면 '소리 끔'">미디악기 <select id="midiIns"><option value="off">소리 끔 (악기 소리 사용)</option></select></label>
+        <label title="연주에 쓸 MIDI 장치">장치 <select autocomplete="off" id="midiDev"><option value="all">모든 장치</option></select></label>
+        <label title="MIDI로 연주할 때 나는 악기 소리 — 악기 자체에서 소리가 나면 '소리 끔'">미디악기 <select autocomplete="off" id="midiIns"><option value="off">소리 끔 (악기 소리 사용)</option></select></label>
         <label title="MIDI 연주 음량">내 연주 <input class="vol" data-vk="LIVE" type="range" min="0" max="100" value="80"><b class="vv"></b></label>
         <label class="duckopt" title="MIDI 악기로 연주하는 동안 자동 멜로디 소리를 작게 (연주를 멈추면 약 1.5초 뒤 원래대로)"><input id="duck" type="checkbox" checked> 내 연주 때 멜로디 줄이기</label>
         <span class="midinote" id="midiNote"></span>
       </div>
       <div class="timbre sfrow" id="sfRow">
-        <label title="악기 소리의 출처 — SF2 사운드폰트를 고르면 실제 녹음된 악기 소리로 연주"><i class="dot"></i>음원 <select id="sfSel"><option value="synth">합성음 (기본 내장)</option></select></label>
+        <label title="악기 소리의 출처 — SF2 사운드폰트를 고르면 실제 녹음된 악기 소리로 연주"><i class="dot"></i>음원 <select autocomplete="off" id="sfSel"><option value="synth">합성음 (기본 내장)</option></select></label>
         <button class="midibtn" id="sfLoad" title="가지고 있는 .sf2 파일 불러오기 (한 번 불러오면 이 브라우저에 보관)">📂 SF2 불러오기</button>
         <button class="midibtn" id="sfDel" title="이 브라우저에 보관한 SF2 지우기" style="display:none">삭제</button>
         <input type="file" id="sfFile" accept=".sf2,.SF2" hidden>
@@ -814,6 +820,7 @@ const $=id=>document.getElementById(id);
   sel.title='몇 번(절) 부를지, 끝에 후렴을 한 번 더 부를지';
   if(!HAS_REFRAIN){const o=document.querySelector('#intro option[value=ref]');if(o)o.remove();}
   if(SONG.form){sel.innerHTML='';sel.add(new Option('전곡 (악보 순서)',NUM_VERSES));sel.title='되돌이표·D.C.·D.S. 순서대로 연주';}
+  else if([...sel.options].some(o=>o.value===NUM_VERSES+':0'))sel.value=NUM_VERSES+':0';   // 기본: 모든 절
   buildForm(sel.value);
 })();
 let DUCKED=false;const DUCK=0.15;            // 내 연주(MIDI) 중에는 자동 멜로디를 15%로
@@ -1513,8 +1520,8 @@ const KS=(()=>{
     const r=document.createElement('div');r.className='srow';r.id='ksRow';
     r.innerHTML='<span class="sh" title="관악 MIDI 악기를 C장조 운지로 불면 곡의 조표 ♯/♭이 붙어서 납니다 (KeySig)">🎼 조표</span><div class="sb">'+
       '<label title="켜면 MIDI 악기의 음에 조표를 붙임 — C장조(다장조) 운지로 연주"><input type="checkbox" id="ksOn"> 조표 적용</label>'+
-      '<label title="붙일 조표 — 자동이면 지금 악보의 조(이조 반영)">조표 <select id="ksSel"></select></label>'+
-      '<label title="반음 키(LP1 등) 운지의 해석 — 관악기는 자동, MIDI 건반은 해석 안 함">반음 키 <select id="ksSemi">'+
+      '<label title="붙일 조표 — 자동이면 지금 악보의 조(이조 반영)">조표 <select autocomplete="off" id="ksSel"></select></label>'+
+      '<label title="반음 키(LP1 등) 운지의 해석 — 관악기는 자동, MIDI 건반은 해석 안 함">반음 키 <select autocomplete="off" id="ksSemi">'+
         '<option value="auto">자동 (♭조: ♯키 / ♯조: ♭키)</option><option value="sharp">항상 ♯키</option><option value="flat">항상 ♭키</option><option value="off">해석 안 함 (건반)</option></select></label>'+
       '<span class="grp" title="악기 키(✱)를 누르는 동안 ♮ — 조표를 뗌. [학습]을 누른 뒤 악기의 키를 누르면 지정">♮ 키 '+
         '<button class="midibtn" id="ksL0">✱1 CC80</button><button class="midibtn" id="ksL1">✱2 CC81</button></span>'+
@@ -1665,7 +1672,7 @@ const REC=(()=>{
       '<label title="연주가 끝나면 여운 뒤 녹음도 자동으로 멈춤"><input type="checkbox" id="recAuto"> 연주 끝나면 자동 정지</label>'+
       '<span class="br"></span>'+
       '<label title="마이크·노래방 마이크·오디오 인터페이스(악기) 소리도 함께 녹음"><input type="checkbox" id="recMic"> 마이크/악기 입력</label>'+
-      '<label title="녹음할 입력 장치 (USB 마이크, 오디오 인터페이스 등)">입력 <select id="recDev"><option value="">기본 입력</option></select></label>'+
+      '<label title="녹음할 입력 장치 (USB 마이크, 오디오 인터페이스 등)">입력 <select autocomplete="off" id="recDev"><option value="">기본 입력</option></select></label>'+
       '<label title="마이크 입력 크기">마이크 <input id="recVol" type="range" min="0" max="120" value="80" style="width:110px"><b id="recVolV" style="font:400 12px Noto Sans KR;color:#8a7f6e;min-width:24px"></b></label>'+
       '<label title="내 목소리를 스피커로도 들음 — 스피커를 쓰면 울림(하울링)이 생기므로 이어폰일 때만"><input type="checkbox" id="recMon"> 내 소리 듣기(이어폰)</label>'+
       '<span class="br"></span>'+
@@ -1763,7 +1770,9 @@ if(!navigator.requestMIDIAccess){$('midiBtn').title='이 브라우저는 Web MID
 function setPanel(open){document.body.classList.toggle('collapsed',!open);
   $('setBtn').textContent=open?'⚙ 설정 접기':'⚙ 설정 펼치기';$('setBtn').classList.toggle('open',open);
   try{localStorage.setItem('ccm_panelOpen',open?'1':'0');}catch(e){}}
-(function(){let o=false;try{o=localStorage.getItem('ccm_panelOpen')==='1';}catch(e){}setPanel(o);})();
+/* 목록에서 곡을 누르면 설정을 접은 채 '연주 대기' 화면으로, 목록의 [⚙ 설정]으로 들어오면 설정을 편 채로 */
+(function(){const q=new URLSearchParams(location.search);setPanel(q.get('set')==='1');
+  try{if(q.get('n'))localStorage.setItem('ccm_last',q.get('n'));}catch(e){}})();
 $('setBtn').onclick=()=>setPanel(document.body.classList.contains('collapsed'));
 $('hPlay').onclick=()=>$('play').click();
 /* 사용법 */
@@ -2285,6 +2294,7 @@ function applyCfg(c){
 }
 /* 이 곡에 저장된 설정이 있으면 열 때 적용 */
 const saved=jget(CFG(SONG.n),null);
+window.SONGCFG={save:()=>jput(CFG(SONG.n),readCfg()),has:()=>!!jget(CFG(SONG.n),null),clear:()=>{try{localStorage.removeItem(CFG(SONG.n));}catch(e){}}};
 if(saved)applyCfg(saved);
 
 /* ----- 예약 창 ----- */
@@ -2294,10 +2304,10 @@ dlg.innerHTML=`<div class="hbox plbox" role="dialog" aria-label="연주 예약">
 <p class="plhelp">곡마다 설정(템포·전주·재생·엔딩·악기·반주·드럼·음량·이조)을 맞춘 뒤 <b>이 곡 설정 저장</b>을 누르세요. 저장한 설정은 그 곡을 열 때마다 적용되고, 예약 연주에도 쓰입니다.</p>
 <div class="plrow"><b id="plCur"></b><span class="plsum" id="plCurSum"></span></div>
 <div class="plrow"><button class="plb pri" id="plSave">💾 이 곡 설정 저장</button><button class="plb" id="plAddCur">＋ 이 곡 예약에 추가</button><button class="plb" id="plDelCfg">설정 지우기</button></div>
-<div class="plrow"><select id="plPick"></select><button class="plb" id="plAdd">＋ 추가</button></div>
+<div class="plrow"><select autocomplete="off" id="plPick"></select><button class="plb" id="plAdd">＋ 추가</button></div>
 <h3>예약 목록 <small id="plCount"></small></h3>
 <ol id="plList"></ol>
-<div class="plrow"><label>곡이 끝나면 <select id="plGap"><option value="hold">버튼 누를 때까지 대기</option><option value="5">5초</option><option value="10">10초</option><option value="20">20초</option></select></label>
+<div class="plrow"><label>곡이 끝나면 <select autocomplete="off" id="plGap"><option value="hold">버튼 누를 때까지 대기</option><option value="5">5초</option><option value="10">10초</option><option value="20">20초</option></select></label>
 <button class="plb pri" id="plStart">▶ 예약 연주 시작</button><button class="plb" id="plClear">목록 비우기</button></div></div>`;
 document.body.appendChild(dlg);
 const btn=document.createElement('button');btn.className='setbtn';btn.id='plBtn';btn.title='여러 곡을 순서대로 이어서 연주';btn.textContent='📋 예약';
@@ -2436,7 +2446,7 @@ function pauseNow(){if(!playing)return;const b=curBeat(),it=curIntro;KEEPV=true;
   $('play').textContent='▶ 계속';$('hPlay').textContent='▶ 계속';$('pos').textContent='일시정지';}
 function resumeNow(){const p=PAUSE;if(!p)return;PAUSE=null;document.body.classList.remove('paused');
   KEEPV=true;try{start(mode,Math.max(0,p.b-.02),p.it);}finally{KEEPV=false;}}
-function endPause(){if(!PAUSE)return;stop();fromBeat=0;}
+function endPause(){if(!PAUSE)return;stop();fromBeat=0;if(window.setPanel)setPanel(true);}   // 연주 화면에서 ■ → 설정 화면
 $('pExit').onclick=endPause;
 document.addEventListener('keydown',e=>{
   const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
@@ -2490,7 +2500,7 @@ function lastLine(){const sg=FORM[FORM.length-1];if(!sg)return 0;
 B('tbHome').onclick=()=>goTo(0);B('tbEnd').onclick=()=>goTo(lastLine());
 B('tbBack').onclick=()=>seek(-1);B('tbFwd').onclick=()=>seek(1);
 B('tbPP').onclick=()=>{if(playing)pauseNow();else if(PAUSE)resumeNow();};
-B('tbStop').onclick=()=>{if(PAUSE)endPause();else if(playing){stop();fromBeat=0;}};
+B('tbStop').onclick=()=>{if(PAUSE)endPause();else if(playing){stop();fromBeat=0;setPanel(true);}};
 document.querySelectorAll('#tbar button').forEach(x=>x.addEventListener('mouseup',()=>x.blur()));
 setInterval(()=>{const pp=B('tbPP');const t=playing?'⏸\uFE0E':'▶\uFE0E';if(pp.textContent!==t)pp.textContent=t;},200);
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
@@ -2555,7 +2565,7 @@ $('pList').title='곡 목록 — 고른 곡을 바로 연주';$('pList').onclick
     document.body.appendChild(d);d.querySelector('button').onclick=()=>{d.remove();start(mode,0,getIntro());};};
   /* 연주 화면을 띄우되 소리는 내지 않고 맨 처음에서 대기 — ▶ 또는 스페이스바로 시작 */
   setTimeout(()=>{try{start(mode,0,getIntro());pauseNow();if(PAUSE){PAUSE.b=0;fromBeat=0;PAUSE.show=true;}
-    $('pos').textContent='준비 · ▶ 또는 스페이스바로 시작';}catch(e){document.documentElement.classList.remove('autostart');}},300);})();
+    $('pos').textContent='준비 · ▶ 또는 스페이스바로 시작';document.documentElement.classList.remove('autostart');}catch(e){document.documentElement.classList.remove('autostart');}},300);})();
 sync();new MutationObserver(()=>{if(document.body.classList.contains('playing')){sync();requestAnimationFrame(place);}}).observe(document.body,{attributes:true,attributeFilter:['class']});
 const apply=v=>{KEEPV=true;try{setTempo(v,true);}finally{KEEPV=false;}sync();};
 pt.oninput=()=>{pn.value=pt.value;};pt.onchange=()=>apply(pt.value);
@@ -2566,5 +2576,19 @@ if(pa){pa.oninput=()=>{const a=av();if(!a)return;a.value=pa.value;a.dispatchEven
 [pt,pn,pm,pa].filter(Boolean).forEach(x=>x.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();}));
 })();
 </script>
+<script>/* 곡마다 연주 설정: 기본은 전주 끝4마디 · 재생 모든 절. 설정 화면에서 바꾸고 ▶ 시작하면 그 곡에만 저장되어 다음에도 그대로 */
+(function(){
+const panel=document.querySelector('.card>.panel');let dirty=false;
+if(panel)panel.addEventListener('change',e=>{if(e.target.closest('#recRow,#ksRow'))return;dirty=true;},true);
+document.querySelectorAll('.pbtn').forEach(b=>b.addEventListener('click',()=>{dirty=true;}));
+$('play').addEventListener('click',()=>{if(dirty&&playing&&window.SONGCFG){SONGCFG.save();dirty=false;showReset();toast(SONG.n+'번 곡 설정을 저장했습니다 (이 곡에만 적용)');}});
+/* 이 곡의 저장 설정 지우기 */
+const vs=$('verses'),host=vs&&vs.closest('label');let rb=null;
+function showReset(){if(!host)return;if(!rb){rb=document.createElement('button');rb.className='setbtn';rb.id='cfgReset';rb.type='button';
+  rb.textContent='↺ 이 곡 기본값';rb.title='이 곡에 저장된 설정을 지우고 기본(전주 끝4마디 · 모든 절)으로';rb.style.cssText='padding:4px 10px;font-size:13px;margin-left:4px';
+  rb.onclick=()=>{SONGCFG.clear();location.replace('player.html?n='+encodeURIComponent(SONG.n)+'&set=1');};host.after(rb);}
+  rb.style.display=SONGCFG.has()?'':'none';}
+setTimeout(showReset,50);
+})();</script>
 </body>
 </html>
