@@ -1957,6 +1957,7 @@ function flowSeq(p){                              // 연주 박 p부터 연주�
   return seq;
 }
 function flowPage(L,p){
+  if(window.innerHeight>window.innerWidth*1.1){const P=PAGES||buildPages();return P.find(([a,b])=>L>=a&&L<=b)||[L,L];}   // 세로 화면: 반복과 관계없이 화면에 들어가는 만큼 줄을 다 보여줌
   let seq=flowSeq(Math.max(0,p)),k=seq.indexOf(L);if(k<0){seq=[L];k=0;}
   const pb=Math.max(0,document.querySelector('.panel').getBoundingClientRect().bottom)+6;
   const avail=window.innerHeight-TBH()-pb-10,b0=lineBox(L);let j=L;
