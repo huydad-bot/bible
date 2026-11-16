@@ -43,6 +43,7 @@ header{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:1
 .ttl p{margin:0;color:var(--mute);font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(60,40,10,.05)}
 .panel{position:sticky;top:0;z-index:5;background:var(--card);padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:10px}
+body:not(.playing) .card>.panel{position:relative}   /* 설정을 편 대기 화면: 설정이 악보를 가리지 않게 함께 스크롤 */
 /* 설정 영역 바탕색 — 악보(흰 바탕)와 구분 */
 .card>.panel{background:#efe9df;margin:-16px -16px 14px;padding:14px 16px 12px;border-radius:16px 16px 0 0;border-bottom:1px solid #ddd3c3}
 body.playing .card>.panel{border-radius:8px 8px 0 0}
@@ -152,6 +153,13 @@ body.playing #midiLive.show{display:inline-block}
 .hplay.on{background:var(--ink)}
 .setbtn{height:44px;padding:0 14px;border:1px solid #ddd3c3;border-radius:10px;background:#efe9df;color:var(--ink);font:600 14px "Noto Sans KR";cursor:pointer}
 .setbtn.open{background:#e2d9ca}
+.editbar{margin:10px 0 0;padding:10px 14px;border:2px solid #c9a227;border-radius:12px;background:#fff8e1;font:14px "Noto Sans KR";display:flex;flex-direction:column;gap:6px}
+.editbar .erow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.editbar label{cursor:pointer;white-space:nowrap}
+.ebtn{height:32px;padding:0 10px;border:1px solid #d6c79a;border-radius:8px;background:#fff;font:600 13px "Noto Sans KR";cursor:pointer}
+.ebtn.ego{background:#1f7a4d;color:#fff;border-color:#1f7a4d}.ehint{color:#6b5a1e;font-size:13px}
+body.editing #score svg .abcjs-note{cursor:crosshair}
+#score svg .esel,#score svg .esel *{fill:#d4145a!important;stroke:#d4145a!important}
 body.collapsed:not(.playing) .card>.panel{display:none}
 body:not(.lyrOpen) #lyrBox{display:none}
 body:not(.playing) .parts .play{display:none}
@@ -218,6 +226,7 @@ body{transition:background-color .25s}
 <li>악보의 <b>음표나 가사를 누르면</b> 그 음부터 바로 연주합니다.</li>
 <li>연주 중에는 화면이 두 줄씩 자동으로 넘어갑니다(다음 줄 약 1초 전). 휴대폰은 안드로이드에서 가로 화면으로 바뀝니다(아이폰은 직접 돌려 주세요).</li>
 <li><b>✎ 가사 입력</b>: 가지고 계신 악보의 가사를 절별로 붙여넣으면 음표 아래에 자동 배치됩니다. 글자 수가 맞으면 숫자가 초록색이 됩니다. 가사는 이 브라우저에만 저장되며, 파일로 내보내기/불러오기·가사 포함 HTML 저장으로 다른 기기에 옮길 수 있습니다.</li>
+<li><b>✏ 편집</b>: <b>음 높이</b> 도구로 음표를 누르면 빨갛게 표시되고, ▲▼(음계 한 칸)·♯·♭·♮·옥타브 버튼으로 그 음을 고칩니다(붙임줄로 이어진 음도 함께, 임시표는 자동 표시). <b>코드</b> 도구는 코드가 있는 음을 누르면 지우고 없는 음을 누르면 새 코드를 입력, <b>늘임표</b>·<b>이어 부르기</b>는 누를 때마다 붙였다 뗍니다. 고친 내용은 이 브라우저에 저장되고, <b>💾 js 파일로 저장</b>으로 고친 곡 파일을 받아 songs 폴더에 덮어쓸 수 있습니다.</li>
 <li><b>⚙ 설정 펼치기</b>: 아래의 모든 설정이 들어 있습니다. 고른 설정은 브라우저에 기억됩니다.</li>
 </ol><h3>연주 설정</h3>
 <ul>
@@ -262,10 +271,37 @@ body{transition:background-color .25s}
     <div class="hbtns">
       <button class="hplay" id="hPlay" title="시작 / 정지">▶ 시작</button>
       <button class="setbtn" id="lyrBtn" title="가사 입력·저장·내보내기">✎ 가사 입력</button>
+      <button class="setbtn" id="editBtn" title="음 높이·임시표·코드·늘임표 고치기">✏ 편집</button>
       <button class="setbtn" id="setBtn" title="악기·이조·템포·반주·MIDI 설정">⚙ 설정 펼치기</button>
       <button class="setbtn" id="helpBtn" title="프로그램 사용법">? 사용법</button>
     </div>
   </header>
+  <div id="editBar" class="editbar" style="display:none">
+    <div class="erow"><b>✏ 편집 모드</b>
+      <span class="etools">악보의 음표를 눌러:
+        <label><input type="radio" name="etool" value="pitch" checked> 음 높이</label>
+        <label><input type="radio" name="etool" value="chord"> 코드</label>
+        <label><input type="radio" name="etool" value="ferm"> 늘임표</label>
+        <label><input type="radio" name="etool" value="mel"> 이어 부르기</label>
+      </span></div>
+    <div class="erow" id="ePitchRow">
+      <span id="ePitchSel">음표를 누르면 고를 수 있습니다</span>
+      <button class="ebtn" data-op="up" title="한 음(음계) 위로">▲ 위로</button>
+      <button class="ebtn" data-op="dn" title="한 음(음계) 아래로">▼ 아래로</button>
+      <button class="ebtn" data-op="sh" title="올림표">♯</button>
+      <button class="ebtn" data-op="fl" title="내림표">♭</button>
+      <button class="ebtn" data-op="na" title="제자리표">♮</button>
+      <button class="ebtn" data-op="o8u" title="한 옥타브 위">8va ▲</button>
+      <button class="ebtn" data-op="o8d" title="한 옥타브 아래">8va ▼</button>
+      <button class="ebtn" data-op="rs" title="이 음을 원래 음으로">원래 음</button>
+    </div>
+    <div class="erow">
+      <button class="ebtn" id="eReset">이 곡 원래대로</button>
+      <button class="ebtn ego" id="eSave">💾 js 파일로 저장</button>
+      <button class="ebtn" id="eDone">편집 끝</button>
+    </div>
+    <div class="erow ehint" id="eHint"></div>
+  </div>
 
   <div class="card">
     <div class="panel">
@@ -416,6 +452,26 @@ if(!window.SONG){
   throw new Error('song not found');
 }
 const SONG=window.SONG;
+/* ── 편집 모드: 고친 내용(음 높이·임시표·코드·늘임표·이어 부르기)을 브라우저에 저장해 두고 불러올 때 덮어씀 ── */
+const LS_EDIT='ccm'+SONG.n+'_edit';
+let EDIT={};try{EDIT=JSON.parse(localStorage.getItem(LS_EDIT)||'{}')||{};}catch(e){EDIT={};}
+let EDITING=false;try{EDITING=sessionStorage.getItem('ccm_editing')==='1';}catch(e){}
+const ORIG_V={S:SONG.S};
+const PDUR=d=>{d=d.replace(/~$/,'');return d.includes('/')?(+d.split('/')[0])/(+d.split('/')[1]):parseFloat(d);};
+(function applyEdit(){
+  const E=EDIT;
+  if('fermatas' in E)SONG.fermatas=E.fermatas;
+  if('melisma' in E)SONG.melisma=E.melisma;
+  if('chords' in E&&E.chords)SONG.chords=E.chords;
+  if(E.notes&&Object.keys(E.notes).length&&SONG.S){
+    let t=0;const toks=SONG.S.trim().split(/\s+/);let carry=null;
+    for(let i=0;i<toks.length;i++){const tok=toks[i];if(tok==='|')continue;const [pp,d]=tok.split(':');
+      const key='S@'+(+t.toFixed(4));
+      if(carry&&pp===carry.old){toks[i]=carry.np+':'+d;if(!/~$/.test(d))carry=null;}
+      else{carry=null;if(pp!=='r'&&key in E.notes){toks[i]=E.notes[key]+':'+d;if(/~$/.test(d))carry={old:pp,np:E.notes[key]};}}
+      t=Math.round((t+PDUR(d))*48)/48;}
+    SONG.S=toks.join(' ');}
+})();
 const SCORE={S:SONG.S,A:SONG.A,T:SONG.T,B:SONG.B};
 const [MN,MD]=(SONG.meter||'4/4').split('/').map(Number);
 const BPB=MN*4/MD;                  // 한 마디의 박 수 (4분음표 = 1박)
@@ -715,7 +771,7 @@ function buildABC(){
 let lit=[];
 let showAcc=false;try{showAcc=(localStorage.getItem('ccm_acc'))==='1';}catch(e){}
 let noteMap=[];               // {k,start,dur,els}
-let elemStart=new Map();
+let elemStart=new Map(),elemVoice=new Map();
 function renderScore(){
   noteMap=[];elemStart=new Map();lit=[];
   if(!window.ABCJS){$('score').innerHTML='<div class="err">악보 라이브러리를 불러오지 못했습니다 (인터넷 연결 확인). 연주 버튼은 그대로 작동합니다.</div>';return;}
@@ -725,6 +781,7 @@ function renderScore(){
     format:{vocalfont:'Noto Serif KR 15',gchordfont:'Noto Sans KR 13',annotationfont:'Noto Sans KR 13 bold'},
     clickListener:(el,tn,cls,an,drag,ev)=>{
       const b=elemStart.get(el);if(b===undefined)return;
+      if(EDITING){editClick(b,elemVoice.get(el)||'S');return;}
       const cv=clickedVerse(el,ev,b),sel=$('verses');
       if(!SONG.form){const [n0,k0]=String(sel.value).split(':');            // 고른 횟수보다 뒤 절을 누르면 그 절까지 연주
         if(cv+1>(+n0||1)){const want=[(cv+1)+':'+(k0||0),(cv+1)+':0'].find(v=>[...sel.options].some(o=>o.value===v));if(want)sel.value=want;}}
@@ -750,7 +807,7 @@ function renderScore(){
         if(el.endTriplet)tri[k]=null;
         const els=(el.abselem&&el.abselem.elemset)||[];
         if(!el.rest)noteMap.push({k,start:clock[k],dur:d,els});
-        elemStart.set(el,clock[k]);
+        elemStart.set(el,clock[k]);elemVoice.set(el,k);
         if(!el.rest&&el.pitches&&els[0]){                       // 조표·임시표에 따른 ♯/♭ 음 표시
           const pp=el.pitches[0],letter=pp.name.replace(/[^A-Ga-g]/g,'').toUpperCase();
           let acc=pp.accidental||keyAcc[si][letter]||'';
@@ -2252,7 +2309,7 @@ $('lyrHtml').onclick=async()=>{
   {const h=doc.querySelector('#hPlay');if(h){h.classList.remove('on');h.textContent='▶ 시작';}}
   doc.querySelector('#pos').textContent='▶ 시작을 누르세요';
   {doc.querySelectorAll('.navbtn').forEach(x=>x.remove());const x=doc.querySelector('#plBtn');if(x)x.remove();const d=doc.querySelector('#plDlg');if(d)d.remove();const n=doc.querySelector('#plNext');if(n)n.remove();}
-  doc.querySelector('#lyrBox').remove();{const lb=doc.querySelector('#lyrBtn');if(lb)lb.remove();}doc.body.classList.remove('lyrOpen');   // 저장본에는 가사 입력창을 넣지 않음
+  doc.querySelector('#lyrBox').remove();{const eb=doc.querySelector('#editBar');if(eb)eb.remove();const ebt=doc.querySelector('#editBtn');if(ebt)ebt.remove();}{const lb=doc.querySelector('#lyrBtn');if(lb)lb.remove();}doc.body.classList.remove('lyrOpen');   // 저장본에는 가사 입력창을 넣지 않음
   // 단독 파일: 곡 데이터를 파일 안에 넣고, 악보 라이브러리는 인터넷(CDN)에서 불러옴
   doc.querySelector('#loader').textContent='window.SONG_ID='+JSON.stringify(String(SONG.n))+';window.SONG='+JSON.stringify(SONG).replace(/</g,'\\u003c')+';';
   doc.querySelector('#abcjsLib').setAttribute('src','https://cdn.jsdelivr.net/npm/abcjs@6.7.2/dist/abcjs-basic-min.js');
@@ -2279,6 +2336,75 @@ buildLyricUI();
 renderScore();
 requestAnimationFrame(tick);
 if(fromLink&&HAS_EDITOR){$('lyrBox').open=true;setTimeout(()=>toast('공유 링크의 가사를 불러왔습니다'),300);}
+
+/* ── 편집 모드 동작 ── */
+function editSave(){try{if(Object.keys(EDIT).length)localStorage.setItem(LS_EDIT,JSON.stringify(EDIT));else localStorage.removeItem(LS_EDIT);}catch(e){}
+  try{sessionStorage.setItem('ccm_scrollY',String(window.scrollY||document.documentElement.scrollTop||0));}catch(e){}
+  location.reload();}
+function editTool(){const r=document.querySelector('input[name=etool]:checked');return r?r.value:'pitch';}
+function sTok(b){let t=0;const toks=[];SONG.S.trim().split(/\s+/).forEach(x=>{if(x==='|')return;const [pp,d]=x.split(':');const du=PDUR(d);toks.push({p:pp,t,dur:du,tie:/~$/.test(d)});t=Math.round((t+du)*48)/48;});
+  let i=toks.findIndex(n=>n.t<b+1e-6&&n.t+n.dur>b+1e-6);if(i<0)return null;while(i>0&&toks[i-1].tie&&toks[i-1].p===toks[i].p&&toks[i].p!=='r')i--;return toks[i];}
+function pitchOp(op){
+  let sel=null;try{sel=JSON.parse(sessionStorage.getItem('ccm_psel')||'null');}catch(e){}
+  if(!sel)return;const n=sTok(sel.t);if(!n||n.p==='r')return;
+  const key='S@'+(+n.t.toFixed(4));EDIT.notes=EDIT.notes||{};
+  if(op==='rs'){delete EDIT.notes[key];if(!Object.keys(EDIT.notes).length)delete EDIT.notes;editSave();return;}
+  const m=n.p.match(/^([A-G])(#|b)?(-?\d)$/);if(!m)return;let L=m[1],acc=m[2]||'',o=+m[3];const LS='CDEFGAB';
+  if(op==='up'){const i=LS.indexOf(L);if(i===6)o++;L=LS[(i+1)%7];acc=KEY_SIG[L]||'';}
+  else if(op==='dn'){const i=LS.indexOf(L);if(i===0)o--;L=LS[(i+6)%7];acc=KEY_SIG[L]||'';}
+  else if(op==='sh')acc='#';else if(op==='fl')acc='b';else if(op==='na')acc='';
+  else if(op==='o8u')o++;else if(op==='o8d')o--;
+  const np=L+acc+o;
+  const orig=(()=>{let t=0;for(const x of ORIG_V.S.trim().split(/\s+/)){if(x==='|')continue;const [pp,d]=x.split(':');if(Math.abs(t-n.t)<1e-6)return pp;t=Math.round((t+PDUR(d))*48)/48;}return null;})();
+  if(np===orig)delete EDIT.notes[key];else EDIT.notes[key]=np;
+  if(!Object.keys(EDIT.notes).length)delete EDIT.notes;
+  editSave();
+}
+function pitchShowSel(){
+  let sel=null;try{sel=JSON.parse(sessionStorage.getItem('ccm_psel')||'null');}catch(e){}
+  document.querySelectorAll('#score .esel').forEach(e=>e.classList.remove('esel'));
+  if(!sel||!EDITING||editTool()!=='pitch')return;
+  const n=sTok(sel.t);if(!n||n.p==='r')return;
+  $('ePitchSel').innerHTML='고른 음: <b>'+(Math.round(n.t*100)/100)+'박 '+n.p.replace('#','♯').replace(/b(?=-?\d)/,'♭')+'</b>';
+  elemStart.forEach((t,el)=>{if(t>n.t-1e-6&&t<n.t+n.dur-1e-6){((el.abselem&&el.abselem.elemset)||[]).forEach(e=>e.classList&&e.classList.add('esel'));}});
+}
+function editClick(b){
+  const tool=editTool();const n=sTok(b);if(!n)return;const t=n.t;
+  if(tool==='pitch'){if(n.p==='r')return;try{sessionStorage.setItem('ccm_psel',JSON.stringify({t}));}catch(e){}pitchShowSel();return;}
+  if(tool==='ferm'){const F=new Set((SONG.fermatas||[]).map(Number));F.has(t)?F.delete(t):F.add(t);EDIT.fermatas=[...F].sort((x,y)=>x-y);editSave();}
+  else if(tool==='mel'){const M=new Set((SONG.melisma||[]).map(Number));M.has(t)?M.delete(t):M.add(t);EDIT.melisma=[...M].sort((x,y)=>x-y);editSave();}
+  else if(tool==='chord'){
+    const C=Object.assign({},SONG.chords||{});const k=Object.keys(C).find(x=>Math.abs(+x-t)<1e-6);
+    if(k!==undefined)delete C[k];
+    else{const prev=Object.keys(C).filter(x=>+x<=t+1e-6).sort((a,b)=>a-b).pop();
+      const v=prompt('이 음('+(Math.round(t*100)/100)+'박)에 넣을 코드 이름 (예: G, D7, Am, C/E)',prev!==undefined?C[prev]:'');
+      if(!v||!v.trim())return;C[String(+t.toFixed(4))]=v.trim().replace(/♭/g,'b').replace(/♯/g,'#');}
+    EDIT.chords=C;editSave();}
+}
+(function editInit(){
+  const bar=$('editBar');if(!bar)return;
+  try{const tl=sessionStorage.getItem('ccm_etool');if(tl){const r=document.querySelector('input[name=etool][value='+tl+']');if(r)r.checked=true;}}catch(e){}
+  const prow=()=>{$('ePitchRow').style.display=EDITING&&editTool()==='pitch'?'':'none';pitchShowSel();};
+  document.querySelectorAll('input[name=etool]').forEach(r=>r.addEventListener('change',()=>{try{sessionStorage.setItem('ccm_etool',r.value);}catch(e){}prow();}));
+  document.querySelectorAll('#ePitchRow [data-op]').forEach(bt=>bt.onclick=()=>pitchOp(bt.dataset.op));
+  const show=on=>{EDITING=on;try{sessionStorage.setItem('ccm_editing',on?'1':'0');}catch(e){}
+    bar.style.display=on?'':'none';document.body.classList.toggle('editing',on);$('editBtn').classList.toggle('open',on);
+    $('editBtn').textContent=on?'✏ 편집 중':'✏ 편집';
+    if(!on){try{sessionStorage.removeItem('ccm_psel');}catch(e){}document.querySelectorAll('#score .esel').forEach(e=>e.classList.remove('esel'));const pr=$('ePitchRow');if(pr)pr.style.display='none';}prow();};
+  $('editBtn').onclick=()=>show(!EDITING);$('eDone').onclick=()=>show(false);
+  $('eReset').onclick=()=>{if(!confirm('이 곡에서 고친 음 높이·코드·늘임표·이어 부르기를 모두 원래대로 되돌릴까요? (가사는 그대로)'))return;EDIT={};editSave();};
+  $('eSave').onclick=()=>{
+    const o=JSON.parse(JSON.stringify(SONG));
+    ['fermatas','melisma'].forEach(k=>{if(o[k]&&!o[k].length)delete o[k];});delete o.lyrics;   // CCM 곡 파일에는 가사를 넣지 않음(가사는 브라우저 저장)
+    const txt='/* CCM '+o.n+' — '+(o.title||'')+' (편집 모드에서 저장) */\nregisterSong('+JSON.stringify(o,null,1)+');\n';
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/javascript'}));a.download=o.n+'.js';
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+    $('eHint').textContent=o.n+'.js 를 다운로드했습니다. ccm/songs 폴더의 같은 파일에 덮어쓰면 다른 기기에서도 고친 대로 나옵니다.';};
+  const nN=EDIT.notes?Object.keys(EDIT.notes).length:0;
+  $('eHint').textContent='고친 음 '+nN+'개 · 늘임표 '+(SONG.fermatas||[]).length+'곳'+(Object.keys(EDIT).length?' · (이 브라우저에 고친 내용 있음)':'')+' — 고칠 때마다 악보를 다시 그립니다.';
+  show(EDITING);setTimeout(prow,900);
+  try{const y=+sessionStorage.getItem('ccm_scrollY');if(y){sessionStorage.removeItem('ccm_scrollY');setTimeout(()=>window.scrollTo(0,y),400);}}catch(e){}
+})();
 </script>
 <script>
 /* ===== 연주 예약 (여러 곡 연달아) =====
