@@ -313,7 +313,7 @@ body{transition:background-color .25s}
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
-        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀ 이전곡</button><button id="pNext" title="다음 곡">다음곡 ▶</button><button id="pList" title="곡 목록으로">☰ 목록</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디 음량<input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주 음량<input id="pAcc" type="range" min="0" max="100"></label></span>
+        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀</button><button id="pList" title="곡 목록으로">☰ 곡선택</button><button id="pNext" title="다음 곡">▶</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디 음량<input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주 음량<input id="pAcc" type="range" min="0" max="100"></label></span>
         <span id="midiLive"></span>
         <span class="status" id="pos">▶ 시작을 누르세요</span>
       </div>
@@ -2479,9 +2479,10 @@ E('hPlay').before(btn);
  const mk=(id,txt,tip,fn)=>{const b=document.createElement('button');b.className='setbtn navbtn';b.id=id;b.textContent=txt;b.title=tip;if(fn)b.onclick=fn;else b.disabled=true;btn.before(b);return b;};
  const pv=ix>0?LIST[ix-1]:null,nx=ix>=0&&ix<LIST.length-1?LIST[ix+1]:null;
  const goN=n=>()=>{try{stop(true);}catch(e){}location.href='player.html?n='+n;};
- mk('navPrev','◀ 이전곡',pv?`이전 곡: ${pv.n} ${pv.title}`:'첫 곡입니다',pv&&goN(pv.n)).dataset.n=pv?pv.n:'';
- mk('navNext','다음곡 ▶',nx?`다음 곡: ${nx.n} ${nx.title}`:'마지막 곡입니다',nx&&goN(nx.n)).dataset.n=nx?nx.n:'';
- mk('navList','☰ 목록','곡 목록으로 돌아가기',()=>{try{stop(true);}catch(e){}location.href='list.html';});
+ mk('navPrev','◀',pv?`이전 곡: ${pv.n} ${pv.title}`:'첫 곡입니다',pv&&goN(pv.n)).dataset.n=pv?pv.n:'';
+ mk('navNext','▶',nx?`다음 곡: ${nx.n} ${nx.title}`:'마지막 곡입니다',nx&&goN(nx.n)).dataset.n=nx?nx.n:'';
+ mk('navList','☰ 곡선택','곡 목록으로 돌아가기',()=>{try{stop(true);}catch(e){}location.href='list.html';});
+ {const nl=document.getElementById('navList'),nn=document.getElementById('navNext');if(nl&&nn)nl.after(nn);}   // ◀ 곡선택 ▶
  const back=document.getElementById('back');if(back)back.style.display='none';}
 const st=document.createElement('style');st.textContent=`
 .plbox{max-width:640px}.plhelp{font-size:13px;color:var(--mute);margin:2px 0 10px}
@@ -2500,7 +2501,9 @@ const st=document.createElement('style');st.textContent=`
 #plList:empty::after{content:'예약한 곡이 없습니다';color:var(--mute);font-size:13px;padding:8px}
 body.playing .hbtns #plBtn,body.playing .hbtns .navbtn{display:none}
 .navbtn:disabled{opacity:.4;cursor:default}
-.hbtns{flex-wrap:wrap;justify-content:flex-end}.hbtns button{white-space:nowrap}.hbtns .navbtn{padding-left:10px;padding-right:10px}
+.hbtns{flex-wrap:wrap;justify-content:flex-end}
+body:not(.playing) .hbtns{margin-left:0!important;width:100%;justify-content:flex-start!important}   /* 버튼 줄 왼쪽 정렬 (아래 상자 왼쪽 선에 맞춤) */
+#navPrev,#navNext,#pPrev,#pNext{padding-left:14px!important;padding-right:14px!important}.hbtns button{white-space:nowrap}.hbtns .navbtn{padding-left:10px;padding-right:10px}
 #plNext{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(30,25,20,.45)}
 #plNext[hidden]{display:none}
 #plNext .card2{background:var(--card);border-radius:14px;padding:22px 26px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25);font:15px "Noto Sans KR"}
