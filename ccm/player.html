@@ -900,7 +900,7 @@ function applyMix(){
 const INSTR={
   basic:{name:'기본',lvl:1},
   organ:{name:'파이프오르간',lvl:0.9},
-  piano:{name:'피아노',lvl:1.5},
+  piano:{name:'그랜드피아노',lvl:1.5},
   choir:{name:'합창 (우~)',lvl:3.0},
   flute:{name:'플루트',lvl:1.2},
   clarinet:{name:'클라리넷',lvl:0.8},
@@ -1468,7 +1468,7 @@ try{const o=JSON.parse(localStorage.getItem('ccm_levels')||'null');if(o)Object.k
   const av=localStorage.getItem('ccm_accVol'),dv=localStorage.getItem('ccm_drumVol');      // 이전 버전 설정 이어받기
   if(!o){if(av!==null)LEVEL.AC=LEVEL.AB=+av;if(dv!==null)LEVEL.DR=+dv;}}catch(e){}
 const levelOf=k=>(LEVEL[k]??60)/VOL_DEF[k];
-try{ACC_PAT=localStorage.getItem('ccm_accPat')||ACC_PAT;ACC_INS=localStorage.getItem('ccm_accIns')||ACC_INS;
+try{ACC_PAT=localStorage.getItem('ccm_accPat')||ACC_PAT;ACC_INS='piano';   /* 반주 악기: 곡을 열 때마다 그랜드피아노로 시작 */
   BASS_INS=localStorage.getItem('ccm_bassIns')||BASS_INS;DRUM=localStorage.getItem('ccm_drum')||DRUM;}catch(e){}
 function accVoices(){
   const vs=[];
@@ -1839,7 +1839,7 @@ function setPanel(open){document.body.classList.toggle('collapsed',!open);
   $('setBtn').textContent=open?'⚙ 설정 접기':'⚙ 설정 펼치기';$('setBtn').classList.toggle('open',open);
   try{localStorage.setItem('ccm_panelOpen',open?'1':'0');}catch(e){}}
 /* 목록에서 곡을 누르면 설정을 접은 채 '연주 대기' 화면으로, 목록의 [⚙ 설정]으로 들어오면 설정을 편 채로 */
-(function(){const q=new URLSearchParams(location.search);setPanel(q.get('set')==='1');
+(function(){const q=new URLSearchParams(location.search);setPanel(false);   // 곡을 열 때는 항상 설정을 접은 채로
   try{if(q.get('n'))localStorage.setItem('ccm_last',q.get('n'));}catch(e){}})();
 $('setBtn').onclick=()=>setPanel(document.body.classList.contains('collapsed'));
 $('hPlay').onclick=()=>$('play').click();
@@ -2442,7 +2442,7 @@ function applyCfg(c){
   if(!c)return;
   try{
     if(c.ins){TIMBRE.S=c.ins;saveTimbre();setSel(melSel(),c.ins);}
-    if(c.accIns){ACC_INS=c.accIns;try{localStorage.setItem('ccm_accIns',c.accIns);}catch(e){}setSel(E('accIns'),c.accIns);}
+    /* 반주 악기는 곡마다 저장값을 쓰지 않고 그랜드피아노로 시작 */
     if(c.bassIns){BASS_INS=c.bassIns;try{localStorage.setItem('ccm_bassIns',c.bassIns);}catch(e){}setSel(E('bassIns'),c.bassIns);}
     [['accPat','accPat'],['drum','drum'],['ending','ending'],['ferm','ferm']].forEach(([id,k])=>{if(setSel(E(id),c[k])&&E(id).onchange)E(id).onchange();});
     if(setSel(E('intro'),c.intro)){}
