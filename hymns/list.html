@@ -81,11 +81,11 @@ function hasLyrics(n){
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function draw(){
   const q=$('q').value.trim().toLowerCase().replace(/\s+/g,'');
-  const items=LIST.filter(s=>!q||String(s.n).startsWith(q)||(s.title+(s.tune||'')).toLowerCase().replace(/\s+/g,'').includes(q));
+  const items=LIST.filter(s=>!q||String(s.n).startsWith(q)||(s.title+(s.tune||'')+(s.composer||'')).toLowerCase().replace(/\s+/g,'').includes(q));
   $('cnt').textContent=items.length+' / '+LIST.length+'곡';
   $('list').innerHTML=items.length?items.map(s=>`<li><a href="player.html?n=${encodeURIComponent(s.n)}${AUTO}">
     <span class="no">${esc(s.n)}</span>
-    <span class="t">${esc(s.title)}<small>${esc(s.tune||'')}</small></span>
+    <span class="t">${esc(s.title)}<small>${esc([s.tune,s.composer&&s.composer!=='미상'?s.composer:''].filter(Boolean).join(' · '))}</small></span>
     <span class="badges">${s.key?`<span class="b">${esc(s.key)}</span>`:''}${hasLyrics(s.n)?'<span class="b ly">가사</span>':''}</span>
   </a></li>`).join(''):'<li class="empty">찾는 곡이 없습니다</li>';
 }
@@ -114,14 +114,15 @@ async function saveFile(name,text,type){
   return 'download';
 }
 $('exp').onclick=async()=>{
-  const all={};
+  const all={},edits={};
   try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);const m=k&&k.match(/^hymn(\d+)_lyrics$/);
-    if(m){const o=JSON.parse(localStorage.getItem(k));if(o&&Object.values(o).some(x=>x&&String(x).trim()))all[m[1]]=o;}}}catch(e){}
-  const n=Object.keys(all).length;if(!n)return toast('저장된 가사가 없습니다');
+    if(m){const o=JSON.parse(localStorage.getItem(k));if(o&&Object.values(o).some(x=>x&&String(x).trim()))all[m[1]]=o;}
+    const m2=k&&k.match(/^hymn(\d+)_edit$/);if(m2){const o=JSON.parse(localStorage.getItem(k));if(o&&Object.keys(o).length)edits[m2[1]]=o;}}}catch(e){}
+  const n=Object.keys(all).length,ne=Object.keys(edits).length;if(!n&&!ne)return toast('저장된 가사·편집 내용이 없습니다');
   const d=new Date(),ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
-  const r=await saveFile('찬송가_가사_전체_'+ds+'.json',JSON.stringify({all:true,numbering:2,saved:d.toISOString(),hymns:all},null,1),'application/json');
+  const r=await saveFile('찬송가_가사_전체_'+ds+'.json',JSON.stringify({all:true,numbering:2,saved:d.toISOString(),hymns:all,edits},null,1),'application/json');
   if(r==='cancel')return;
-  toast(n+'곡의 가사를 '+(r==='picked'?'지정한 위치에 저장했습니다':'다운로드 폴더에 저장했습니다'));
+  toast(n+'곡의 가사'+(ne?'와 '+ne+'곡의 편집 내용':'')+'을 '+(r==='picked'?'지정한 위치에 저장했습니다':'다운로드 폴더에 저장했습니다'));
 };
 $('imp').onclick=()=>$('file').click();
 $('file').onchange=e=>{
@@ -132,6 +133,7 @@ $('file').onchange=e=>{
     else if(o.hymn&&o.lyrics)map={[o.hymn]:o.lyrics};          // 한 곡짜리 가사 파일도 허용
     else throw 0;
     if(!o.numbering&&window.SONG_RENUM){const R=window.SONG_RENUM,m2={};Object.keys(map).forEach(n=>{m2[R[n]||n]=map[n];});map=m2;}   // 번호 변경 전 파일 → 새 번호로
+    if(o.edits)Object.keys(o.edits).forEach(n=>{if(/^\d+$/.test(n))try{localStorage.setItem('hymn'+n+'_edit',JSON.stringify(o.edits[n]));}catch(e){}});
     const ns=Object.keys(map).filter(n=>/^\d+$/.test(n));
     const over=ns.filter(hasLyrics);
     if(over.length&&!confirm(`${ns.length}곡 중 ${over.length}곡은 이미 가사가 있습니다. 불러온 가사로 바꿀까요?`))return;
