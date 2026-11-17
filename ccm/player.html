@@ -589,7 +589,7 @@ function markLegato(){if(LEG_DONE)return;LEG_DONE=true;
 /* ===== ABC 악보 생성 ===== */
 function abcPitch(p,state){
   const m=p.match(/^([A-G])(#|b)?(\d)$/);const L=m[1],o=+m[3],need=m[2]||'';
-  const id=L+o, cur=(id in state)?state[id]:(KEY_SIG[L]||'');
+  const id=L+o, cur=(id in state)?state[id]:((CUR_SIG||KEY_SIG)[L]||'');
   let pre='';
   if(need!==cur){pre=need==='#'?'^':need==='b'?'_':'=';state[id]=need;}   // 조표와 다를 때만 임시표
   return pre+(o>=5?L.toLowerCase()+"'".repeat(o-5):L+",".repeat(4-o));
@@ -608,10 +608,13 @@ const ENDSTOP=(()=>{const st=new Set(SONG.endingStop||[]);if(SONG.endingStop)ret
     if(stop>=SONG_LEN-1e-6||isBar(stop))return;
     if(Object.keys(BARX).some(x=>+x>e+1e-6&&+x<=stop+1e-6))return;st.add(Math.round(stop*48)/48);});
   return st;})();
+let CUR_SIG=null;   // 곡 중간 조바꿈(SONG.keyChanges {박:'Bb'})이 적용된 현재 조표
+const KEY_CH=Object.fromEntries(Object.entries(SONG.keyChanges||{}).map(([k,v])=>[Math.round(k*48)/48,v]));
 function abcLines(v){
-  const lines=[];let cur='';let state={};let slurOpen=false;let carry='';
+  const lines=[];let cur='';let state={};let slurOpen=false;let carry='';CUR_SIG=null;
   v.tokens.forEach((n,idx)=>{
     let s='';
+    if(KEY_CH[n.t]){s+=`[K:C] [K:${KEY_CH[n.t]}] `;CUR_SIG=keySig(KEY_CH[n.t]);state={};}   // 조바꿈: 앞 조표를 제자리표로 지우고 새 조표 (C를 거쳐야 다음 줄에 제자리표가 반복되지 않음)
     if(carry){s+=carry+' ';carry='';}
     const slurV=v.k==='S'||v.k==='A', nx=v.tokens[idx+1];
     const pv=v.tokens[idx-1];
@@ -650,7 +653,7 @@ function abcLines(v){
     else if(isBar(end)){cur+='| ';state={};}
     if(LINE_BREAKS.includes(end)||end===SONG_LEN){lines.push(cur.trim());cur='';}
   });
-  return lines;
+  CUR_SIG=null;return lines;
 }
 /* ===== 가사 ===== */
 const ECHO=SONG.echo||null;                   // 남성부 메아리 가사 {voice:'T', spans:[[시작,끝],...]}
@@ -678,7 +681,9 @@ const HAS_EDITOR=!!document.getElementById('lyrBox');
     if(sv&&Object.values(sv).some(x=>x)){LYR=cleanLyr(sv);return;}}catch(e){}
   if(EMBEDDED_LYRICS)LYR=cleanLyr(EMBEDDED_LYRICS);
 })();
-function sylls(text){return (text||'').replace(/[–—\-_]/g,' ').match(/_|[A-Za-z']+|[^\sA-Za-z'.,!?;:·"“”‘’()\[\]\-_*~|]/g)||[];}   // '_' = 앞 글자를 이어 부르는 음(붙임/슬러)
+function sylls(text){   // [스라] 또는 스+라 = 한 음에 두 글자 이상
+  const t=(text||'').replace(/([^\s\[\]+]+(?:\+[^\s\[\]+]+)+)/g,m=>'['+m.replace(/\+/g,'')+']').replace(/[–—\-_]/g,' ');   // CCM: '-'·'_' 는 띄어쓰기로 (예전과 같음)
+  return (t.match(/\[[^\]]*\]|_|[A-Za-z']+|[^\sA-Za-z'.,!?;:·"“”‘’()\[\]\-_*~|]/g)||[]).map(x=>x[0]==='['?x.slice(1,-1).trim().replace(/\s+/g,'~')||'_':x);}
 // 소프라노 음표를 줄별로 나눔
 function sNoteLines(){
   const res=[[]];const S=VOICES[0];
