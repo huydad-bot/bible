@@ -68,4 +68,8 @@ window.SONG_LIST = [
   { n: 462, title: '나 주님의 기쁨되기 원하네', key: 'G', tune: 'Teresa Muller' },
   { n: 465, title: '나의 가는 길',         key: 'G', tune: 'Don Moen' },
   { n: 466, title: '나를 통하여',           key: 'G', tune: '이권희' },
+  { n: 474, title: '낮엔 해처럼 밤엔 달처럼', key: 'G', tune: '최용덕' },
+  { n: 479, title: '내가 주인 삼은',       key: 'G', tune: '전승연' },
+  { n: 492, title: '모든 열방 주 볼 때까지', key: 'G', tune: '고형원' },
+  { n: 500, title: '물이 바다 덮음 같이',   key: 'G', tune: '고형원' },
 ];
