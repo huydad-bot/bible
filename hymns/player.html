@@ -856,6 +856,24 @@ function echoSyl(n,sy){
   if(ECHO_SAME&&sy.length===ECHO_SPAN_N&&ECHO_SPAN_N>0)return sy[i%ECHO_SPAN_N];
   return sy[i];
 }
+function echoLyrAlign(){   // 같은 오선의 두 성부(테너·베이스 등)에 메아리 가사가 있으면 아래 줄을 위 줄 높이로 올려 맞춤
+  if(!EV||VIEW!=='satb'||ECHO_VS.size<2)return;
+  const vi={S:0,A:1,T:2,B:3},pairs=[[0,1],[2,3]],G={};
+  document.querySelectorAll('#score text.abcjs-lyric').forEach(t=>{const c=t.getAttribute('class')||'';
+    const l=c.match(/abcjs-l(\d+)/),v=c.match(/abcjs-v(\d+)/);if(!l||!v)return;
+    if(!(t.textContent||'').replace(/\u200b/g,'').trim())return;
+    (G[l[1]+'-'+v[1]]=G[l[1]+'-'+v[1]]||[]).push(t);});
+  const lines=new Set(Object.keys(G).map(k=>k.split('-')[0]));
+  lines.forEach(l=>pairs.forEach(([a,b])=>{
+    if(![...ECHO_VS].some(k=>vi[k]===a)||![...ECHO_VS].some(k=>vi[k]===b))return;
+    const A=G[l+'-'+a],B=G[l+'-'+b];if(!A||!B)return;
+    const bb=t=>t.getBBox(),ya=Math.min(...A.map(t=>bb(t).y)),yb=Math.min(...B.map(t=>bb(t).y));
+    const [up,lo,dy]=ya<=yb?[A,B,ya-yb]:[B,A,yb-ya];if(Math.abs(dy)<1)return;
+    const R=up.map(t=>{const r=bb(t);return [r.x-3,r.x+r.width+3];});
+    if(lo.some(t=>{const r=bb(t);return R.some(([x0,x1])=>r.x<x1&&r.x+r.width>x0);}))return;   // 글자가 겹치면 그대로 둠
+    lo.forEach(t=>t.setAttribute('transform','translate(0,'+dy+')'));
+  }));
+}
 function echoLineFor(i,k){
   if(!EV)return '';
   const line=(ECHO_LINES[k||ECHO_V]||[])[i];if(!line||!line.some(n=>ECHO_IDX.has(n)))return '';
@@ -904,6 +922,7 @@ function renderScore(){
       start(mode,scoreToPerf(b,cv),[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
     }
   })[0];
+  echoLyrAlign();
   const keyOf=VIEW==='satb'?{'0-0':'S','0-1':'A','1-0':'T','1-1':'B'}:{'0-0':VIEW};   // 한 파트만 보일 때는 그 파트
   const clock={},tri={};
   const keyAcc={};
@@ -2242,10 +2261,7 @@ function editClick(b,vk){
   if(tool==='pitch'){if(!vk)return;const n=pitchGroupStart(vk,b);if(!n)return;
     try{sessionStorage.setItem('hymn_psel',JSON.stringify({k:vk,t:n.t}));}catch(e){}pitchShowSel();return;}
   if(tool==='echo'){
-    let v=$('echoV').value;
-    if(vk&&/^[SATB]$/.test(vk)&&vk!==v){v=vk;$('echoV').value=v;}   // 누른 음의 성부로 메아리 성부를 맞춤 (테너가 기본값이라 베이스 메아리가 테너로 잡히던 문제)
-    {const s0=(()=>{try{return sessionStorage.getItem('hymn_echoStart');}catch(e){return null;}})();
-     if(s0&&s0.split(',')[2]&&!vk)v=s0.split(',')[2];}
+    const v=$('echoV').value;   // 메아리 성부는 고른 값만 따름 (테너·베이스가 한 기둥에 붙은 음은 누른 음이 어느 성부인지 가릴 수 없음)
     const V=VOICES.find(x=>x.k===v);
     const n=V&&(V.notes.find(x=>x.t<b+1e-6&&x.t+x.dur>b+1e-6));
     let st=null;try{st=sessionStorage.getItem('hymn_echoStart');}catch(e){}
