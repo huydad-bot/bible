@@ -610,14 +610,15 @@ document.title='찬송가 '+SONG.n+'장 '+SONG.title+' · 파트 연습';
 document.getElementById('hNum').textContent=SONG.n;
 document.getElementById('hTitle').textContent=SONG.title;
 document.getElementById('pNum').textContent=SONG.n;document.getElementById('pName').textContent=SONG.title;
-document.getElementById('hSub').textContent=[SONG.tune,SONG.composer&&SONG.composer!=='미상'&&(SONG.composer+(SONG.year?' ('+SONG.year+')':'')),koKeyName(SONG.key),SONG.meter,SONG.tempoText].filter(Boolean).join(' · ');
+document.getElementById('hSub').textContent=[SONG.tune,SONG.composer&&SONG.composer!=='미상'&&(SONG.composer+(SONG.year?' ('+SONG.year+')':'')),koKeyName(+SONG.trans?keyName(KEY_PC+Math.round(+SONG.trans)).replace('♭','b').replace('♯','#').replace('m',''):SONG.key),SONG.meter,SONG.tempoText].filter(Boolean).join(' · ');
 if(SONG.tempo){['tempo','tempoN'].forEach(id=>document.getElementById(id).value=SONG.tempo);}
+const DEF_TRANS=Math.max(-6,Math.min(5,Math.round(+SONG.trans||0)));   // 곡 파일에 저장된 기본 이조(반음) — 실제 찬송가 조로 맞출 때
 (function buildKeyMenu(){
   const sel=document.getElementById('trans');
   for(let o=-6;o<=5;o++){
     const op=new Option(keyName(KEY_PC+o),o);
     op.title=o===0?'원조':(Math.abs(o)+'반음 '+(o<0?'낮게':'높게'));
-    if(o===0)op.selected=true;sel.add(op);
+    if(o===DEF_TRANS)op.selected=true;sel.add(op);
   }
 })();
 
@@ -2345,16 +2346,17 @@ function editInit(){
     let ly=null;try{ly=JSON.parse(JSON.stringify(LYR));}catch(e){}
     if(ly&&Object.values(ly).some(x=>x&&String(x).trim()))o.lyrics=ly;
     ['fermatas','melisma'].forEach(k=>{if(o[k]&&!o[k].length)delete o[k];});
+    {const t=+$('trans').value;if(t)o.trans=t;else delete o.trans;}   // 지금 이조를 곡 파일에 함께 저장 → 어느 기기에서 열어도 그 조로
     const txt='/* 찬송가 '+o.n+'장 — '+(o.title||'')+' (편집 모드에서 저장) */\nregisterSong('+JSON.stringify(o,null,1)+');\n';
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/javascript'}));a.download=o.n+'.js';
     document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
-    $('eHint').textContent=o.n+'.js 를 다운로드했습니다. hymns/songs 폴더의 같은 파일에 덮어쓰면, 다른 기기·브라우저에서도 고친 내용이 그대로 나옵니다.';
+    $('eHint').textContent=o.n+'.js 를 다운로드했습니다'+(o.trans?' (이조 '+(o.trans>0?'+':'')+o.trans+'반음 포함)':'')+'. hymns/songs 폴더의 같은 파일에 덮어쓰면, 다른 기기·브라우저에서도 고친 내용이 그대로 나옵니다.';
   };
   const F=(SONG.fermatas||[]).length,E=SONG.echo&&SONG.echo.spans?SONG.echo.spans.length:0;
   let st=null;try{st=sessionStorage.getItem('hymn_echoStart');}catch(e){}
   $('eHint').textContent=(st?'메아리 시작 '+st.split(',')[0]+'박 — 끝나는 음을 누르세요. · ':'')+'늘임표 '+F+'곳 · 후렴 '+(HAS_REFRAIN?REFRAIN_AT+'박부터':'없음')+' · 메아리 '+E+'구간'
     +(E?' ('+SONG.echo.spans.map(sp=>{const VN={S:'S',A:'A',T:'T',B:'B'};return VN[spanV(sp)]+' '+(+sp[0].toFixed(2))+'~'+(+sp[1].toFixed(2))+'박 '+spanNotes(sp).length+'글자';}).join(', ')+')':'')
-    +(Object.keys(EDIT).length?' · (이 브라우저에 고친 내용 있음)':'')+' — 고칠 때마다 악보를 다시 그립니다.';
+    +(DEF_TRANS?' · 파일의 이조 '+(DEF_TRANS>0?'+':'')+DEF_TRANS+'반음':'')+(Object.keys(EDIT).length?' · (이 브라우저에 고친 내용 있음)':'')+' — 고칠 때마다 악보를 다시 그립니다.';
   show(EDITING);
   try{const y=+sessionStorage.getItem('hymn_scrollY');if(y){sessionStorage.removeItem('hymn_scrollY');setTimeout(()=>window.scrollTo(0,y),400);}}catch(e){}
 }
