@@ -480,7 +480,7 @@ const SONG=window.SONG;
 const LS_EDIT='hymn'+SONG.n+'_edit';
 let EDIT={};try{EDIT=JSON.parse(localStorage.getItem(LS_EDIT)||'{}')||{};}catch(e){EDIT={};}
 /* 곡 파일이 바뀌면(편집본 js 로 덮어쓴 경우 등) 예전에 이 브라우저에 저장한 고친 내용은 버림 — 새 파일 내용이 그대로 보이게 */
-const BASE_FP=(()=>{const o={};Object.keys(SONG).sort().forEach(k=>{if(k!=='lyrics')o[k]=SONG[k];});const t=JSON.stringify(o);let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return String(h);})();
+const BASE_FP=(()=>{const o={};Object.keys(SONG).sort().forEach(k=>{if(k!=='lyrics'&&k!=='trans')o[k]=SONG[k];});const t=JSON.stringify(o);let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;return String(h);})();
 let EDIT_STALE=false;{const f=EDIT._fp;delete EDIT._fp;
   if(f&&f!==BASE_FP){EDIT={};EDIT_STALE=true;try{localStorage.removeItem(LS_EDIT);}catch(e){}}}
 let EDITING=false;try{EDITING=sessionStorage.getItem('hymn_editing')==='1';}catch(e){}
