@@ -4,6 +4,7 @@ registerSong({
   title: '나 어느곳에 있든지',
   composer: 'L.O.Brown',
   key: 'Ab',
+  trans: -1,   // 복음찬송가 악보의 조로
   meter: '3/4',
   pickup: 1,
   tempo: 100,

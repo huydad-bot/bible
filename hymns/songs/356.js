@@ -4,6 +4,7 @@ registerSong({
   title: '주 예수 이름 소리 높여',
   composer: 'Anonymous',
   key: 'Eb',
+  trans: -1,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 1,
   tempo: 100,

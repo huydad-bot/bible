@@ -4,6 +4,7 @@ registerSong({
   title: '주와 같이 길 가는 것',
   composer: 'A.B.Simpson',
   key: 'F',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 0,
   tempo: 100,

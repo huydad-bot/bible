@@ -4,6 +4,7 @@ registerSong({
   title: '나 맡은 본 분은',
   composer: 'J.Chetham\'s Paslmody',
   key: 'A',
+  trans: -6,   // 복음찬송가 악보의 조로
   meter: '2/2',
   pickup: 0,
   tempo: 100,

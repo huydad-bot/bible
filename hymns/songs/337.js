@@ -4,6 +4,7 @@ registerSong({
   title: '내 모든 시험 무거운 짐을',
   composer: 'E.A.Hoffman',
   key: 'Eb',
+  trans: -1,   // 복음찬송가 악보의 조로
   meter: '9/8',
   pickup: 1.5,
   tempo: 100,

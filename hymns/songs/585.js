@@ -4,6 +4,7 @@ registerSong({
   title: '내 주는 강한 성이요',
   composer: 'H.F.Hemy',
   key: 'D',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 1,
   tempo: 100,

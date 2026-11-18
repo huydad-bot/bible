@@ -4,6 +4,7 @@ registerSong({
   title: '새벽부터 우리',
   composer: 'G.A.Minor',
   key: 'C',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 0,
   tempo: 100,

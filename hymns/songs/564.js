@@ -4,6 +4,7 @@ registerSong({
   title: '예수께서 오실 때에',
   composer: 'Anonymous',
   key: 'Bb',
+  trans: 5,   // 복음찬송가 악보의 조로
   meter: '3/4',
   pickup: 1,
   tempo: 100,

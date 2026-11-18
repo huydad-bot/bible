@@ -4,6 +4,7 @@ registerSong({
   title: '그 크신 하나님의 사랑',
   composer: 'F.M.Lehman',
   key: 'Eb',
+  trans: -1,   // 복음찬송가 악보의 조로
   meter: '3/4',
   pickup: 1.5,
   tempo: 100,

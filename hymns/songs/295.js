@@ -4,6 +4,7 @@ registerSong({
   title: '큰 죄에 빠진 나를',
   composer: 'L.N.Morris',
   key: 'Bb',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '3/4',
   pickup: 1,
   tempo: 100,
@@ -12,7 +13,7 @@ registerSong({
   refrainAt: 49,
   fermatas: [71, 72],
   bars: [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 43, 46, 49, 53, 57, 61, 65, 69, 73, 77],
-  lineBreaks: [15, 28, 46, 61],
+  lineBreaks: [16, 31, 49, 57],
   melisma: [55],
   chords: {0:'Bb',10:'F7',16:'Bb',19:'C7',22:'F7',25:'Bb',28:'F7',34:'Gbdim',37:'Eb',43:'Bb/F',46:'Bb',53:'Cm/Eb',57:'F7',61:'Bb',69:'Eb',73:'Bb/D',77:'Bb'},
 

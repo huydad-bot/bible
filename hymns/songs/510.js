@@ -4,6 +4,7 @@ registerSong({
   title: '하나님의 진리 등대',
   composer: 'P.P.Bliss',
   key: 'Bb',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '3/4',
   pickup: 1,
   tempo: 100,

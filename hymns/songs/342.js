@@ -4,6 +4,7 @@ registerSong({
   title: '너 시험을 당해',
   composer: 'H.R.Palmer',
   key: 'Bb',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '6/8',
   pickup: 0,
   tempo: 100,

@@ -4,6 +4,7 @@ registerSong({
   title: '주를 앙모하는 자',
   composer: 'Anonymous',
   key: 'Eb',
+  trans: -1,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 1,
   tempo: 100,
@@ -11,7 +12,7 @@ registerSong({
   verses: 4,
   refrainAt: 44,
   fermatas: [73],
-  lineBreaks: [13, 25, 44, 60],
+  lineBreaks: [12, 28, 44, 60],
   melisma: [47, 55, 63, 71],
   chords: {0:'Eb',13:'Eb/Bb',17:'Bb7',19:'Eb',37:'Eb/Bb',41:'Bb7',43:'Eb',61:'C',63:'Ab',65:'Eb'},
 

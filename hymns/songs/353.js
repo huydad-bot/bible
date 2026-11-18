@@ -4,6 +4,7 @@ registerSong({
   title: '십자가 군병 되어서',
   composer: 'I.D.Sankey',
   key: 'C',
+  trans: 2,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 1,
   tempo: 100,

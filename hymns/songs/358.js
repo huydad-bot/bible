@@ -4,13 +4,14 @@ registerSong({
   title: '주의 진리 위해 십자가 군기',
   composer: 'J.McGranahan',
   key: 'Bb',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 1,
   tempo: 100,
   tempoText: '',
   verses: 4,
   refrainAt: 32,
-  lineBreaks: [17, 37, 48],
+  lineBreaks: [16, 32, 48],
   chords: {0:'Bb',9:'F7',13:'Bb',25:'F7/C',27:'C',29:'F',33:'F7',35:'F7/C',37:'Bb',39:'Bb/F',41:'Eb/G',43:'Bb',45:'F',49:'Bb',51:'Bb/D',53:'Eb',57:'Bb/F',61:'Bb'},
 
   S:`D4:.75 Eb4:.25 | F4:1 F4:1 F4:1 Bb4:1 | D4:.75 Eb4:.25 F4:.75 G4:.25 F4:1 Bb4:.75 Bb4:.25 | A4:1 C5:1 G4:1 A4:1 | Bb4:3 D4:.75 Eb4:.25

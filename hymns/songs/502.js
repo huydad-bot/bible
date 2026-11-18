@@ -4,6 +4,7 @@ registerSong({
   title: '빛의 사자들이여',
   composer: 'J.E.Jones',
   key: 'Ab',
+  trans: -1,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 1,
   tempo: 100,

@@ -4,6 +4,7 @@ registerSong({
   title: '허락하신 새 땅에',
   composer: 'P.P.Bilhorn',
   key: 'C',
+  trans: -2,   // 복음찬송가 악보의 조로
   meter: '4/4',
   pickup: 0,
   tempo: 100,
