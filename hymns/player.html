@@ -326,7 +326,7 @@ body{transition:background-color .25s}
         <span class="sp"></span>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
-        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" class="pnb" title="이전 곡">◀</button><button id="pList" title="곡 목록으로">☰ 곡선택</button><button id="pNext" class="pnb" title="다음 곡">▶</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><span class="pvh">음량</span><label title="소프라노 음량" class="pv1"><b style="color:var(--S)">S</b><input id="pVS" data-pk="S" type="range" min="0" max="100"></label><label title="앨토 음량" class="pv1"><b style="color:var(--A)">A</b><input id="pVA" data-pk="A" type="range" min="0" max="100"></label><label title="테너 음량" class="pv1"><b style="color:var(--T)">T</b><input id="pVT" data-pk="T" type="range" min="0" max="100"></label><label title="베이스 음량" class="pv1"><b style="color:var(--B)">B</b><input id="pVB" data-pk="B" type="range" min="0" max="100"></label></span>
+        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" class="pnb" title="이전 곡">◀</button><button id="pList" title="곡 목록으로">☰ 곡선택</button><button id="pNext" class="pnb" title="다음 곡">▶</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="이조 (조 바꾸기) — 바꾸면 그 자리부터 새 조로">이조<select autocomplete="off" id="pTrans"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><span class="pvh">음량</span><label title="소프라노 음량" class="pv1"><b style="color:var(--S)">S</b><input id="pVS" data-pk="S" type="range" min="0" max="100"></label><label title="앨토 음량" class="pv1"><b style="color:var(--A)">A</b><input id="pVA" data-pk="A" type="range" min="0" max="100"></label><label title="테너 음량" class="pv1"><b style="color:var(--T)">T</b><input id="pVT" data-pk="T" type="range" min="0" max="100"></label><label title="베이스 음량" class="pv1"><b style="color:var(--B)">B</b><input id="pVB" data-pk="B" type="range" min="0" max="100"></label></span>
         <span id="midiLive"></span>
         <span class="status" id="pos">파트를 고르고 ▶ 시작을 누르세요</span>
       </div>
@@ -2677,7 +2677,11 @@ const pvv=$('pVerses'),vv=$('verses');
 const syncV=()=>{if(pvv.options.length!==vv.options.length)pvv.innerHTML=vv.innerHTML;pvv.value=vv.value;};
 pvv.onchange=()=>{vv.value=pvv.value;vv.dispatchEvent(new Event('change'));if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
 pvv.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();});
-const sync=()=>{syncV();pt.value=$('tempo').value;pn.value=$('tempoN').value;pvs.forEach(x=>{const m=mvk(x.dataset.pk);if(m)x.value=m.value;});};
+const ptr=$('pTrans'),tr0=$('trans');ptr.innerHTML=tr0.innerHTML;ptr.value=tr0.value;
+ptr.onchange=()=>{tr0.value=ptr.value;tr0.dispatchEvent(new Event('change'));if(PAUSE)PAUSE.show=true;};
+ptr.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();});
+tr0.addEventListener('change',()=>{ptr.value=tr0.value;});
+const sync=()=>{syncV();ptr.value=tr0.value;pt.value=$('tempo').value;pn.value=$('tempoN').value;pvs.forEach(x=>{const m=mvk(x.dataset.pk);if(m)x.value=m.value;});};
 pvs.slice(1).forEach(x=>{x.oninput=()=>{const m=mvk(x.dataset.pk);if(!m)return;m.value=x.value;m.dispatchEvent(new Event('input'));};x.onchange=()=>{const m=mvk(x.dataset.pk);if(m)m.dispatchEvent(new Event('change'));};});
 const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement,nv=$('pNav');
   t.style.marginLeft='';nv.classList.remove('tight');c.classList.remove('tight');
