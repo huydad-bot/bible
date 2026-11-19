@@ -4,6 +4,7 @@ registerSong({
  "title": "세상 모든 수고 끝나",
  "composer": "C.B.Widmeyer",
  "key": "Bb",
+ "trans": -2,
  "meter": "4/4",
  "pickup": 1,
  "tempo": 100,
