@@ -1,7 +1,7 @@
-/* 찬송가 20장 — 큰 영광중에 계신 주 (편집 모드에서 저장) */
+/* 찬송가 20장 — 큰 영광 중에 계신 주 (편집 모드에서 저장) */
 registerSong({
  "n": 20,
- "title": "큰 영광중에 계신 주",
+ "title": "큰 영광 중에 계신 주",
  "composer": "H.W.Greatorex's Cololection",
  "key": "G",
  "meter": "3/4",

@@ -1,7 +1,7 @@
 /* 찬송가 40장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 40,
-  title: '찬송으로 ㅗ답할 수 없는',
+  title: '찬송으로 보답할 수 없는',
   composer: 'W.J.Kirkpatrick',
   key: 'D',
   meter: '4/4',
@@ -11,7 +11,7 @@ registerSong({
   verses: 4,
   refrainAt: 32,
   fermatas: [63],
-  lineBreaks: [16, 33, 48],
+  lineBreaks: [16, 32, 48],
   melisma: [14.5],
   chords: {0:'D',5:'G',7:'D',11:'D/A',13:'A',17:'D',21:'G',23:'D',27:'D/A',29:'A7',31:'D',37:'G',39:'D',47:'A',49:'D',53:'G',55:'D',59:'D/A',61:'A7',63:'D'},
 
