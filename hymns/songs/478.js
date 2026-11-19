@@ -1,7 +1,7 @@
-/* 찬송가 478장 — 참 아름다와라 (MIDI에서 자동 변환) */
+/* 찬송가 478장 — 참 아름다워라 (MIDI에서 자동 변환) */
 registerSong({
   n: 478,
-  title: '참 아름다와라',
+  title: '참 아름다워라',
   composer: 'F.L.Shepard',
   key: 'Eb',
   meter: '4/4',

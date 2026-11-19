@@ -1,7 +1,7 @@
 /* 찬송가 482장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 482,
-  title: '참 즐거운 노래',
+  title: '참 즐거운 노래를',
   composer: 'J.R.Sweney',
   key: 'Eb',
   meter: '4/4',

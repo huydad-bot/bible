@@ -1,7 +1,7 @@
 /* 찬송가 543장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 543,
-  title: '어려운 일 당할때',
+  title: '어려운 일 당할 때',
   composer: 'I.D.Sankey',
   key: 'G',
   meter: '6/8',

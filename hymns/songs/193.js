@@ -1,7 +1,7 @@
 /* 찬송가 193장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 193,
-  title: '성령의바람불어오니',
+  title: '성령의 봄바람 불어오니',
   composer: '임태득사, 이문승곡',
   key: 'Eb',
   meter: '6/8',

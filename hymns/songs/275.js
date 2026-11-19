@@ -1,7 +1,7 @@
 /* 찬송가 275장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 275,
-  title: '날마다 주와 버성겨',
+  title: '날마다 주와 멀어져',
   composer: 'B.D.Ackley',
   key: 'D',
   meter: '3/4',

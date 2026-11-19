@@ -1,7 +1,7 @@
 /* 찬송가 330장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 330,
-  title: '어둔밤 쉬 되리니',
+  title: '어둔 밤 쉬 되리니',
   composer: 'L.Mason',
   key: 'F',
   meter: '4/4',

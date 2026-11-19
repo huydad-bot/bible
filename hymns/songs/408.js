@@ -1,7 +1,7 @@
 /* 찬송가 408장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 408,
-  title: '나 어느곳에 있든지',
+  title: '나 어느 곳에 있든지',
   composer: 'L.O.Brown',
   key: 'Ab',
   trans: -1,   // 복음찬송가 악보의 조로

@@ -1,7 +1,7 @@
 /* 찬송가 453장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 453,
-  title: '예수 더 알기 원함은',
+  title: '예수 더 알기 원하네',
   composer: 'J.R.Sweney',
   key: 'Ab',
   meter: '6/8',

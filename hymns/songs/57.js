@@ -1,7 +1,7 @@
 /* 찬송가 57장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 57,
-  title: '오늘주신말씀에',
+  title: '오늘 주신 말씀에',
   composer: '정치근사, 김정일곡',
   key: 'G',
   meter: '4/4',

@@ -1,7 +1,7 @@
 /* 찬송가 450장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 450,
-  title: '내 평생 소원 이것 뿐',
+  title: '내 평생 소원 이것뿐',
   composer: 'C.G.Glaser',
   key: 'Ab',
   meter: '3/2',

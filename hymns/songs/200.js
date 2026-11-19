@@ -4,6 +4,7 @@ registerSong({
   title: '달고 오묘한 그 말씀',
   composer: 'P.P.Bliss',
   key: 'G',
+  trans: -2,
   meter: '6/8',
   pickup: 0,
   tempo: 100,

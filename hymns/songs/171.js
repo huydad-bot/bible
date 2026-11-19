@@ -1,7 +1,7 @@
 /* 찬송가 171장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 171,
-  title: '하나님의독생자',
+  title: '하나님의 독생자',
   composer: 'W.J.Gaither사, 곡',
   key: 'Ab',
   meter: '4/4',

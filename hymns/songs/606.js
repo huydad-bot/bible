@@ -1,7 +1,7 @@
 /* 찬송가 606장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 606,
-  title: '날 빛보다 더 밝은 천국',
+  title: '해보다 더 밝은 저 천국',
   composer: 'J.P.Webster',
   key: 'G',
   meter: '4/4',

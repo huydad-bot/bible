@@ -1,7 +1,7 @@
 /* 찬송가 202장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 202,
-  title: '하나님 아버지 주신책은',
+  title: '하나님 아버지 주신 책은',
   composer: 'P.P.Bliss',
   key: 'G',
   meter: '6/8',

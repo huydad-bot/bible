@@ -1,7 +1,7 @@
 /* 찬송가 196장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 196,
-  title: '성령의 은사',
+  title: '성령의 은사를',
   composer: 'R.Jackson',
   key: 'F',
   meter: '3/4',

@@ -1,7 +1,7 @@
 /* 찬송가 494장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 494,
-  title: '만세반석 열리니',
+  title: '만세 반석 열리니',
   composer: 'T.Hastings',
   key: 'Bb',
   meter: '3/4',

@@ -1,7 +1,7 @@
 /* 찬송가 438장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 438,
-  title: '내 영혼이 은총입어',
+  title: '내 영혼이 은총 입어',
   composer: 'J.M.Black',
   key: 'Ab',
   meter: '3/4',

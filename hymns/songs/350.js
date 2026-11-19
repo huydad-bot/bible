@@ -1,7 +1,7 @@
 /* 찬송가 350장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 350,
-  title: '우리들의 싸울 것은',
+  title: '우리들이 싸울 것은',
   composer: 'Anonymous',
   key: 'G',
   meter: '2/4',

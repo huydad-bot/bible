@@ -1,7 +1,7 @@
 /* 찬송가 62장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 62,
-  title: '고요히머리숙여',
+  title: '고요히 머리 숙여',
   composer: '서정운사, 곽상수곡',
   key: 'Eb',
   meter: '3/4',

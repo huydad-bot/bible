@@ -1,7 +1,7 @@
 /* 찬송가 183장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 183,
-  title: '빈 들에 마른 풀 같이',
+  title: '빈 들에 마른 풀같이',
   composer: 'J.McGranahan',
   key: 'Bb',
   meter: '6/8',

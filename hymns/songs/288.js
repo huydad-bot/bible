@@ -1,7 +1,7 @@
 /* 찬송가 288장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 288,
-  title: '예수로 나의 구주 삼고',
+  title: '예수를 나의 구주 삼고',
   composer: 'P.P.Knapp',
   key: 'D',
   meter: '9/8',

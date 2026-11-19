@@ -1,7 +1,7 @@
 /* 찬송가 41장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 41,
-  title: '내영혼아주찬양하여라',
+  title: '내 영혼아 주 찬양하여라',
   composer: 'T.D.Smith사, Songs of praise',
   key: 'D',
   meter: '4/4',

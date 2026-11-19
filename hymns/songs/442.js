@@ -1,7 +1,7 @@
 /* 찬송가 442장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 442,
-  title: '저 장미꽃 위의 이슬',
+  title: '저 장미꽃 위에 이슬',
   composer: 'C.A.Miles',
   key: 'Ab',
   meter: '6/8',

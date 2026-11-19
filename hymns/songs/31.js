@@ -1,7 +1,7 @@
 /* 찬송가 31장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 31,
-  title: '찬양하라 복 되신 구세주 예수',
+  title: '찬양하라 복되신 구세주 예수',
   composer: 'C.G.Allen',
   key: 'Ab',
   meter: '6/8',

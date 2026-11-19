@@ -1,7 +1,7 @@
 /* 찬송가 277장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 277,
-  title: '양때를 떠나서',
+  title: '양떼를 떠나서',
   composer: 'J.Zundel',
   key: 'F',
   meter: '6/8',

@@ -1,7 +1,7 @@
 /* 찬송가 84장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 84,
-  title: '온 세상이 캄캄하여',
+  title: '온 세상이 캄캄하여서',
   composer: 'Anonymous',
   key: 'Eb',
   meter: '6/8',

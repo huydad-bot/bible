@@ -1,7 +1,7 @@
 /* 찬송가 546장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 546,
-  title: '주의 약속하신 말씀 위에서',
+  title: '주님 약속하신 말씀 위에 서',
   composer: 'R.K.Carter',
   key: 'Bb',
   meter: '4/4',

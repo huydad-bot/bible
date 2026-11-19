@@ -1,7 +1,7 @@
 /* 찬송가 534장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 534,
-  title: '주님 찾아 오셨네',
+  title: '주님 찾아오셨네',
   composer: 'C.L.Naylor',
   key: 'F',
   meter: '3/4',

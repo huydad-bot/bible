@@ -1,7 +1,7 @@
 /* 찬송가 490장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 490,
-  title: '주여 지난 밤 내 꿈에',
+  title: '주여 지난밤 내 꿈에',
   composer: 'C.H.Gabriel',
   key: 'Ab',
   meter: '6/8',

@@ -1,7 +1,7 @@
 /* 찬송가 488장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 488,
-  title: '이 몸의 소망 무엔가',
+  title: '이 몸의 소망 무언가',
   composer: 'W.B.Bradbury',
   key: 'F',
   meter: '3/4',

@@ -1,7 +1,7 @@
 /* 찬송가 516장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 516,
-  title: '옳은 길 따르라 의의 길',
+  title: '옳은 길 따르라 의의 길을',
   composer: 'H.E.Nichol',
   key: 'Eb',
   meter: '4/4',

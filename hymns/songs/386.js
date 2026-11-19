@@ -1,7 +1,7 @@
 /* 찬송가 386장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 386,
-  title: '만세반석 열린 곳에',
+  title: '만세 반석 열린 곳에',
   composer: 'W.W.Bently',
   key: 'Eb',
   meter: '3/2',

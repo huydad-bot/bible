@@ -1,7 +1,7 @@
 /* 찬송가 38장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 38,
-  title: '예수우리왕이여',
+  title: '예수 우리 왕이여',
   composer: 'P.Kyle사, 곡',
   key: 'Ab',
   meter: '2/2',

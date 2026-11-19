@@ -1,7 +1,7 @@
 /* 찬송가 215장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 215,
-  title: '내죄 속해 주신 주께',
+  title: '내 죄 속해 주신 주께',
   composer: 'Anonymous',
   key: 'F',
   meter: '4/4',

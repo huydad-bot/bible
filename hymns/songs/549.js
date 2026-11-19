@@ -1,7 +1,7 @@
 /* 찬송가 549장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 549,
-  title: '내 선한 목자',
+  title: '내 주여 뜻대로',
   composer: 'Thuringian Fork Song',
   key: 'Eb',
   meter: '4/4',

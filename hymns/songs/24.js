@@ -1,7 +1,7 @@
 /* 찬송가 24장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 24,
-  title: '왕되신주',
+  title: '왕 되신 주',
   composer: 'W.Churchill사, 곡',
   key: 'F',
   meter: '4/4',

@@ -1,7 +1,7 @@
 /* 찬송가 351장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 351,
-  title: '믿는 사람들은 군병 같으니',
+  title: '믿는 사람들은 주의 군사니',
   composer: 'A.S.Sullivan',
   key: 'Eb',
   meter: '4/4',

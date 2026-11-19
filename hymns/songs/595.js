@@ -1,10 +1,10 @@
 /* 찬송가 595장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 595,
-  title: '나 맡은 본 분은',
+  title: '나 맡은 본분은',
   composer: 'J.Chetham\'s Paslmody',
   key: 'A',
-  trans: -6,   // 복음찬송가 악보의 조로
+  trans: -1,   // 복음찬송가 악보의 조로
   meter: '2/2',
   pickup: 0,
   tempo: 100,

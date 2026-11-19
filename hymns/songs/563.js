@@ -1,7 +1,7 @@
 /* 찬송가 563장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 563,
-  title: '예수 사랑하심은',
+  title: '예수 사랑하심을',
   composer: 'W.B.Bradbury',
   key: 'Eb',
   meter: '2/4',

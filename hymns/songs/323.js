@@ -1,7 +1,7 @@
 /* 찬송가 323장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 323,
-  title: '부름받아 나선 이 몸',
+  title: '부름 받아 나선 이 몸',
   composer: '이유선',
   key: 'Ab',
   meter: '3/4',

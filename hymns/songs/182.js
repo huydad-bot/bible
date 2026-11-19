@@ -1,7 +1,7 @@
 /* 찬송가 182장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 182,
-  title: '강물 같이 흐르는 기쁨',
+  title: '강물같이 흐르는 기쁨',
   composer: 'W.S.Marshall',
   key: 'Ab',
   meter: '3/4',

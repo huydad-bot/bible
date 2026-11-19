@@ -1,7 +1,7 @@
 /* 찬송가 635장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 635,
-  title: '하늘에 계신(주기도문)',
+  title: '하늘에 계신 (주기도문)',
   composer: 'A. H. Malotte',
   key: 'Bb',
   meter: '4/4',

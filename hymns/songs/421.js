@@ -1,7 +1,7 @@
 /* 찬송가 421장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 421,
-  title: '내 죄 사함 받고서',
+  title: '내가 예수 믿고서',
   composer: 'W.S.Martin',
   key: 'G',
   meter: '4/4',

@@ -1,7 +1,7 @@
 /* 찬송가 524장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 524,
-  title: '가루길을 밝히 보이시니',
+  title: '갈 길을 밝히 보이시니',
   composer: 'G.F.Root',
   key: 'Bb',
   meter: '4/4',

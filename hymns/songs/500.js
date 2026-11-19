@@ -1,7 +1,7 @@
 /* 찬송가 500장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 500,
-  title: '물 건너 생명줄 던지어라',
+  title: '물 위에 생명줄 던지어라',
   composer: 'E.S.Ufford',
   key: 'F',
   meter: '6/8',

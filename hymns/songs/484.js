@@ -1,7 +1,7 @@
 /* 찬송가 484장 (NWC 음표 · 복음찬송가 악보 줄 나눔) */
 registerSong({
   n: 484,
-  title: '내 맘의 주여 소망 되소서',
+  title: '내 맘의 주여 소망되소서',
   composer: 'Traditional Irish Melody',
   key: 'Eb',
   meter: '3/4',

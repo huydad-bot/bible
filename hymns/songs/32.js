@@ -62,5 +62,5 @@ registerSong({
   "e2": "",
   "e3": ""
  },
- "trans": 3
+ "trans": -2
 });
