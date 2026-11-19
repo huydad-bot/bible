@@ -11,7 +11,7 @@ registerSong({
   verses: 3,
   refrainAt: 23.5,
   fermatas: [23, 23.5, 41],
-  lineBreaks: [12, 24.25, 36],
+  lineBreaks: [12, 23.5, 36],   // 후렴(주님)부터 다음 줄 (악보대로)
   melisma: [5, 22.5, 35, 45, 47],
   chords: {0:'Ab',6.5:'Db',9.5:'Ab',12.5:'Eb7',15.5:'Ab/C',18.5:'Bb7',21.5:'Eb',24.5:'Ab',27.5:'Eb7/Bb',33.5:'Ab',38:'C7',39.5:'Fm',41:'Db',42.5:'Ab/Eb',44:'Eb7',45.5:'Ab'},
 
