@@ -10,7 +10,7 @@ registerSong({
   tempoText: '',
   verses: 4,
   refrainAt: 40,
-  lineBreaks: [17, 40, 56],
+  lineBreaks: [16, 40, 56],   // 둘째 줄은 "이"(못갖춘 첫 음)부터
   melisma: [30, 31],
   chords: {0:'Eb',3:'Ab/Eb',5:'Eb/G',11:'Ab/Eb',13:'Eb',17:'Bb',21:'Eb/G',23:'Eb/Bb',25:'Cm',27:'F',29:'Bb',31:'Bb/D',33:'EbM7',35:'F7/C',37:'Bb',39:'Gm',41:'Eb',43:'Bb7/D',45:'Eb/Bb',47:'Bb/D',49:'Bb7/F',51:'Cm7',53:'Eb',55:'Eb/G',59:'Bb7/Ab',61:'Eb/Bb',63:'Cm',65:'Eb/Bb',67:'C7/Bb',69:'Eb'},
 

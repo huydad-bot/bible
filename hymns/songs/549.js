@@ -10,7 +10,7 @@ registerSong({
   tempoText: '',
   verses: 3,
   doubleBars: [64],
-  lineBreaks: [15, 32, 48],
+  lineBreaks: [16, 32, 48],   // 넷째 마디 쉼표까지 첫 줄에
   melisma: [30],
   chords: {0:'Eb',4:'Bb',8:'Eb',12:'Eb/Bb',14:'Eb',16:'Ab/Eb',20:'Eb',24:'Bb7',26:'Bb',32:'Eb',36:'Bb',40:'Eb',44:'Eb7',46:'Ab',52:'Eb',56:'Eb/Bb',60:'Eb',64:'Ab',66:'Eb'},
 
