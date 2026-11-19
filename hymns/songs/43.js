@@ -1,7 +1,7 @@
-/* 찬송가 43장 — 즐검게 안식할 날 (편집 모드에서 저장) */
+/* 찬송가 43장 — 즐겁게 안식할 날 (편집 모드에서 저장) */
 registerSong({
  "n": 43,
- "title": "즐검게 안식할 날",
+ "title": "즐겁게 안식할 날",
  "composer": "Traditional German Melody",
  "key": "F",
  "meter": "4/4",

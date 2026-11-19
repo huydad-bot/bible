@@ -41,9 +41,9 @@ registerSong({
   69
  ],
  "lineBreaks": [
-  19,
-  42,
-  58
+  18,
+  39,
+  52
  ],
  "melisma": [
   4.75,
@@ -101,5 +101,6 @@ registerSong({
   "e2": "",
   "e3": "",
   "e4": ""
- }
+ },
+ "trans": -1
 });
