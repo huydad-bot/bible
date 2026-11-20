@@ -4,4 +4,7 @@ window.SONG_LIST = [
   { n: 2, title: '비 준비하시니', key: 'G', tune: '심형진' },
   { n: 3, title: '은혜', key: 'Bb', tune: '손경민' },
   { n: 4, title: '충만', key: 'G', tune: '손경민' },
+  { n: 5, title: '꽃들도', key: 'F', tune: '우치코시 츠요시' },
+  { n: 6, title: '원하고 바라고 기도합니다', key: 'D', tune: '민호기' },
+  { n: 7, title: '행복', key: 'Eb', tune: '손경민' },
 ];
