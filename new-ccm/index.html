@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="새 CCM 연습">
+<title>새 CCM 멜로디 연습</title>
+<style>
+html,body{margin:0;height:100%;background:#f4f1ea;overflow:hidden}
+#app{position:fixed;inset:0;width:100%;height:100%;border:0;display:block;background:#f4f1ea}
+</style>
+</head>
+<body>
+<iframe id="app" title="새 CCM 멜로디 연습" allow="fullscreen *; autoplay *; midi *; screen-wake-lock *" allowfullscreen></iframe>
+<script>
+/* 프로그램 틀: 목록·연주 화면을 이 틀 안에서 바꿔 보여 주므로 곡을 옮겨 다녀도 전체화면이 유지됨.
+   전체화면은 ⛶ 버튼으로 켜고, Esc(또는 iPad에서 아래로 쓸기)로 해제. */
+const F=document.getElementById('app'),de=document.documentElement;
+const h=decodeURIComponent(location.hash.slice(1));
+F.src=/^(list|player)\.html/.test(h)?h:'list.html';
+const isFS=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+const canFS=!!(de.requestFullscreen||de.webkitRequestFullscreen)&&!navigator.standalone;
+const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){}};
+function req(){if(!canFS||isFS())return;try{const r=(de.requestFullscreen||de.webkitRequestFullscreen).call(de,{navigationUI:'hide'});if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+function exit(){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}catch(e){}}
+function auto(){}   // 첫 터치 때 자동 전체화면은 쓰지 않음 (⛶ 전체화면 버튼으로만)
+window.FS={can:canFS,is:isFS,on(){ss('fsOff',null);req();},off(){ss('fsOff','1');exit();},toggle(){isFS()?this.off():this.on();}};
+let was=false;
+function changed(){const now=isFS();if(was&&!now)ss('fsOff','1');was=now;notify();}   // 사용자가 해제하면 다시 켤 때까지 자동으로 들어가지 않음
+document.addEventListener('fullscreenchange',changed);document.addEventListener('webkitfullscreenchange',changed);
+function notify(){try{F.contentWindow.postMessage({ccmFSstate:isFS()},'*');}catch(e){}try{const w=F.contentWindow;w.document.documentElement.classList.toggle('fs',isFS());w.dispatchEvent(new Event('appfs'));}catch(e){}}
+/* 파일로 열었을 때(file://) 곡 화면이 메시지로 전체화면 켜기/끄기를 부탁함 — 클릭은 곡 화면에서 일어났어도 틀에서 켤 수 있음 */
+addEventListener('message',e=>{if(e.source!==F.contentWindow||!e.data)return;if(e.data.ccmFS==='toggle')FS.toggle();else if(e.data.ccmFS==='ask')notify();});
+['pointerdown','keydown'].forEach(t=>document.addEventListener(t,auto,true));
+F.addEventListener('load',()=>{let w,d;try{w=F.contentWindow;d=w.document;}catch(e){return;}
+  try{history.replaceState(null,'','#'+w.location.pathname.split('/').pop()+w.location.search);}catch(e){}
+  ['pointerdown','keydown'].forEach(t=>d.addEventListener(t,auto,true));
+  d.addEventListener('keydown',e=>{if(e.key==='Escape'&&isFS())FS.off();},true);
+  notify();try{w.focus();}catch(e){}
+});
+setInterval(()=>{try{const t=F.contentDocument.title;if(t&&document.title!==t)document.title=t;}catch(e){}},1000);
+</script>
+</body>
+</html>

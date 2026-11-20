@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<script>
+/* 연주 화면의 ☰ 목록으로 왔으면(list.html?auto=1) 고른 곡을 바로 연주 */
+const AUTO='&auto=1';   // 곡을 누르면 바로 연주 화면(맨 처음에서 대기)try{if(window.top===window)location.replace("index.html");}catch(e){}</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="새 CCM 연습">
+<style>body{padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}.lhead{flex-wrap:wrap}@media(max-width:600px){.lbtns{justify-content:flex-start}.lb,#fsBtn.lfs{padding:6px 10px!important;font-size:13px!important}}
+.lbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.lb:hover,#fsBtn.lfs:hover{background:#f7f4fb}
+.lhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#fsBtn.lfs,.lb{border:1px solid #d9d2c3;background:#fff;border-radius:10px;padding:8px 14px;font:600 14px "Noto Sans KR",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+html.fs .wrap{padding-top:calc(env(safe-area-inset-top) + 8px)}
+</style>
+<title>새 CCM 멜로디 연습</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
+<script src="songs/index.js"></script>
+<style>
+:root{--bg:#f5f2ec;--card:#fffdf9;--ink:#23201c;--mute:#7b746b;--line:#e3dccf;--ALL:#5a3ea6;--ok:#2a8d58}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+h1{font-family:"Noto Serif KR",serif;font-weight:900;font-size:30px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:13.5px;margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(60,40,10,.05)}
+.search{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.search input{flex:1;font:16px "Noto Sans KR";padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.search input:focus{outline:2px solid var(--ALL);border-color:transparent}
+.count{color:var(--mute);font-size:13px;white-space:nowrap}
+ul{list-style:none;margin:0;padding:0}
+li a{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:6px 10px;border-radius:10px;text-decoration:none;color:inherit;border-bottom:1px solid var(--line)}
+li:last-child a{border-bottom:none}
+li a:hover{background:#f3eefb}
+.no{font-family:"Noto Serif KR",serif;font-weight:900;font-size:19px;text-align:right;color:var(--ALL)}
+.t{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t small{display:inline;font-weight:400;color:var(--mute);font-size:12.5px;margin-left:10px}
+.badges{display:flex;gap:6px}
+.b{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--mute);background:#fff;white-space:nowrap}
+.b.ly{color:var(--ok);border-color:#bfe0cc;background:#eef8f2;font-weight:600}
+.empty{padding:24px;text-align:center;color:var(--mute)}
+.backup{margin-top:16px}
+.backup h2{font-size:15px;margin:0 0 6px}
+.backup p{font-size:12.5px;color:var(--mute);line-height:1.6;margin:0 0 10px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btns button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font:14px "Noto Sans KR";cursor:pointer}
+.btns button.pri{background:var(--ALL);border-color:var(--ALL);color:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lhead"><h1>새 CCM 멜로디 연습</h1><div class="lbtns">
+    <button class="lb" id="exp" title="가사 백업: 모든 곡에 입력한 가사를 파일 하나로 저장합니다 (다른 기기로 옮길 때)">⤓ 가사 백업</button>
+    <button class="lb" id="imp" title="가사 불러오기: 백업해 둔 가사 파일을 이 기기로 가져옵니다">⤒ 가사 불러오기</button>
+    <input type="file" id="file" accept=".json,application/json" hidden>
+  </div></div>
+  <p class="sub">번호나 제목으로 찾아 누르면 멜로디 악보와 연주 화면이 열립니다.</p>
+
+  <div class="card">
+    <div class="search">
+      <input id="q" type="search" placeholder="번호 또는 제목 (예: 282, 어둠)" autocomplete="off">
+      <span class="count" id="cnt"></span>
+    </div>
+    <ul id="list"></ul>
+  </div>
+
+</div>
+
+<script>
+const LIST=(window.SONG_LIST||[]).slice().sort((a,b)=>a.n-b.n);
+const $=id=>document.getElementById(id);
+function hasLyrics(n){
+  try{const o=JSON.parse(localStorage.getItem('nccm'+n+'_lyrics')||'null');return !!o&&Object.values(o).some(x=>x&&String(x).trim());}catch(e){return false;}
+}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function draw(){
+  const q=$('q').value.trim().toLowerCase().replace(/\s+/g,'');
+  const items=LIST.filter(s=>!q||String(s.n).startsWith(q)||(s.title+(s.tune||'')).toLowerCase().replace(/\s+/g,'').includes(q));
+  $('cnt').textContent=items.length+' / '+LIST.length+'곡';
+  $('list').innerHTML=items.length?items.map(s=>`<li><a href="player.html?n=${encodeURIComponent(s.n)}${AUTO}">
+    <span class="no">${esc(s.n)}</span>
+    <span class="t">${esc(s.title)}<small>${esc(s.tune||'')}</small></span>
+    <span class="badges">${s.key?`<span class="b">${esc(s.key)}</span>`:''}${hasLyrics(s.n)?'<span class="b ly">가사</span>':''}</span>
+  </a></li>`).join(''):'<li class="empty">찾는 곡이 없습니다</li>';
+}
+$('q').addEventListener('input',draw);
+$('q').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const a=document.querySelector('#list a');if(a)location.href=a.href;}
+});
+draw();
+
+function toast(msg){let t=document.querySelector('.toast');
+  if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t);}
+  t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);}
+/* 파일 저장: 지원 브라우저(PC 크롬·엣지)에서는 저장 위치·이름을 고르는 창, 그 외는 다운로드 폴더 */
+async function saveFile(name,text,type){
+  const ext=(name.match(/\.[^.]+$/)||['.txt'])[0];
+  if(window.showSaveFilePicker){
+    try{
+      const h=await showSaveFilePicker({suggestedName:name,types:[{description:ext==='.json'?'가사 파일':'HTML 파일',accept:{[type]:[ext]}}]});
+      const w=await h.createWritable();await w.write(new Blob([text],{type}));await w.close();
+      return 'picked';
+    }catch(e){if(e&&e.name==='AbortError')return 'cancel';}
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));
+  a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+  return 'download';
+}
+$('exp').onclick=async()=>{
+  const all={},edits={};
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);const m=k&&k.match(/^nccm(\d+)_lyrics$/);
+    if(m){const o=JSON.parse(localStorage.getItem(k));if(o&&Object.values(o).some(x=>x&&String(x).trim()))all[m[1]]=o;}
+    const m2=k&&k.match(/^nccm(\d+)_edit$/);if(m2){const o=JSON.parse(localStorage.getItem(k));if(o&&Object.keys(o).length)edits[m2[1]]=o;}}}catch(e){}
+  const n=Object.keys(all).length,ne=Object.keys(edits).length;if(!n&&!ne)return toast('저장된 가사·편집 내용이 없습니다');
+  const d=new Date(),ds=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const r=await saveFile('새CCM_가사_전체_'+ds+'.json',JSON.stringify({all:true,saved:d.toISOString(),hymns:all,edits},null,1),'application/json');
+  if(r==='cancel')return;
+  toast(n+'곡의 가사'+(ne?'와 '+ne+'곡의 편집 내용':'')+'을 '+(r==='picked'?'지정한 위치에 저장했습니다':'다운로드 폴더에 저장했습니다'));
+};
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  f.text().then(t=>{
+    const o=JSON.parse(t);let map={};
+    if(o.all&&o.hymns)map=o.hymns;
+    else if(o.hymn&&o.lyrics)map={[o.hymn]:o.lyrics};          // 한 곡짜리 가사 파일도 허용
+    else throw 0;
+    if(o.edits)Object.keys(o.edits).forEach(n=>{if(/^\d+$/.test(n))try{localStorage.setItem('nccm'+n+'_edit',JSON.stringify(o.edits[n]));}catch(e){}});
+    const ns=Object.keys(map).filter(n=>/^\d+$/.test(n));
+    const over=ns.filter(hasLyrics);
+    if(over.length&&!confirm(`${ns.length}곡 중 ${over.length}곡은 이미 가사가 있습니다. 불러온 가사로 바꿀까요?`))return;
+    ns.forEach(n=>{try{localStorage.setItem('nccm'+n+'_lyrics',JSON.stringify(map[n]));}catch(e){}});
+    draw();toast(ns.length+'곡의 가사를 불러왔습니다');
+  }).catch(()=>toast('가사 파일을 읽지 못했습니다'));
+  e.target.value='';
+};
+</script>
+<script>/* ⚙ 설정 버튼: 마지막에 연 곡(없으면 첫 곡)의 연주 화면을 설정을 편 채로 엶 */
+(function(){
+const hb=document.querySelector('.lbtns');if(!hb)return;
+const b=document.createElement('button');b.className='lb';b.id='setOpenBtn';b.title='음원·악기·템포·MIDI·녹음 등 설정 화면 열기';b.textContent='⚙ 설정';
+b.onclick=()=>{let n='';try{n=localStorage.getItem('nccm_last')||'';}catch(e){}
+  if(!n){const a=document.querySelector('#list a');if(a)n=new URL(a.href).searchParams.get('n');}
+  if(n)location.href='player.html?n='+encodeURIComponent(n)+'&set=1';};
+hb.appendChild(b);
+})();</script>
+</body>
+</html>
