@@ -785,7 +785,7 @@ function renderScore(){
   noteMap=[];elemStart=new Map();lit=[];
   if(!window.ABCJS){$('score').innerHTML='<div class="err">악보 라이브러리를 불러오지 못했습니다 (인터넷 연결 확인). 연주 버튼은 그대로 작동합니다.</div>';return;}
   const vis=window._vis=ABCJS.renderAbc('score',buildABC(),{
-    responsive:'resize',add_classes:true,visualTranspose:+$('trans').value,staffwidth:880,scale:1,
+    responsive:'resize',add_classes:true,visualTranspose:+$('trans').value,staffwidth:window._SW||880,scale:1,
     paddingtop:0,paddingbottom:10,paddingleft:10,paddingright:10,
     format:{vocalfont:'Noto Serif KR 15',gchordfont:'Noto Sans KR 13',annotationfont:'Noto Sans KR 13 bold'},
     clickListener:(el,tn,cls,an,drag,ev)=>{
@@ -798,6 +798,9 @@ function renderScore(){
       start(mode,scoreToPerf(b,cv),[]);   // 누른 음(가사)에서 바로 시작 (전주 없이)
     }
   })[0];
+  /* 음표가 많은 줄은 정한 폭(880)보다 길게 그려져 줄 끝이 들쭉날쭉해짐 → 가장 긴 줄에 폭을 맞춰 다시 그려 모든 줄 끝을 맞춤 */
+  {const sv=document.querySelector('#score svg'),W=sv&&sv.viewBox&&sv.viewBox.baseVal?sv.viewBox.baseVal.width:0,cur=window._SW||880;
+   if(W>cur+20+3&&(window._SWfix||0)<4){window._SW=Math.ceil(W-20)+4;window._SWfix=(window._SWfix||0)+1;try{return renderScore();}finally{window._SWfix--;}}}
   const keyOf={'0-0':'S'};
   const clock={},tri={};
   const keyAcc={};
