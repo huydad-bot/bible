@@ -1842,7 +1842,7 @@ function setPanel(open){document.body.classList.toggle('collapsed',!open);
 (function(){const q=new URLSearchParams(location.search);setPanel(false);   // 곡을 열 때는 항상 설정을 접은 채로
   try{if(q.get('n'))localStorage.setItem('ccm_last',q.get('n'));}catch(e){}})();
 $('setBtn').onclick=()=>setPanel(document.body.classList.contains('collapsed'));
-$('hPlay').onclick=()=>$('play').click();
+$('hPlay').onclick=()=>{window.WANT_READY=!playing&&!PAUSE;$('play').click();};   // 첫 화면의 ▶ 시작: 연주 화면을 띄우고 대기
 /* 사용법 */
 $('helpBtn').onclick=()=>{$('help').hidden=false;$('help').scrollTop=0;};
 $('helpClose').onclick=()=>{$('help').hidden=true;};
@@ -2611,7 +2611,7 @@ function pauseNow(){if(!playing)return;const b=curBeat(),it=curIntro;KEEPV=true;
   $('play').textContent='▶ 계속';$('hPlay').textContent='▶ 계속';$('pos').textContent='일시정지';}
 function resumeNow(){const p=PAUSE;if(!p)return;PAUSE=null;document.body.classList.remove('paused');
   KEEPV=true;try{start(mode,Math.max(0,p.b-.02),p.it);}finally{KEEPV=false;}}
-function endPause(){if(!PAUSE)return;stop();fromBeat=0;if(window.setPanel)setPanel(true);}   // 연주 화면에서 ■ → 설정 화면
+function endPause(){if(!PAUSE)return;stop();fromBeat=0;if(window.setPanel)setPanel(false);}   // 연주 화면에서 ■ → 처음 화면 (설정 접힘)
 $('pExit').onclick=endPause;
 document.addEventListener('keydown',e=>{
   const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
@@ -2620,7 +2620,7 @@ document.addEventListener('keydown',e=>{
   e.preventDefault();if(e.repeat)return;
   if(t&&t.tagName==='BUTTON')t.blur();
   const nx=document.getElementById('plNext');if(nx&&!nx.hidden){const g=document.getElementById('plGo')||document.getElementById('plAgain');if(g){g.click();return;}}
-  if(playing)pauseNow();else if(PAUSE)resumeNow();else $('play').click();
+  if(playing)pauseNow();else if(PAUSE)resumeNow();else{window.WANT_READY=true;$('play').click();}
 },true);
 </script>
 <div id="tbar" role="toolbar" aria-label="연주 조작">
@@ -2665,7 +2665,7 @@ function lastLine(){const sg=FORM[FORM.length-1];if(!sg)return 0;
 B('tbHome').onclick=()=>goTo(0);B('tbEnd').onclick=()=>goTo(lastLine());
 B('tbBack').onclick=()=>seek(-1);B('tbFwd').onclick=()=>seek(1);
 B('tbPP').onclick=()=>{if(playing)pauseNow();else if(PAUSE)resumeNow();};
-B('tbStop').onclick=()=>{if(PAUSE)endPause();else if(playing){stop();fromBeat=0;setPanel(true);}};
+B('tbStop').onclick=()=>{if(PAUSE)endPause();else if(playing){stop();fromBeat=0;setPanel(false);}};
 document.querySelectorAll('#tbar button').forEach(x=>x.addEventListener('mouseup',()=>x.blur()));
 setInterval(()=>{const pp=B('tbPP');const t=playing?'⏸\uFE0E':'▶\uFE0E';if(pp.textContent!==t)pp.textContent=t;},200);
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
@@ -2688,6 +2688,7 @@ body.playing .pctl{display:inline-flex}
 .pctl input[type=number]{width:52px;padding:2px 4px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff}
 @media (max-width:1000px){.pctl input[type=range]{width:60px}}
 .pctl.tight{gap:8px;font-size:12px}.pctl.tight input[type=range]{width:56px}.pctl.tight input[type=number]{width:44px}
+.pctl.tighter{gap:6px}.pctl.tighter input[type=range]{width:40px}.pctl.tighter input[type=number]{width:40px}
 .pnav.tight{gap:4px}.pnav.tight button{padding:6px 7px;font-size:12px}
 @media (min-width:700px){body.playing .pctl,body.playing .pnav{position:absolute;top:50%;transform:translateY(-50%)}}
 @media (max-width:640px){.pctl,.pnav{display:none!important}}
@@ -2703,16 +2704,18 @@ vv.addEventListener('change',syncV);
 pvv.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();});
 const sync=()=>{syncV();pt.value=$('tempo').value;pn.value=$('tempoN').value;const m=mv();if(m)pm.value=m.value;const a=av();if(a&&pa)pa.value=a.value;};
 const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement,nv=$('pNav');
-  t.style.marginLeft='';c.classList.remove('tight');nv.classList.remove('tight');
+  t.style.marginLeft='';t.style.left='';t.style.maxWidth='';c.classList.remove('tight','tighter');nv.classList.remove('tight');
   if(innerWidth<700||!document.body.classList.contains('playing')){c.style.left='';nv.style.left='';$('pos').style.visibility='';$('pInfo').style.visibility='';return;}
-  const pr=P.getBoundingClientRect();let tr=t.getBoundingClientRect();
-  const fit=()=>{tr=t.getBoundingClientRect();c.style.left=(tr.right-pr.left+18)+'px';return c.getBoundingClientRect().right-(pr.right-8);};
-  let over=fit();
-  if(over>0){c.classList.add('tight');over=fit();}                       // 오른쪽이 모자라면 조절 막대를 작게
-  if(over>0){t.style.marginLeft=(-over)+'px';over=fit();}                 // 그래도 모자라면 제목을 왼쪽으로
-  let L=tr.left-pr.left-18-nv.offsetWidth;
-  if(L<8){nv.classList.add('tight');L=tr.left-pr.left-14-nv.offsetWidth;}
-  nv.style.left=Math.max(4,L)+'px';
+  /* 이전·곡선택·다음 + 제목 + 조절 막대를 한 덩어리로 보고, 그 덩어리 전체를 악보 가운데에 맞춤 */
+  const pr=P.getBoundingClientRect(),pw=pr.width;let G=18;
+  const tw=()=>t.getBoundingClientRect().width,total=()=>nv.offsetWidth+G+tw()+G+c.offsetWidth;
+  if(total()>pw-16){c.classList.add('tight');nv.classList.add('tight');G=10;}   // 모자라면 조절 막대·버튼을 작게
+  if(total()-tw()+60>pw-8)c.classList.add('tighter');                       // 아주 좁으면 막대를 더 짧게
+  if(total()>pw-8)t.style.maxWidth=Math.max(60,pw-8-(total()-tw()))+'px';   // 그래도 모자라면 긴 제목을 … 으로 줄임
+  const W=total(),x0=Math.max(4,Math.min((pw-W)/2,pw-4-W));
+  nv.style.left=x0+'px';
+  t.style.left=(x0+nv.offsetWidth+G+tw()/2)+'px';                        // 제목은 translateX(-50%) 기준
+  c.style.left=(x0+nv.offsetWidth+G+tw()+G)+'px';
   const ps=$('pos');ps.style.visibility='';if(c.getBoundingClientRect().right>ps.getBoundingClientRect().left-8)ps.style.visibility='hidden';
   const pi=$('pInfo');pi.style.visibility='';if(pi.getBoundingClientRect().right>nv.getBoundingClientRect().left-8)pi.style.visibility='hidden';};
 addEventListener('resize',place);
@@ -2755,5 +2758,11 @@ function showReset(){if(!host)return;if(!rb){rb=document.createElement('button')
   rb.style.display=SONGCFG.has()?'':'none';}
 setTimeout(showReset,50);
 })();</script>
+<script>/* ▶ 시작: 연주 화면으로 바꾸되 소리는 내지 않고 맨 처음에서 대기 (▶ 또는 스페이스바로 연주) */
+$('play').addEventListener('click',()=>{if(!window.WANT_READY)return;window.WANT_READY=false;if(!playing)return;
+  pauseNow();if(PAUSE){PAUSE.b=0;fromBeat=0;PAUSE.show=true;}$('pos').textContent='준비 · ▶ 또는 스페이스바로 시작';});
+/* 화면이 바뀔 때(처음 열기·다른 곡·뒤로가기로 돌아옴)는 항상 설정을 접은 채로 */
+addEventListener('pageshow',()=>{if(window.setPanel&&!document.body.classList.contains('playing'))setPanel(false);});
+</script>
 </body>
 </html>
