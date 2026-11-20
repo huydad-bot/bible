@@ -2746,7 +2746,7 @@ const pt=$('pTempo'),pn=$('pTempoN'),pvs=[...document.querySelectorAll('#pCtl .p
    tb.onclick=()=>{window.tipToggle&&window.tipToggle(tb);tb.blur();};box.appendChild(tb);}
   tt.appendChild(box);const h=document.querySelector('#pCtl .pvh');if(h)h.remove();}   // S·A·T·B 버튼은 제목 옆으로
 const alignParts=()=>{const bx=$('pParts'),t=$('pTitle'),sv=document.querySelector('#score svg');if(!bx||!t||!sv)return;   // 오른쪽 끝을 악보 오른쪽 끝에 맞춤
-  let r=0;const vh=innerHeight;document.querySelectorAll('#score .abcjs-staff').forEach(e=>{const q=e.getBoundingClientRect();if(q.width>0&&q.bottom>0&&q.top<vh)r=Math.max(r,q.right);});if(!r)r=sv.getBoundingClientRect().right;const tr=t.getBoundingClientRect().right;   /* 오선의 실제 오른쪽 끝 */bx.style.right=Math.max(4,tr-r)+'px';};
+  let r=0;const vh=innerHeight;document.querySelectorAll('#score .abcjs-staff').forEach(e=>{const q=e.getBoundingClientRect();if(q.width>0&&q.bottom>0&&q.top<vh)r=Math.max(r,q.right);});if(!r)r=sv.getBoundingClientRect().right;const tr=t.getBoundingClientRect().right;   /* 오선의 실제 오른쪽 끝 */bx.style.right=Math.max(4,tr-r)+'px';{const bl=bx.getBoundingClientRect().left,pad=Math.max(150,Math.ceil(tr-bl)+12);t.style.setProperty('padding-left',pad+'px','important');t.style.setProperty('padding-right',pad+'px','important');}   /* 제목이 버튼과 겹치지 않게 */};
 addEventListener('resize',()=>requestAnimationFrame(alignParts));setTimeout(alignParts,500);
 new MutationObserver(()=>requestAnimationFrame(alignParts)).observe(document.body,{attributes:true,attributeFilter:['class']});
 window.alignParts=alignParts;
