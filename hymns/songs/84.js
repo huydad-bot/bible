@@ -10,7 +10,7 @@ registerSong({
   tempoText: '',
   verses: 3,
   refrainAt: 24.5,
-  lineBreaks: [12, 24.5, 39.5],
+  lineBreaks: [12, 24.5, 39.5, 54.5],
   melisma: [11, 44, 71],
   chords: {0:'Eb',5:'Eb/G',9.5:'Bb',12.5:'Eb',17:'Eb/G',18.5:'Eb/Bb',20:'Bb7',21.5:'Eb',26:'Eb/Bb',29:'Bb7/F',35:'Eb/G',42.5:'Cm',45.5:'Bb',48.5:'Eb',50:'Eb/Bb',53:'Bb7/F',59:'Eb/G',66.5:'Eb/Bb',68:'Bb',69.5:'Eb'},
 
