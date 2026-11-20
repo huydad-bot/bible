@@ -2588,14 +2588,22 @@ if(q!=null&&getPL()[+q]===String(SONG.n))setTimeout(()=>startHere(+q),900);
 </script>
 <script>/* 전체화면 버튼: 프로그램 틀(index.html)의 전체화면을 켜고 끔 */
 (function(){
-let T=null;try{if(window.top!==window&&top.FS)T=top.FS;}catch(e){}
+let T=null,XO=false,XS=false;try{if(window.top!==window&&top.FS)T=top.FS;}catch(e){XO=window.top!==window;}   // XO: 파일로 열어 틀에 직접 접근 못 함 → 메시지로
+if(XO){window.addEventListener('message',e=>{const m=e.data;if(m&&m.hymnFS==='state'){XS=!!m.on;window.dispatchEvent(new Event('appfs'));}});try{top.postMessage({hymnFS:'ask'},'*');}catch(e){}}
 const d=document,el=d.documentElement,hb=d.querySelector('.hbtns');if(!hb)return;
-const can=T?T.can:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
-const cur=()=>T?T.is():!!(d.fullscreenElement||d.webkitFullscreenElement);
+const can=T?T.can:XO?true:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
+const cur=()=>T?T.is():XO?XS:!!(d.fullscreenElement||d.webkitFullscreenElement);
 const b=d.createElement('button');b.className='setbtn';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (해제: Esc, iPad는 아래로 쓸기)';
 const lab=()=>{b.textContent=cur()?'⤢ 전체':'⛶ 전체';b.title=cur()?'전체화면 끄기':'전체화면';el.classList.toggle('fs',cur());};lab();
-b.onclick=()=>{if(T){T.toggle();return;}try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
-window.addEventListener('appfs',lab);d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
+const own=()=>!!(d.fullscreenElement||d.webkitFullscreenElement);
+b.onclick=()=>{
+  if(own()){try{(d.exitFullscreen||d.webkitExitFullscreen).call(d);}catch(e){}return;}
+  if(XO){try{top.postMessage({hymnFS:'toggle'},'*');}catch(e){}return;}
+  if(T){const was=cur();try{T.toggle();}catch(e){}
+    if(!was)setTimeout(()=>{if(!cur()&&!own()){try{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}catch(e){}}},250);   // 틀의 전체화면이 안 되면 이 화면만이라도
+    return;}
+  try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
+window.addEventListener('appfs',lab);d.addEventListener('fullscreenchange',lab);const cur0=cur;d.addEventListener('webkitfullscreenchange',lab);
 const h=d.getElementById('helpBtn');hb.insertBefore(b,h||null);
 })();</script>
 
