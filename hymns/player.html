@@ -273,6 +273,7 @@ body{transition:background-color .25s}
       <button class="setbtn" id="editBtn" title="늘임표·후렴·메아리·절 수·못갖춘마디 고치기">✏ 편집</button>
       <button class="setbtn" id="setBtn" title="파트·이조·템포·전주·악기 설정">⚙ 설정 펼치기</button>
       <button class="setbtn" id="helpBtn" title="프로그램 사용법">? 사용법</button>
+      <button class="setbtn" id="printBtn" title="제목과 악보만 세로 한 쪽에 인쇄 (인쇄 창에서 'PDF로 저장'을 고르면 PDF 파일)">🖨 인쇄·PDF</button>
     </div>
   </header>
   <div id="editBar" class="editbar" style="display:none">
@@ -2887,6 +2888,41 @@ document.addEventListener('mouseout',e=>{if(cur&&(!e.relatedTarget||!cur.contain
 ['mousedown','scroll','keydown'].forEach(ev=>addEventListener(ev,hide,true));
 window.tipToggle=b=>{ON=!ON;try{localStorage.setItem('hymn_tips',ON?'1':'0');}catch(e){}hide();if(b)b.classList.toggle('on',ON);};
 window.tipOn=()=>ON;
+})();
+</script>
+<style>
+#printBox{display:none}
+@media print{
+  @page{size:A4 portrait;margin:0}   /* 여백 0 → 브라우저의 날짜·주소 머리글/바닥글이 들어갈 자리가 없어 나오지 않음 */
+  body>*:not(#printBox){display:none!important}
+  body{background:#fff!important;margin:0!important;padding:0!important}
+  #printBox{display:block!important;box-sizing:border-box;width:210mm;margin:0;padding:12mm 10mm 0;text-align:center;color:#000;break-inside:avoid;page-break-inside:avoid}
+  #printBox h1{font:700 20pt 'Noto Serif KR',serif;margin:0 0 5mm;letter-spacing:.02em}
+  #printBox h1 b{font-size:24pt;margin-right:4mm}
+  #printBox svg{display:block;margin:0 auto}
+  #printBox svg *{animation:none!important;transition:none!important}
+}
+</style>
+<script>/* 인쇄·PDF: 제목과 악보만, 세로 한 쪽 */
+(function(){
+const btn=document.getElementById('printBtn');if(!btn)return;
+btn.onclick=()=>{
+  const sv=document.querySelector('#score svg');if(!sv){alert('악보가 아직 그려지지 않았습니다.');return;}
+  let box=document.getElementById('printBox');if(box)box.remove();
+  box=document.createElement('div');box.id='printBox';
+  const h=document.createElement('h1');h.innerHTML='<b>'+SONG.n+'</b>'+String(SONG.title).replace(/</g,'&lt;');box.appendChild(h);
+  const c=sv.cloneNode(true);
+  c.querySelectorAll('[style]').forEach(e=>{if(/fill|stroke|color/.test(e.getAttribute('style')))e.removeAttribute('style');});   // 연주 중 색칠 지우기
+  c.querySelectorAll('.abcjs-cursor,.cursor,.playline').forEach(e=>e.remove());
+  const vb=(c.getAttribute('viewBox')||'').split(/[ ,]+/).map(Number);
+  const w=vb.length===4?vb[2]:sv.getBoundingClientRect().width,hh=vb.length===4?vb[3]:sv.getBoundingClientRect().height;
+  const maxW=190,maxH=246;let W=maxW,H=W*hh/w;if(H>maxH){H=maxH;W=H*w/hh;}   // A4 세로 한 쪽 안에
+  c.removeAttribute('height');c.removeAttribute('width');c.style.cssText='width:'+W+'mm;height:'+H+'mm';
+  if(vb.length!==4)c.setAttribute('viewBox','0 0 '+w+' '+hh);
+  box.appendChild(c);document.body.appendChild(box);
+  const old=document.title;document.title=SONG.n+' '+SONG.title;
+  setTimeout(()=>{window.print();setTimeout(()=>{document.title=old;},500);},50);
+};
 })();
 </script>
 </body>
