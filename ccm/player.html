@@ -276,6 +276,7 @@ body{transition:background-color .25s}
       <button class="setbtn" id="editBtn" title="음 높이·임시표·코드·늘임표 고치기">✏ 편집</button>
       <button class="setbtn" id="setBtn" title="악기·이조·템포·반주·MIDI 설정">⚙ 설정 펼치기</button>
       <button class="setbtn" id="helpBtn" title="프로그램 사용법">? 사용법</button>
+      <button class="setbtn" id="printBtn" title="제목과 악보만 A4 세로로 인쇄 / PDF로 저장 (악보가 길면 여러 장)">🖨 인쇄·PDF</button>
     </div>
   </header>
   <div id="editBar" class="editbar" style="display:none">
@@ -2778,5 +2779,59 @@ addEventListener('pageshow',()=>{if(window.setPanel&&!document.body.classList.co
 }
 @media (min-width:700px) and (max-height:500px){body.playing .ptitle b{font-size:22px}body.playing .ptitle span{font-size:19px}body.playing .ptitle{padding-bottom:6px}body.playing .parts{row-gap:6px}}
 </style>
+<style>/* 인쇄·PDF: 제목과 악보만, A4 세로. 악보는 줄 단위로 잘라 넣어 한 줄이 두 장에 걸치지 않게 함 */
+#printArea{display:none}
+@media print{
+  /* 여백을 0으로 두면 브라우저가 날짜·제목·주소·쪽번호(머리글/바닥글)를 찍을 자리가 없어 나오지 않음.
+     대신 위아래 여백은 표의 머리/바닥 빈 칸(매 쪽 반복)으로, 좌우 여백은 안쪽 여백으로 만듦 */
+  @page{size:A4 portrait;margin:0}
+  html,body{background:#fff!important;margin:0!important;padding:0!important;height:auto!important;overflow:visible!important}
+  body.printing>*:not(#printArea){display:none!important}
+  body.printing #printArea{display:block!important;color:#000;padding:0 12mm}
+  #printArea table{width:100%;border-collapse:collapse}
+  #printArea td{padding:0}
+  #printArea thead td{height:12mm}
+  #printArea tfoot td{height:12mm}
+  #printArea h1{font-family:'Noto Serif KR',serif;font-size:20pt;font-weight:700;text-align:center;margin:0 0 5mm;color:#000}
+  #printArea h1 b{margin-right:.4em}
+  #printArea .pline{break-inside:avoid;page-break-inside:avoid;margin:0}
+  #printArea tr{break-inside:avoid;page-break-inside:avoid}
+  #printArea svg{display:block;width:100%;height:auto;color:#000}
+  #printArea text.abcjs-lyric,#printArea text.abcjs-lyric tspan{font-family:'Noto Serif KR',serif!important;font-weight:600}
+  #printArea .abcjs-note text,#printArea .abcjs-note tspan{fill:#000!important;stroke:none!important}
+}
+</style>
+<script>(()=>{const $=id=>document.getElementById(id);
+let builtAt=0;
+function build(){
+  if(Date.now()-builtAt<1500&&$('printArea'))return;              // 버튼으로 막 만든 직후면 그대로 사용
+  document.body.classList.remove('printing');                      // 악보가 보이는 상태에서 위치를 재야 함
+  const old=$('printArea');if(old)old.remove();
+  const src=document.querySelector('#score svg');if(!src)return;
+  const A=document.createElement('div');A.id='printArea';
+  const tb=document.createElement('table');tb.innerHTML='<thead><tr><td></td></tr></thead><tfoot><tr><td></td></tr></tfoot><tbody></tbody>';
+  const body=tb.querySelector('tbody'),row=el=>{const tr=document.createElement('tr'),td=document.createElement('td');td.append(el);tr.append(td);body.append(tr);};
+  const h=document.createElement('h1'),b=document.createElement('b');b.textContent=SONG.n;h.append(b,document.createTextNode(SONG.title));row(h);
+  const sr=src.getBoundingClientRect(),vb=src.viewBox&&src.viewBox.baseVal;
+  const W=vb&&vb.width?vb.width:sr.width,H=vb&&vb.height?vb.height:sr.height,X=vb?vb.x:0,Y0=vb?vb.y:0,k=H/sr.height;
+  /* 하이라이트(재생 위치·선택 표시)는 빼고 검정으로 */
+  const clean=sv=>{sv.querySelectorAll('[class]').forEach(e=>{const c=e.getAttribute('class');const n=c.split(/\s+/).filter(x=>!/^(hl-|esel)/.test(x)).join(' ');if(n!==c)e.setAttribute('class',n);});
+    sv.removeAttribute('height');sv.removeAttribute('style');sv.removeAttribute('width');return sv;};
+  let rows=[];try{rows=staffRows();}catch(e){}
+  if(!rows.length){const sv=clean(src.cloneNode(true));sv.setAttribute('viewBox',X+' '+Y0+' '+W+' '+H);const d=document.createElement('div');d.className='pline';d.append(sv);row(d);}
+  else rows.forEach((_,i)=>{let bx;try{bx=lineBox(i);}catch(e){}if(!bx)return;
+    let y=(bx.top-sr.top)*k+Y0,y2=(bx.bot-sr.top)*k+Y0;
+    if(i===0)y=Math.min(y,Y0+0);                       // 첫 줄은 맨 위(코드 이름 포함)부터
+    if(i===rows.length-1)y2=Math.max(y2,Y0+H);         // 마지막 줄은 끝까지
+    const sv=clean(src.cloneNode(true));sv.setAttribute('viewBox',X+' '+y+' '+W+' '+(y2-y));sv.setAttribute('preserveAspectRatio','xMidYMin meet');
+    const d=document.createElement('div');d.className='pline';d.append(sv);row(d);});
+  A.append(tb);document.body.append(A);document.body.classList.add('printing');builtAt=Date.now();
+}
+addEventListener('beforeprint',build);
+addEventListener('afterprint',()=>{document.body.classList.remove('printing');const a=$('printArea');if(a)a.remove();});
+$('printBtn').onclick=()=>{
+  if(document.body.classList.contains('playing')){const t=$('tbStop');if(t)t.click();}   // 연주 화면이면 처음 화면으로 돌아가 전체 악보 기준으로
+  setTimeout(()=>{build();window.print();},350);};
+})();</script>
 </body>
 </html>
