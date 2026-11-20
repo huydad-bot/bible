@@ -14,7 +14,7 @@ html,body{margin:0;height:100%;background:#f4f1ea;overflow:hidden}
 </style>
 </head>
 <body>
-<iframe id="app" title="CCM 멜로디 연습" allow="fullscreen; autoplay; midi; screen-wake-lock"></iframe>
+<iframe id="app" title="CCM 멜로디 연습" allow="fullscreen *; autoplay *; midi *; screen-wake-lock *" allowfullscreen></iframe>
 <script>
 /* 프로그램 틀: 목록·연주 화면을 이 틀 안에서 바꿔 보여 주므로 곡을 옮겨 다녀도 전체화면이 유지됨.
    전체화면은 ⛶ 버튼으로 켜고, Esc(또는 iPad에서 아래로 쓸기)로 해제. */
@@ -31,7 +31,9 @@ window.FS={can:canFS,is:isFS,on(){ss('fsOff',null);req();},off(){ss('fsOff','1')
 let was=false;
 function changed(){const now=isFS();if(was&&!now)ss('fsOff','1');was=now;notify();}   // 사용자가 해제하면 다시 켤 때까지 자동으로 들어가지 않음
 document.addEventListener('fullscreenchange',changed);document.addEventListener('webkitfullscreenchange',changed);
-function notify(){try{const w=F.contentWindow;w.document.documentElement.classList.toggle('fs',isFS());w.dispatchEvent(new Event('appfs'));}catch(e){}}
+function notify(){try{F.contentWindow.postMessage({ccmFSstate:isFS()},'*');}catch(e){}try{const w=F.contentWindow;w.document.documentElement.classList.toggle('fs',isFS());w.dispatchEvent(new Event('appfs'));}catch(e){}}
+/* 파일로 열었을 때(file://) 곡 화면이 메시지로 전체화면 켜기/끄기를 부탁함 — 클릭은 곡 화면에서 일어났어도 틀에서 켤 수 있음 */
+addEventListener('message',e=>{if(e.source!==F.contentWindow||!e.data)return;if(e.data.ccmFS==='toggle')FS.toggle();else if(e.data.ccmFS==='ask')notify();});
 ['pointerdown','keydown'].forEach(t=>document.addEventListener(t,auto,true));
 F.addEventListener('load',()=>{let w,d;try{w=F.contentWindow;d=w.document;}catch(e){return;}
   try{history.replaceState(null,'','#'+w.location.pathname.split('/').pop()+w.location.search);}catch(e){}

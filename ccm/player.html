@@ -2594,12 +2594,15 @@ if(q!=null&&getPL()[+q]===String(SONG.n))setTimeout(()=>startHere(+q),900);
 (function(){
 let T=null;try{if(window.top!==window&&top.FS)T=top.FS;}catch(e){}
 const d=document,el=d.documentElement,hb=d.querySelector('.hbtns');if(!hb)return;
-const can=T?T.can:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
-const cur=()=>T?T.is():!!(d.fullscreenElement||d.webkitFullscreenElement);
+/* 내 PC에서 파일로 열면(file://) 브라우저가 틀(index.html)과 이 화면을 서로 다른 출처로 보아 top.FS를 못 씀
+   → 틀에 메시지로 켜고 끄기를 부탁하고, 상태도 메시지로 받음 */
+const MSG=!T&&window.top!==window;let msgFS=false;
+const can=T?T.can:MSG?true:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
+const cur=()=>T?T.is():MSG?msgFS:!!(d.fullscreenElement||d.webkitFullscreenElement);
 const b=d.createElement('button');b.className='setbtn';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (해제: Esc, iPad는 아래로 쓸기)';
 const lab=()=>{b.textContent=cur()?'⤢ 해제':'⛶ 전체';b.title=cur()?'전체화면 끄기':'전체화면';el.classList.toggle('fs',cur());};lab();
-b.onclick=()=>{if(T){T.toggle();return;}try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
-window.addEventListener('appfs',lab);d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
+b.onclick=()=>{if(T){T.toggle();return;}if(MSG){try{parent.postMessage({ccmFS:'toggle'},'*');}catch(e){}return;}try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
+window.addEventListener('appfs',lab);window.addEventListener('message',e=>{if(e.data&&typeof e.data.ccmFSstate==='boolean'){msgFS=e.data.ccmFSstate;lab();}});if(MSG)try{parent.postMessage({ccmFS:'ask'},'*');}catch(e){}d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
 const h=d.getElementById('helpBtn');hb.insertBefore(b,h||null);
 })();</script>
 
