@@ -38,8 +38,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR",s
 .back{display:inline-block;margin-bottom:8px;color:var(--ALL);text-decoration:none;font-size:14px;font-weight:600}
 .back:hover{text-decoration:underline}
 header{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:14px}
-.num{font-family:"Noto Serif KR",serif;font-weight:900;font-size:52px;line-height:1}
-.ttl h1{font-family:"Noto Serif KR",serif;font-weight:700;font-size:26px;margin:0 0 4px}
+.num{font-family:var(--tfont,"Noto Serif KR",serif);font-weight:900;font-size:52px;line-height:1}
+.ttl h1{font-family:var(--tfont,"Noto Serif KR",serif);font-weight:700;font-size:26px;margin:0 0 4px}
 .ttl p{margin:0;color:var(--mute);font-size:13px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(60,40,10,.05)}
 .panel{position:sticky;top:0;z-index:5;background:var(--card);padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:10px}
@@ -118,7 +118,7 @@ body.playing .card{padding:4px 12px 12px}
 body.playing #score{display:block!important;margin:0 auto;transition:opacity .18s ease-in}
 body.playing #score.fading{opacity:0;transition:opacity .12s ease-out}
 /* 연주 중 정지 버튼 옆 곡 번호·제목 */
-.ptitle{display:none;align-items:baseline;gap:10px;margin-left:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:"Noto Serif KR",serif}
+.ptitle{display:none;align-items:baseline;gap:10px;margin-left:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--tfont,"Noto Serif KR",serif)}
 .ptitle b{font-weight:900;font-size:24px;line-height:1}
 .ptitle span{font-weight:700;font-size:19px;overflow:hidden;text-overflow:ellipsis}
 body.playing .ptitle{display:inline-flex;flex:1 1 auto}
@@ -149,9 +149,9 @@ body.playing #midiLive.show{display:inline-block}
 #midiLive.ok{background:#e3f4ea;color:#1f7a4c}#midiLive.no{background:#fdecea;color:#c0392b}
 /* 첫 화면: 곡 제목 + 시작 버튼 + 악보만 — 설정은 '설정 펼치기'로 */
 .hbtns{margin-left:auto;display:flex;gap:8px;align-items:center;align-self:center}
-.hplay{height:44px;min-width:120px;padding:0 20px;border:none;border-radius:10px;background:#1f7a4c;color:#fff;font:700 17px "Noto Sans KR";cursor:pointer;box-shadow:0 2px 8px rgba(31,122,76,.25)}
+.hplay{height:44px;min-width:104px;padding:0 16px;border:none;border-radius:10px;background:#1f7a4c;color:#fff;font:700 17px "Noto Sans KR";cursor:pointer;box-shadow:0 2px 8px rgba(31,122,76,.25)}
 .hplay.on{background:var(--ink)}
-.setbtn{height:44px;padding:0 14px;border:1px solid #ddd3c3;border-radius:10px;background:#efe9df;color:var(--ink);font:600 14px "Noto Sans KR";cursor:pointer}
+.setbtn{height:44px;padding:0 11px;border:1px solid #ddd3c3;border-radius:10px;background:#efe9df;color:var(--ink);font:600 14px "Noto Sans KR";cursor:pointer}
 .setbtn.open{background:#e2d9ca}
 .editbar{margin:10px 0 0;padding:10px 14px;border:2px solid #c9a227;border-radius:12px;background:#fff8e1;font:14px "Noto Sans KR";display:flex;flex-direction:column;gap:6px}
 .editbar .erow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
@@ -188,7 +188,7 @@ body.playing .wrap{padding-bottom:100vh!important}   /* 마지막 페이지도 �
 #curtain{display:none;position:fixed;bottom:0;z-index:4;background:var(--card);pointer-events:none}
 body:not(.playing) #curtain{display:none!important}
 /* 가사: 곡 제목과 같은 명조체 */
-#score text.abcjs-lyric,#score text.abcjs-lyric tspan{font-family:'Noto Serif KR',serif!important;font-weight:600}
+#score text.abcjs-lyric,#score text.abcjs-lyric tspan{font-family:var(--lfont,'Noto Serif KR',serif)!important;font-weight:var(--lweight,600)}
 .duckopt{font:400 13px 'Noto Sans KR'!important;color:var(--mute)!important;gap:4px}
 .pinfo{display:none;gap:6px;align-items:center;white-space:nowrap;margin-left:10px}
 .pinfo span{font:600 12.5px 'Noto Sans KR';color:var(--ink);background:#e4dccd;border-radius:999px;padding:2px 9px}
@@ -273,6 +273,7 @@ body{transition:background-color .25s}
     <div class="hbtns">
       <button class="hplay" id="hPlay" title="시작 / 정지">▶ 시작</button>
       <button class="setbtn" id="lyrBtn" title="가사 입력·저장·내보내기">✎ 가사</button>
+      <button class="setbtn" id="fontBtn" title="가사·제목 글꼴 바꾸기">가 글꼴</button>
       <button class="setbtn" id="editBtn" title="음 높이·임시표·코드·늘임표 고치기">✏ 편집</button>
       <button class="setbtn" id="setBtn" title="악기·이조·템포·반주·MIDI 설정">⚙ 설정</button>
       <button class="setbtn" id="helpBtn" title="프로그램 사용법">? 사용법</button>
@@ -2507,7 +2508,7 @@ body.playing .hbtns #plBtn,body.playing .hbtns .navbtn{display:none}
 .navbtn:disabled{opacity:.4;cursor:default}
 .hbtns{flex-wrap:wrap;justify-content:flex-end}
 body:not(.playing) .hbtns{margin-left:0!important;width:100%;justify-content:flex-start!important}   /* 버튼 줄 왼쪽 정렬 (아래 상자 왼쪽 선에 맞춤) */
-#navPrev,#navNext,#pPrev,#pNext{padding-left:14px!important;padding-right:14px!important}.hbtns button{white-space:nowrap}.hbtns .navbtn{padding-left:10px;padding-right:10px}
+#navPrev,#navNext,#pPrev,#pNext{padding-left:12px!important;padding-right:12px!important}.hbtns button{white-space:nowrap}.hbtns .navbtn{padding-left:10px;padding-right:10px}
 #plNext{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(30,25,20,.45)}
 #plNext[hidden]{display:none}
 #plNext .card2{background:var(--card);border-radius:14px;padding:22px 26px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25);font:15px "Noto Sans KR"}
@@ -2795,12 +2796,12 @@ addEventListener('pageshow',()=>{if(window.setPanel&&!document.body.classList.co
   #printArea td{padding:0}
   #printArea thead td{height:12mm}
   #printArea tfoot td{height:12mm}
-  #printArea h1{font-family:'Noto Serif KR',serif;font-size:20pt;font-weight:700;text-align:center;margin:0 0 5mm;color:#000}
+  #printArea h1{font-family:var(--tfont,'Noto Serif KR',serif);font-size:20pt;font-weight:700;text-align:center;margin:0 0 5mm;color:#000}
   #printArea h1 b{margin-right:.4em}
   #printArea .pline{break-inside:avoid;page-break-inside:avoid;margin:0}
   #printArea tr{break-inside:avoid;page-break-inside:avoid}
   #printArea svg{display:block;width:100%;height:auto;color:#000}
-  #printArea text.abcjs-lyric,#printArea text.abcjs-lyric tspan{font-family:'Noto Serif KR',serif!important;font-weight:600}
+  #printArea text.abcjs-lyric,#printArea text.abcjs-lyric tspan{font-family:var(--lfont,'Noto Serif KR',serif)!important;font-weight:var(--lweight,600)}
   #printArea .abcjs-note text,#printArea .abcjs-note tspan{fill:#000!important;stroke:none!important}
 }
 </style>
@@ -2835,6 +2836,51 @@ addEventListener('afterprint',()=>{document.body.classList.remove('printing');co
 $('printBtn').onclick=()=>{
   if(document.body.classList.contains('playing')){const t=$('tbStop');if(t)t.click();}   // 연주 화면이면 처음 화면으로 돌아가 전체 악보 기준으로
   setTimeout(()=>{build();window.print();},350);};
+})();</script>
+<style>/* 글꼴 고르기 창 */
+#fontMenu{position:absolute;z-index:60;background:#fff;border:1px solid #ddd3c3;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:10px;width:270px;box-sizing:border-box;font:14px "Noto Sans KR",sans-serif}
+#fontMenu h4{margin:2px 4px 6px;font-size:12px;color:#8a7f70;font-weight:600}
+#fontMenu .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+#fontMenu button{border:1px solid #e3dccf;background:#faf7f2;border-radius:8px;padding:7px 8px;font-size:16px;cursor:pointer;text-align:left;color:#222}
+#fontMenu button.on{border-color:#1f7a4c;background:#e7f3ec;box-shadow:inset 0 0 0 1px #1f7a4c}
+#fontMenu .fnote{font-size:11.5px;color:#9a8f80;margin:2px 4px 0;line-height:1.4}
+body.playing #fontBtn{display:none}
+</style>
+<script>/* 가 글꼴: 가사와 제목 글꼴을 따로 고름 (이 브라우저에 기억, 모든 곡에 적용) */
+(()=>{const $=id=>document.getElementById(id);
+const FONTS=[
+ {k:'serif',n:'명조',f:"'Noto Serif KR',serif",w:600},
+ {k:'sans',n:'고딕',f:"'Noto Sans KR',sans-serif",w:600},
+ {k:'nmj',n:'나눔명조',f:"'Nanum Myeongjo','Noto Serif KR',serif",w:700,g:'Nanum+Myeongjo:wght@400;700;800'},
+ {k:'ngt',n:'나눔고딕',f:"'Nanum Gothic','Noto Sans KR',sans-serif",w:700,g:'Nanum+Gothic:wght@400;700;800'},
+ {k:'gbt',n:'고운바탕',f:"'Gowun Batang','Noto Serif KR',serif",w:700,g:'Gowun+Batang:wght@400;700'},
+ {k:'gdd',n:'고운돋움',f:"'Gowun Dodum','Noto Sans KR',sans-serif",w:400,g:'Gowun+Dodum'},
+ {k:'jua',n:'주아(둥근)',f:"'Jua','Noto Sans KR',sans-serif",w:400,g:'Jua'},
+ {k:'pen',n:'손글씨',f:"'Nanum Pen Script','Noto Sans KR',sans-serif",w:400,g:'Nanum+Pen+Script'}];
+const get=k=>FONTS.find(x=>x.k===k)||FONTS[0];
+const loaded=new Set();
+const load=F=>{if(!F.g||loaded.has(F.k))return;loaded.add(F.k);const l=document.createElement('link');l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+F.g+'&display=swap';document.head.append(l);};
+let st={l:'serif',t:'serif'};try{Object.assign(st,JSON.parse(localStorage.getItem('ccm_font')||'{}'));}catch(e){}
+const apply=()=>{const L=get(st.l),T=get(st.t),r=document.documentElement.style;load(L);load(T);
+  r.setProperty('--lfont',L.f);r.setProperty('--lweight',L.w);r.setProperty('--tfont',T.f);
+  try{localStorage.setItem('ccm_font',JSON.stringify(st));}catch(e){}
+  const m=$('fontMenu');if(m)m.querySelectorAll('button[data-k]').forEach(b=>b.classList.toggle('on',st[b.dataset.w]===b.dataset.k));};
+apply();
+const btn=$('fontBtn');if(!btn)return;
+const close=()=>{const m=$('fontMenu');if(m)m.remove();document.removeEventListener('pointerdown',out,true);};
+const out=e=>{const m=$('fontMenu');if(m&&!m.contains(e.target)&&e.target!==btn)close();};
+btn.onclick=()=>{if($('fontMenu')){close();return;}
+  FONTS.forEach(load);   // 미리보기용으로 모두 불러옴
+  const m=document.createElement('div');m.id='fontMenu';
+  const sec=(w,title)=>{const h=document.createElement('h4');h.textContent=title;const g=document.createElement('div');g.className='fgrid';
+    FONTS.forEach(F=>{const b=document.createElement('button');b.dataset.k=F.k;b.dataset.w=w;b.textContent=F.n;b.style.fontFamily=F.f;
+      b.onclick=()=>{st[w]=F.k;apply();};g.append(b);});m.append(h,g);};
+  sec('l','가사 글꼴');sec('t','제목 글꼴');
+  const n=document.createElement('p');n.className='fnote';n.textContent='명조·고딕 외의 글꼴은 인터넷에 연결되어 있을 때 받아 옵니다. 연결이 없으면 명조/고딕으로 보입니다.';m.append(n);
+  document.body.append(m);const r=btn.getBoundingClientRect();
+  m.style.top=(r.bottom+scrollY+6)+'px';m.style.left=Math.max(8,Math.min(r.left+scrollX,innerWidth-m.offsetWidth-8))+'px';
+  apply();setTimeout(()=>document.addEventListener('pointerdown',out,true),0);};
+addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 })();</script>
 </body>
 </html>
