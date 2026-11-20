@@ -313,7 +313,7 @@ body{transition:background-color .25s}
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
-        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀</button><button id="pList" title="곡 목록으로">☰ 곡선택</button><button id="pNext" title="다음 곡">▶</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디 음량<input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주 음량<input id="pAcc" type="range" min="0" max="100"></label></span>
+        <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀</button><button id="pList" title="곡 목록으로">☰ 곡선택</button><button id="pNext" title="다음 곡">▶</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="이조 (조 바꾸기) — 바꾸면 그 자리부터 새 조로">이조<select autocomplete="off" id="pTrans"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디<span class="vw"> 음량</span><input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주<span class="vw"> 음량</span><input id="pAcc" type="range" min="0" max="100"></label></span>
         <span id="midiLive"></span>
         <span class="status" id="pos">▶ 시작을 누르세요</span>
       </div>
@@ -1999,10 +1999,13 @@ function lineBox(li){
   const n=R.length,G=[];for(let i=1;i<n;i++)G.push(R[i].top-R[i-1].bot);
   const avgG=G.length?G.reduce((a,b)=>a+b,0)/G.length:(r.bot-r.top)*0.6;
   let top,bot;
-  if(li>0)top=R[li-1].bot+0.3*(R[li].top-R[li-1].bot);
+  /* 두 줄 사이 경계: 기본은 윗줄 오선 아래 + 간격의 30%. 가사가 그보다 아래까지 내려오면(음표 꼬리·가사 여러 절 등) 가사 아래까지 넓힘 */
+  const lyrBot=i=>{let b=-Infinity;document.querySelectorAll('#score svg .abcjs-l'+i+' text.abcjs-lyric').forEach(e=>{const q=e.getBoundingClientRect();if(q.height)b=Math.max(b,q.bottom);});return b;};
+  const cut=i=>{const g=R[i+1].top-R[i].bot;return Math.min(Math.max(R[i].bot+0.3*g,lyrBot(i)+4),R[i+1].top-0.2*g);};
+  if(li>0)top=cut(li-1);
   else{const raw=lineBoxRaw(0);top=Math.max(raw?raw.top:-Infinity,r.top-1.1*avgG);top=Math.min(top,r.top-0.5*avgG);}
-  if(li<n-1)bot=R[li].bot+0.3*(R[li+1].top-R[li].bot)-1;
-  else{const raw=lineBoxRaw(li);bot=Math.min(raw?raw.bot:Infinity,r.bot+0.8*avgG);bot=Math.max(bot,r.bot+0.25*avgG);}
+  if(li<n-1)bot=cut(li)-1;
+  else{const raw=lineBoxRaw(li);bot=Math.min(raw?raw.bot:Infinity,r.bot+0.8*avgG);bot=Math.max(bot,r.bot+0.25*avgG,lyrBot(li)+4);}
   return {top,bot};
 }
 function swBox(li){
@@ -2688,7 +2691,8 @@ body.playing .pctl{display:inline-flex}
 .pctl input[type=number]{width:52px;padding:2px 4px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:#fff}
 @media (max-width:1000px){.pctl input[type=range]{width:60px}}
 .pctl.tight{gap:8px;font-size:12px}.pctl.tight input[type=range]{width:56px}.pctl.tight input[type=number]{width:44px}
-.pctl.tighter{gap:6px}.pctl.tighter input[type=range]{width:40px}.pctl.tighter input[type=number]{width:40px}
+.pctl.tighter{gap:6px}.pctl.tighter .vw{display:none}.pctl.tighter input[type=range]{width:30px}.pctl.tighter input[type=number]{width:46px}.pctl.tighter{font-size:11.5px}
+body.playing #pos{display:none!important}   /* 연주 화면 오른쪽 끝 진행 설명 숨김 */
 .pnav.tight{gap:4px}.pnav.tight button{padding:6px 7px;font-size:12px}
 @media (min-width:700px){body.playing .pctl,body.playing .pnav{position:absolute;top:50%;transform:translateY(-50%)}}
 @media (max-width:640px){.pctl,.pnav{display:none!important}}
@@ -2697,27 +2701,24 @@ body.playing .pctl{display:inline-flex}
 (function(){
 const pt=$('pTempo'),pn=$('pTempoN'),pm=$('pMel'),mv=()=>document.querySelector('input.vol[data-vk=S]');
 const pa=$('pAcc'),av=()=>document.querySelector('input.vol[data-vk=AC]');
-const pvv=$('pVerses'),vv=$('verses');
+const pvv=$('pVerses'),vv=$('verses'),ptr=$('pTrans'),tr=$('trans');
+const syncT=()=>{if(ptr.innerHTML!==tr.innerHTML)ptr.innerHTML=tr.innerHTML;ptr.value=tr.value;};
+ptr.onchange=()=>{tr.value=ptr.value;KEEPV=true;try{tr.onchange();}finally{KEEPV=false;}ptr.blur();};
+tr.addEventListener('change',syncT);
+ptr.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();});
 const syncV=()=>{if(pvv.innerHTML!==vv.innerHTML)pvv.innerHTML=vv.innerHTML;pvv.value=vv.value;};
 pvv.onchange=()=>{vv.value=pvv.value;vv.dispatchEvent(new Event('change'));if(playing){const b=curBeat(),it=curIntro;KEEPV=true;try{start(mode,b,it);}finally{KEEPV=false;}}};
 vv.addEventListener('change',syncV);
 pvv.addEventListener('keydown',e=>{if(e.code==='Space'||e.key===' ')e.stopPropagation();});
-const sync=()=>{syncV();pt.value=$('tempo').value;pn.value=$('tempoN').value;const m=mv();if(m)pm.value=m.value;const a=av();if(a&&pa)pa.value=a.value;};
-const place=()=>{const c=$('pCtl'),t=$('pTitle'),P=c.parentElement,nv=$('pNav');
-  t.style.marginLeft='';t.style.left='';t.style.maxWidth='';c.classList.remove('tight','tighter');nv.classList.remove('tight');
-  if(innerWidth<700||!document.body.classList.contains('playing')){c.style.left='';nv.style.left='';$('pos').style.visibility='';$('pInfo').style.visibility='';return;}
-  /* 이전·곡선택·다음 + 제목 + 조절 막대를 한 덩어리로 보고, 그 덩어리 전체를 악보 가운데에 맞춤 */
-  const pr=P.getBoundingClientRect(),pw=pr.width;let G=18;
-  const tw=()=>t.getBoundingClientRect().width,total=()=>nv.offsetWidth+G+tw()+G+c.offsetWidth;
-  if(total()>pw-16){c.classList.add('tight');nv.classList.add('tight');G=10;}   // 모자라면 조절 막대·버튼을 작게
-  if(total()-tw()+60>pw-8)c.classList.add('tighter');                       // 아주 좁으면 막대를 더 짧게
-  if(total()>pw-8)t.style.maxWidth=Math.max(60,pw-8-(total()-tw()))+'px';   // 그래도 모자라면 긴 제목을 … 으로 줄임
-  const W=total(),x0=Math.max(4,Math.min((pw-W)/2,pw-4-W));
-  nv.style.left=x0+'px';
-  t.style.left=(x0+nv.offsetWidth+G+tw()/2)+'px';                        // 제목은 translateX(-50%) 기준
-  c.style.left=(x0+nv.offsetWidth+G+tw()+G)+'px';
-  const ps=$('pos');ps.style.visibility='';if(c.getBoundingClientRect().right>ps.getBoundingClientRect().left-8)ps.style.visibility='hidden';
-  const pi=$('pInfo');pi.style.visibility='';if(pi.getBoundingClientRect().right>nv.getBoundingClientRect().left-8)pi.style.visibility='hidden';};
+const sync=()=>{syncV();syncT();pt.value=$('tempo').value;pn.value=$('tempoN').value;const m=mv();if(m)pm.value=m.value;const a=av();if(a&&pa)pa.value=a.value;};
+const place=()=>{const c=$('pCtl'),t=$('pTitle'),nv=$('pNav');
+  /* 위 줄: 곡 번호·제목 / 아래 줄: 이전·곡선택·다음 + 조절 막대 — CSS로 가운데 정렬. 아래 줄이 넘치면 막대를 작게 */
+  [t,c,nv].forEach(x=>{x.style.left='';x.style.marginLeft='';x.style.maxWidth='';});
+  c.classList.remove('tight','tighter');nv.classList.remove('tight');
+  if(innerWidth<700||!document.body.classList.contains('playing'))return;
+  const P=c.parentElement,mid=r=>(r.top+r.bottom)/2,over=()=>{const a=c.getBoundingClientRect(),n=nv.getBoundingClientRect();return Math.abs(mid(a)-mid(n))>12||a.right>P.getBoundingClientRect().right-4;};
+  if(over()){c.classList.add('tight');nv.classList.add('tight');}
+  if(over())c.classList.add('tighter');};
 addEventListener('resize',place);
 /* 연주 화면의 이전곡·다음곡: 그 곡을 열어 바로 연주 / 목록: 목록에서 고른 곡을 바로 연주 */
 const leave=u=>{KEEPV=true;try{stop(true);}catch(e){}location.href=u;};   // 화면은 그대로 둔 채 소리만 멈추고 이동
@@ -2764,5 +2765,18 @@ $('play').addEventListener('click',()=>{if(!window.WANT_READY)return;window.WANT
 /* 화면이 바뀔 때(처음 열기·다른 곡·뒤로가기로 돌아옴)는 항상 설정을 접은 채로 */
 addEventListener('pageshow',()=>{if(window.setPanel&&!document.body.classList.contains('playing'))setPanel(false);});
 </script>
+<style>/* 연주 화면 위쪽 막대: 위 줄 = 곡 제목(가운데), 아래 줄 = 기능·조절 버튼(가운데) */
+@media (min-width:700px){
+  body.playing .parts{position:static;flex-wrap:wrap!important;justify-content:center;row-gap:10px;column-gap:14px}
+  body.playing .ptitle{order:-1;position:static!important;transform:none!important;flex:0 0 100%!important;max-width:none!important;
+    justify-content:center;align-items:baseline;gap:14px;margin:0!important;padding:0 0 12px;border-bottom:1px solid #ddd3c3;pointer-events:auto}
+  body.playing .ptitle b{font-size:34px}
+  body.playing .ptitle span{font-size:28px}
+  body.playing .pnav,body.playing .pctl{position:static!important;transform:none!important}
+  body.playing .pinfo{display:none!important}
+  body.playing .panel{padding:14px 0 12px}
+}
+@media (min-width:700px) and (max-height:500px){body.playing .ptitle b{font-size:22px}body.playing .ptitle span{font-size:19px}body.playing .ptitle{padding-bottom:6px}body.playing .parts{row-gap:6px}}
+</style>
 </body>
 </html>
