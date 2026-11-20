@@ -733,6 +733,7 @@ function abcLines(v){
     else if(VOLTA&&end===VOLTA[1]){cur+=':|['+VOLTA_L2+' ';state={};}
     else if(DBL.has(end)){cur+='|| ';state={};}
     else if(isBar(end)){cur+='| ';state={};}
+    if(LINE_BREAKS.includes(end)&&end!==SONG_LEN&&!isBar(end)&&!DBL.has(end)&&!(VOLTA&&VOLTA.includes(end))){cur+='| ';state={};}   // 마디 중간에서 줄이 바뀌어도 줄 끝에 세로줄 (보기용)
     if(LINE_BREAKS.includes(end)||end===SONG_LEN){lines.push(cur.trim());cur='';}
   });
   return lines;
