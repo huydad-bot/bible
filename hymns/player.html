@@ -2718,6 +2718,11 @@ body.playing .pctl .pv1 input{flex:1 1 56px;min-width:22px;width:56px}
 body.playing .pnav{flex:0 0 auto}
 @media (max-width:1000px){body.playing .parts{column-gap:8px}body.playing .pctl{gap:6px;font-size:12px}body.playing .pctl input[type=range]{width:50px}body.playing .pctl .pv1 input{width:44px}body.playing .pctl .pvh{display:none}}
 /* 연주 화면 위쪽: 파트 켜기/끄기 버튼, 조절 항목을 한 줄로 */
+#pParts{display:inline-flex;gap:5px;pointer-events:auto;position:absolute;top:50%;transform:translateY(-50%);right:8px}
+body.playing #pTitle{position:relative!important;left:auto!important;top:auto!important;padding-left:150px!important;padding-right:150px!important}@media (max-width:560px){body.playing #pTitle{padding-left:110px!important;padding-right:110px!important}}
+#pParts .pvt{font:800 14px 'Noto Sans KR';width:30px;height:28px;padding:0;border-radius:7px;border:1.5px solid var(--c);background:#fff;color:var(--c);cursor:pointer;opacity:.45}
+#pParts .pvt.on{background:var(--c);color:#fff;opacity:1}
+@media (max-width:560px){#pParts .pvt{width:24px;height:24px;font-size:12px}#pParts{gap:3px}}
 .pctl .pvt{font:800 13px 'Noto Sans KR';width:28px;height:26px;padding:0;border-radius:7px;border:1.5px solid var(--c);background:#fff;color:var(--c);cursor:pointer;opacity:.45}
 .pctl .pvt.on{background:var(--c);color:#fff;opacity:1}
 body.playing .parts{row-gap:6px}
@@ -2734,6 +2739,19 @@ body.playing .pctl .pvh{margin-left:2px}
 <script>/* 연주 화면 위쪽: 템포·멜로디 음량 (설정의 같은 항목과 연동) */
 (function(){
 const pt=$('pTempo'),pn=$('pTempoN'),pvs=[...document.querySelectorAll('#pCtl .pvt')],mvk=k=>document.querySelector('input[data-pv='+k+']');
+{const tt=$('pTitle'),box=document.createElement('span');box.id='pParts';box.title='파트 소리 켜기/끄기';
+  pvs.forEach(x=>box.appendChild(x));
+  {const tb=document.createElement('button');tb.type='button';tb.className='tipT';tb.textContent='?';tb.setAttribute('data-tip','버튼 설명 풍선 켜기/끄기');
+   let on=true;try{on=localStorage.getItem('hymn_tips')!=='0';}catch(e){}tb.classList.toggle('on',on);
+   tb.onclick=()=>{window.tipToggle&&window.tipToggle(tb);tb.blur();};box.appendChild(tb);}
+  tt.appendChild(box);const h=document.querySelector('#pCtl .pvh');if(h)h.remove();}   // S·A·T·B 버튼은 제목 옆으로
+const alignParts=()=>{const bx=$('pParts'),t=$('pTitle'),sv=document.querySelector('#score svg');if(!bx||!t||!sv)return;   // 오른쪽 끝을 악보 오른쪽 끝에 맞춤
+  let r=0;const vh=innerHeight;document.querySelectorAll('#score .abcjs-staff').forEach(e=>{const q=e.getBoundingClientRect();if(q.width>0&&q.bottom>0&&q.top<vh)r=Math.max(r,q.right);});if(!r)r=sv.getBoundingClientRect().right;const tr=t.getBoundingClientRect().right;   /* 오선의 실제 오른쪽 끝 */bx.style.right=Math.max(4,tr-r)+'px';};
+addEventListener('resize',()=>requestAnimationFrame(alignParts));setTimeout(alignParts,500);
+new MutationObserver(()=>requestAnimationFrame(alignParts)).observe(document.body,{attributes:true,attributeFilter:['class']});
+window.alignParts=alignParts;
+setInterval(()=>{if(document.body.classList.contains('playing'))alignParts();},800);   // 화면에 보이는 줄이 바뀌면 다시 맞춤
+if(typeof fitTwoLines==='function'){const f0=fitTwoLines;fitTwoLines=function(){const r=f0.apply(this,arguments);requestAnimationFrame(alignParts);return r;};}
 const PREV={};   // 끄기 전 음량 (다시 켤 때 되돌림)
 const syncT=()=>pvs.forEach(x=>{const m=mvk(x.dataset.pk);x.classList.toggle('on',!m||+m.value>0);});
 pvs.forEach(x=>{x.onclick=()=>{const k=x.dataset.pk,m=mvk(k);if(!m)return;
@@ -2843,6 +2861,33 @@ let rt=null,lastH=0;const refit=()=>{clearTimeout(rt);rt=setTimeout(()=>{if(!doc
 const pn=document.querySelector('.card>.panel');if(pn)new ResizeObserver(()=>{const h=pn.offsetHeight;if(Math.abs(h-lastH)>2){lastH=h;refit();}}).observe(pn);
 let wasP=false;new MutationObserver(()=>{const P=document.body.classList.contains('playing');if(P&&!wasP){refit();setTimeout(refit,600);}wasP=P;}).observe(document.body,{attributes:true,attributeFilter:['class']});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(refit);new MutationObserver(fit).observe(document.body,{attributes:true,attributeFilter:['class']});addEventListener('resize',fit);})();
+</script>
+<style>
+#tipBox{position:fixed;z-index:9999;pointer-events:none;background:#f3f1ec;color:#222;border:1px solid #c9c4b8;border-radius:7px;padding:5px 9px;font:500 13px 'Noto Sans KR',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.15);max-width:340px;white-space:normal;line-height:1.4;display:none}
+#pParts .tipT{font:700 13px 'Noto Sans KR';width:30px;height:28px;padding:0;border-radius:7px;border:1.5px solid #8a8378;background:#fff;color:#8a8378;cursor:pointer;margin-left:6px;opacity:.6}
+#pParts .tipT.on{background:#8a8378;color:#fff;opacity:1}
+</style>
+<script>/* 설명 풍선: 마우스를 올리면 바로 보이게 (브라우저 기본 풍선은 2~3초 늦게 뜸) · 켜기/끄기 */
+(function(){
+let ON=true;try{ON=localStorage.getItem('hymn_tips')!=='0';}catch(e){}
+const box=document.createElement('div');box.id='tipBox';document.body.appendChild(box);
+let cur=null;
+const hide=()=>{box.style.display='none';cur=null;};
+const show=el=>{const t=el.getAttribute('data-tip');if(!ON||!t){hide();return;}
+  cur=el;box.textContent=t;box.style.display='block';
+  const r=el.getBoundingClientRect(),bw=box.offsetWidth,bh=box.offsetHeight;
+  let x=r.left+r.width/2-bw/2,y=r.bottom+6;
+  if(y+bh>innerHeight-4)y=r.top-bh-6;
+  x=Math.max(4,Math.min(innerWidth-bw-4,x));box.style.left=x+'px';box.style.top=y+'px';};
+document.addEventListener('mouseover',e=>{
+  const el=e.target.closest&&e.target.closest('[title],[data-tip]');if(!el){hide();return;}
+  const t=el.getAttribute('title');if(t){el.setAttribute('data-tip',t);el.removeAttribute('title');}   // 기본 풍선은 끄고 이 풍선으로
+  if(el!==cur)show(el);},true);
+document.addEventListener('mouseout',e=>{if(cur&&(!e.relatedTarget||!cur.contains(e.relatedTarget)))hide();},true);
+['mousedown','scroll','keydown'].forEach(ev=>addEventListener(ev,hide,true));
+window.tipToggle=b=>{ON=!ON;try{localStorage.setItem('hymn_tips',ON?'1':'0');}catch(e){}hide();if(b)b.classList.toggle('on',ON);};
+window.tipOn=()=>ON;
+})();
 </script>
 </body>
 </html>
