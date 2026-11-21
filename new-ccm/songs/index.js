@@ -7,5 +7,4 @@ window.SONG_LIST = [
   { n: 5, title: '꽃들도', key: 'F', tune: '우치코시 츠요시' },
   { n: 6, title: '원하고 바라고 기도합니다', key: 'D', tune: '민호기' },
   { n: 7, title: '행복', key: 'Eb', tune: '손경민' },
-  { n: 8, title: '감사', key: 'C', tune: '손경민' },
 ];
