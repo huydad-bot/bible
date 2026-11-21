@@ -265,6 +265,7 @@ body{transition:background-color .25s}
 <div class="wrap">
   <a class="back" id="back" href="list.html">← CCM 목록</a>
   <header>
+    <div id="modeTag">✎ 편집/설정용 화면</div>
     <div class="num" id="hNum"></div>
     <div class="ttl">
       <h1 id="hTitle"></h1>
@@ -2906,6 +2907,15 @@ addEventListener('resize',()=>{clearTimeout(window._curtT);window._curtT=setTime
 <style>/* 연주 화면: 악보를 다시 그릴 때 브라우저가 스크롤 위치를 저절로 옮기지 않게 (흔들림 방지) */
 html,body{overflow-anchor:none}
 body.playing #score,body.playing #score.fading{opacity:1!important;transition:none!important}
+</style>
+<style>/* 편집·설정 화면 표시 (연주 화면·인쇄에서는 숨김) */
+header{position:relative}
+#modeTag{position:absolute;top:2px;right:0;z-index:2;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;
+  background:#d9622b;color:#fff;font:700 15px "Noto Sans KR",sans-serif;letter-spacing:.02em;box-shadow:0 2px 8px rgba(217,98,43,.35);pointer-events:none;white-space:nowrap}
+header .ttl{padding-right:200px}
+@media (max-width:700px){#modeTag{font-size:12px;padding:4px 10px}header .ttl{padding-right:130px}}
+body.playing #modeTag{display:none}
+@media print{#modeTag{display:none!important}}
 </style>
 </body>
 </html>
