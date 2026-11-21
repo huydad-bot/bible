@@ -2608,7 +2608,11 @@ const MSG=!T&&window.top!==window;let msgFS=false;
 const can=T?T.can:MSG?true:!!(el.requestFullscreen||el.webkitRequestFullscreen)&&!navigator.standalone;if(!can)return;
 const cur=()=>T?T.is():MSG?msgFS:!!(d.fullscreenElement||d.webkitFullscreenElement);
 const b=d.createElement('button');b.className='setbtn';b.id='fsBtn';b.title='주소창·탭을 숨기고 프로그램 화면만 크게 (해제: Esc, iPad는 아래로 쓸기)';
-const lab=()=>{b.textContent=cur()?'⤢ 해제':'⛶ 전체';b.title=cur()?'전체화면 끄기':'전체화면';el.classList.toggle('fs',cur());};lab();
+const b2=d.createElement('button');b2.type='button';b2.id='pFs';
+{const pa=d.getElementById('pAcc'),lb=pa&&pa.closest('label');if(lb)lb.after(b2);}
+b2.onclick=()=>b.onclick();
+const lab=()=>{const on=cur();b.textContent=on?'⤢ 해제':'⛶ 전체';b.title=on?'전체화면 끄기':'전체화면';el.classList.toggle('fs',on);
+  b2.textContent=on?'⤢ 전체':'⛶ 전체';b2.title=on?'전체화면 끄기 (Esc)':'전체화면 켜기';b2.classList.toggle('on',on);};lab();
 b.onclick=()=>{if(T){T.toggle();return;}if(MSG){try{parent.postMessage({ccmFS:'toggle'},'*');}catch(e){}return;}try{if(cur())(d.exitFullscreen||d.webkitExitFullscreen).call(d);else{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}}catch(e){}};
 window.addEventListener('appfs',lab);window.addEventListener('message',e=>{if(e.data&&typeof e.data.ccmFSstate==='boolean'){msgFS=e.data.ccmFSstate;lab();}});if(MSG)try{parent.postMessage({ccmFS:'ask'},'*');}catch(e){}d.addEventListener('fullscreenchange',lab);d.addEventListener('webkitfullscreenchange',lab);
 const h=d.getElementById('helpBtn');hb.insertBefore(b,h||null);
@@ -2889,5 +2893,9 @@ btn.onclick=()=>{if($('fontMenu')){close();return;}
   apply();setTimeout(()=>document.addEventListener('pointerdown',out,true),0);};
 addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 })();</script>
+<style>/* 연주 화면: 반주 음량 다음 전체화면 켜기/끄기 */
+#pFs{height:32px;padding:0 9px;border:1px solid #ddd3c3;border-radius:8px;background:#fff;color:var(--ink);font:600 13px "Noto Sans KR";cursor:pointer;white-space:nowrap;flex:0 0 auto}
+#pFs.on{background:#2f6f4f;border-color:#2f6f4f;color:#fff}
+</style>
 </body>
 </html>
