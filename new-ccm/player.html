@@ -2074,7 +2074,7 @@ function followFlow(L,p){
 }
 function pageOf(li){if(CURPAGE&&li>=CURPAGE[0]&&li<=CURPAGE[1])return CURPAGE;const P=PAGES||buildPages();return P.find(([a,b])=>li>=a&&li<=b)||[li,li];}
 function pageStart(li){return pageOf(li)[0];}
-function setCurtain(li){                         // 페이지 아래로 잘려 보이는 줄을 가림
+function setCurtain(li){setCurtain.li=li;                         // 페이지 아래로 잘려 보이는 줄을 가림
   const c=$('curtain');if(!c)return;
   if(!document.body.classList.contains('playing')||li==null){c.style.display='none';return;}
   const last=lineBox(pageOf(li)[1]),card=document.querySelector('.card').getBoundingClientRect();
@@ -2897,5 +2897,12 @@ addEventListener('keydown',e=>{if(e.key==='Escape')close();});
 #pFs{height:32px;padding:0 9px;border:1px solid #ddd3c3;border-radius:8px;background:#fff;color:var(--ink);font:600 13px "Noto Sans KR";cursor:pointer;white-space:nowrap;flex:0 0 auto}
 #pFs.on{background:#2f6f4f;border-color:#2f6f4f;color:#fff}
 </style>
+<script>/* 창 크기가 바뀌면(전체화면 켜기/끄기 등) 멈춘 상태에서도 악보 크기·페이지·가림막을 새 화면에 다시 맞춤 */
+addEventListener('resize',()=>{clearTimeout(window._curtT);window._curtT=setTimeout(()=>{
+  if(!document.body.classList.contains('playing'))return;
+  try{if(!playing)fitTwoLines();PAGES=null;CURPAGE=null;curLine=-1;
+    const li=setCurtain.li;if(li!=null){followLine(li);setTimeout(()=>setCurtain(li),200);}}catch(e){}
+},350);});
+</script>
 </body>
 </html>
