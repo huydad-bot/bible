@@ -2083,12 +2083,11 @@ function setCurtain(li){setCurtain.li=li;                         // 페이지 �
   c.style.top=Math.max(0,Math.min(window.innerHeight-TBH(),last.bot+6))+'px';
 }
 function pageFade(y,li){
-  const sc=$('score'),tok=++fadeTok;
-  sc.classList.add('fading');                                         // 0.12초 사라짐
-  setTimeout(()=>{if(tok!==fadeTok)return;
-    window.scrollTo({top:y,behavior:'auto'});setCurtain(li);
-    requestAnimationFrame(()=>{if(tok===fadeTok)sc.classList.remove('fading');});   // 0.18초 나타남
-  },120);
+  /* 깜빡임 없이 한 화면(프레임)에서 바로 바꿈: 스크롤·가림막을 같은 순간에 옮기고, 이미 그 자리면 움직이지 않음 */
+  ++fadeTok;$('score').classList.remove('fading');
+  y=Math.max(0,Math.round(y));
+  if(Math.abs(window.scrollY-y)>=1)window.scrollTo({top:y,behavior:'instant'});
+  setCurtain(li);
 }
 /* 전주 끝 카운트 (4·3·2·1) — 1절 첫 음 직전 4박 */
 const COUNT_N=4;let lastCount=0;
@@ -2903,6 +2902,10 @@ addEventListener('resize',()=>{clearTimeout(window._curtT);window._curtT=setTime
 <style>/* 연주 화면: 반주 음량 다음 전체화면 켜기/끄기 */
 #pFs{height:32px;padding:0 9px;border:1px solid #ddd3c3;border-radius:8px;background:#fff;color:var(--ink);font:600 13px "Noto Sans KR";cursor:pointer;white-space:nowrap;flex:0 0 auto}
 #pFs.on{background:#2f6f4f;border-color:#2f6f4f;color:#fff}
+</style>
+<style>/* 연주 화면: 악보를 다시 그릴 때 브라우저가 스크롤 위치를 저절로 옮기지 않게 (흔들림 방지) */
+html,body{overflow-anchor:none}
+body.playing #score,body.playing #score.fading{opacity:1!important;transition:none!important}
 </style>
 </body>
 </html>
