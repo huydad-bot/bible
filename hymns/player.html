@@ -1987,7 +1987,7 @@ function followFlow(L,p){
 }
 function pageOf(li){if(CURPAGE&&li>=CURPAGE[0]&&li<=CURPAGE[1])return CURPAGE;const P=PAGES||buildPages();return P.find(([a,b])=>li>=a&&li<=b)||[li,li];}
 function pageStart(li){return pageOf(li)[0];}
-function setCurtain(li){                         // 페이지 아래로 잘려 보이는 줄을 가림
+function setCurtain(li){setCurtain.li=li;                         // 페이지 아래로 잘려 보이는 줄을 가림
   const c=$('curtain');if(!c)return;
   if(!document.body.classList.contains('playing')||li==null){c.style.display='none';return;}
   const last=lineBox(pageOf(li)[1]),card=document.querySelector('.card').getBoundingClientRect();
@@ -3025,5 +3025,12 @@ btn.onclick=()=>{
 #pFs.on{background:#2f6f4f;border-color:#2f6f4f;color:#fff}
 body[data-hc="2"] #pFs,body[data-hc="3"] #pFs{padding:0 6px;font-size:12px}
 </style>
+<script>/* 창 크기가 바뀌면(전체화면 켜기/끄기 등) 멈춘 상태에서도 악보 크기·페이지·가림막을 새 화면에 다시 맞춤 */
+addEventListener('resize',()=>{clearTimeout(window._curtT);window._curtT=setTimeout(()=>{
+  if(!document.body.classList.contains('playing'))return;
+  try{if(!playing)fitTwoLines();PAGES=null;CURPAGE=null;curLine=-1;
+    const li=setCurtain.li;if(li!=null){followLine(li);setTimeout(()=>setCurtain(li),200);}}catch(e){}
+},350);});
+</script>
 </body>
 </html>
