@@ -72,4 +72,7 @@ window.SONG_LIST = [
   { n: 479, title: '내가 주인 삼은',       key: 'G', tune: '전승연' },
   { n: 492, title: '모든 열방 주 볼 때까지', key: 'G', tune: '고형원' },
   { n: 500, title: '물이 바다 덮음 같이',   key: 'G', tune: '고형원' },
+  { n: 506, title: '보혈을 지나',            key: 'G', tune: '김도훈' },
+  { n: 513, title: '사랑합니다 나의 예수님', key: 'G', tune: '김성수 & 박재윤' },
+  { n: 516, title: '새롭게 하소서',          key: 'G', tune: '이종용' },
 ];
