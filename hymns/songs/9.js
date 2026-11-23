@@ -23,7 +23,6 @@ registerSong({
  ],
  "fermatas": [
   11,
-  21,
   23
  ],
  "melisma": [
