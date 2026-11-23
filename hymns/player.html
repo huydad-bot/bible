@@ -339,7 +339,7 @@ body{transition:background-color .25s}
         <label id="fermBox" title="늘임표(𝄐)가 붙은 음을 몇 배로 늘여 연주할지"><i class="dot"></i>늘임표<span class="fermi">(<span>𝄐</span>)</span> <select autocomplete="off" id="ferm">
           <option value="1">늘이지 않음</option><option value="1.5">1.5배</option><option value="2" selected>2배</option><option value="3">3배</option></select></label>
         <label title="▶ 시작을 누르면 본 찬송 앞에 연주할 전주"><i class="dot"></i>전주 <select autocomplete="off" id="intro">
-          <option value="last" title="악보 마지막 단 전체 (아멘 제외)" selected>마지막 단</option><option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디">끝4마디</option>
+          <option value="last" title="악보 마지막 단 전체 (아멘 제외) · 6마디가 안 되면 끝 6마디" selected>마지막 단</option><option value="fl" title="처음 2마디 + 마지막 2마디">앞2+뒤2</option><option value="l4" title="마지막 4마디">끝4마디</option>
           <option value="ref">후렴</option><option value="none">없음</option></select>
           <input id="rit" type="checkbox" title="전주 마지막 마디를 점점 느리게 (리타르단도)"><span class="rit" title="전주 마지막 마디를 점점 느리게 (리타르단도)">rit.</span></label>
         <label><i class="dot"></i>재생 <select autocomplete="off" id="verses"></select></label>
@@ -1310,10 +1310,10 @@ function noteOn(c,ins,v,dest,lfo,midi,t0,dur,vel=1){
 const INTRO_DEFS=Object.assign({
   fl:[[0,2*BPB],[AMEN_AT-2*BPB,AMEN_AT]],     // 처음 2마디 + 마지막 2마디 (아멘 제외)
   l4:[[AMEN_AT-4*BPB,AMEN_AT]],               // 마지막 4마디 (아멘 제외)
-  last:(()=>{                                 // 마지막 단 전체 (아멘 제외) — 너무 짧으면(2마디 미만) 그 앞 단부터
+  last:(()=>{                                 // 마지막 단 전체 (아멘 제외) — 6마디가 안 되면 끝 6마디
     const lb=LINE_BREAKS.filter(x=>x<AMEN_AT-1e-6).sort((a,b)=>a-b);
     let st=lb.length?lb[lb.length-1]:0;
-    if(AMEN_AT-st<2*BPB-1e-6&&lb.length>1)st=lb[lb.length-2];
+    if(AMEN_AT-st<6*BPB-1e-6)st=Math.max(0,AMEN_AT-6*BPB-PICKUP);   // 6마디가 안 되면 끝에서 6마디(못갖춘마디 포함)
     return [[st,AMEN_AT]];})(),
   ref:HAS_REFRAIN?[[REFRAIN_AT,AMEN_AT]]:[],  // 후렴 전체 (아멘 제외)
   none:[]
