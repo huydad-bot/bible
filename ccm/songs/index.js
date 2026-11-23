@@ -75,4 +75,8 @@ window.SONG_LIST = [
   { n: 506, title: '보혈을 지나',            key: 'G', tune: '김도훈' },
   { n: 513, title: '사랑합니다 나의 예수님', key: 'G', tune: '김성수 & 박재윤' },
   { n: 516, title: '새롭게 하소서',          key: 'G', tune: '이종용' },
+  { n: 522, title: '송축해 내 영혼',          key: 'G', tune: 'Matt Redman & Jonas Myrin' },
+  { n: 527, title: '십자가 그 사랑',          key: 'G', tune: 'Stephen Hah' },
+  { n: 534, title: '아침에 주의 인자하심을', key: 'G', tune: '이유정' },
+  { n: 538, title: '여호와 나의 목자',        key: 'G', tune: '김영기' },
 ];
