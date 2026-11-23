@@ -9,7 +9,6 @@ registerSong({
   tempo: 100,
   tempoText: '',
   verses: 3,
-  doubleBars: [60],
   lineBreaks: [16, 32, 48],
   melisma: [13, 29, 61],
   chords: {0:'A',2:'E',4:'D',6:'A',10:'Bm/D',12:'A/E',14:'A',18:'E',20:'D',22:'A',26:'Bm/D',28:'A/E',30:'A',38:'E',40:'A',42:'E7',44:'Bm',46:'E',48:'A',52:'D',54:'E/G#',56:'A',58:'Bm/D',60:'A/E',62:'A'},
