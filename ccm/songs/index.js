@@ -79,4 +79,10 @@ window.SONG_LIST = [
   { n: 527, title: '십자가 그 사랑',          key: 'G', tune: 'Stephen Hah' },
   { n: 534, title: '아침에 주의 인자하심을', key: 'G', tune: '이유정' },
   { n: 538, title: '여호와 나의 목자',        key: 'G', tune: '김영기' },
+  { n: 547, title: '예수 이름 높이세', key: 'G', tune: '최덕신' },
+  { n: 551, title: '예수님 품으로', key: 'G', tune: '조용기 & 김보훈' },
+  { n: 554, title: '예수 인도하셨네', key: 'G', tune: 'John W. Peterson' },
+  { n: 556, title: '예수의 이름으로', key: 'G', tune: 'Chris Bowater' },
+  { n: 569, title: '우리 함께 모여', key: 'G', tune: 'Gordon Jensen & Wayne Hilton' },
+  { n: 572, title: '이 믿음 더욱 굳세라', key: 'G', tune: 'Don Besig & Nancy Price' },
 ];
