@@ -735,16 +735,30 @@ function lyricLinesFor(i){
     out+=wLine(line.flatMap(n=>sylFor(n,sy)))+'\n';
   }else{
     const multi=VKEYS.filter(k=>lyrSy(k).length).length>1;
-    const syR=sylls(LYR.r);let firstV=true;
+    const syR=sylls(LYR.r);let firstV=true;const rows=[];
     VKEYS.forEach((k,vi)=>{
       const sy=lyrSy(k);if(!sy.length)return;
       const top=firstV;firstV=false;                          // 한 줄 안에서 후렴이 시작되면 후렴 가사는 첫 줄에만
       const arr=line.flatMap(n=>n.t>=REFRAIN_AT?(top?sylFor(n,syR):sylFor(n,[]).map(()=>undefined)):sylFor(n,sy));
       for(let i=0;i<arr.length&&arr[i]==='_';i++)arr[i]='\u200b';   // 줄 첫머리의 '_'(가사 없는 음)는 빈칸으로
       if(multi)for(let i=0;i<arr.length;i++)if(arr[i]==='_')arr[i]='\u200b';   // 여러 절: '_'는 abcjs 가 다른 절 글자를 그 줄로 끌어올리므로 빈 글자로 자리 유지
-      if(multi&&SYL_IDX.get(line[0])===0&&arr[0]!==undefined)arr[0]=(vi+1)+'.~'+arr[0];   // 가사가 두 절 이상일 때만 절 번호
-      out+=wLine(arr)+'\n';
+      rows.push({vi,arr});
     });
+    const has=a=>a.some(x=>x!==undefined&&x!=='_'&&x!=='\u200b'&&x!=='');
+    const live=rows.filter(r=>has(r.arr));
+    if(multi&&live.length===1&&rows.length>1){                 // 여러 절 곡에서 한 줄만 가사가 있는 단(공통 가사·후렴구): 절 번호 없이 가운데 줄에
+      const mid=(rows.length-1)/2,blank=live[0].arr.map(()=>'\u200b');
+      for(let r=0;r<Math.floor(mid);r++)out+=wLine(blank)+'\n';
+      out+=wLine(live[0].arr)+'\n';
+      for(let r=Math.floor(mid)+1;r<rows.length;r++)out+=wLine(blank.map((x,k)=>k?x:'\u2219'))+'\n';   // 아래 빈 줄도 채워 다른 단과 같은 높이 확보
+      if(mid%1)SHARED_HALF.add(i);                             // 절 수가 짝수면 반 줄 더 내림(렌더 뒤 위치 조정)
+    }else{
+      const num=multi&&!NUM_DONE&&live.length>1;if(num)NUM_DONE=true;   // 절 번호는 여러 절 가사가 처음 함께 나오는 단에만
+      rows.forEach(({vi,arr})=>{
+        if(num){const j=arr.findIndex(x=>x!==undefined&&x!=='\u200b');if(j>=0)arr[j]=(vi+1)+'.~'+arr[j];}
+        out+=wLine(arr)+'\n';
+      });
+    }
   }
   return out;
 }
@@ -769,7 +783,9 @@ function echoLineFor(i){
   const arr=line.filter(n=>n.p!=='r').flatMap(n=>{const x=echoSyl(n,sy);const ex=splitDur(n.dur).length-1;return [x].concat(Array(ex).fill(x===undefined?undefined:'_'));});
   return 'w: '+arr.map(x=>x===undefined?'\u200b':x).join(' ')+'\n';   // 빈칸은 폭 없는 글자로(맨 앞 * 가 무시되는 문제 회피)
 }
+let NUM_DONE=false;const SHARED_HALF=new Set();
 function buildABC(){
+  NUM_DONE=false;SHARED_HALF.clear();
   let abc=`X:1\nM:${SONG.meter||'4/4'}\nL:1/16\nK:${SONG.key}\n%%score S\n`+
     `V:S clef=treble\n`;
   const L=Object.fromEntries(VOICES.map(v=>[v.k,abcLines(v)]));
@@ -832,9 +848,19 @@ function renderScore(){
     }));
   });
   console.log('mapped beats',clock);
+  sharedLyrShift();
   $('score').classList.toggle('show-acc',showAcc);
 }
 
+/* 공통 가사 단(한 줄만 가사)을 절 수가 짝수일 때 반 줄 내려 가운데에 오게 함 */
+function sharedLyrShift(){
+  document.querySelectorAll('#score svg text.abcjs-lyric tspan').forEach(t=>{if(t.textContent==='\u2219')t.setAttribute('fill-opacity','0');});
+  if(!SHARED_HALF.size)return;
+  let gap=0;const ts=document.querySelector('#score svg text.abcjs-lyric tspan:nth-child(2)');   // 줄 간격 = 두 번째 줄의 dy
+  if(ts){const dy=ts.getAttribute('dy')||'';gap=parseFloat(dy)||0;if(/em$/.test(dy))gap*=parseFloat(getComputedStyle(ts).fontSize)||16;}
+  if(!gap||gap>60)gap=24;
+  SHARED_HALF.forEach(i=>document.querySelectorAll('#score svg .abcjs-l'+i+' text.abcjs-lyric').forEach(e=>e.setAttribute('transform','translate(0,'+(gap/2)+')')));
+}
 /* ===== 오디오 ===== */
 /* 연주 순서: SONG.form = [[시작박,끝박,절(0부터),'표시'],…] (되돌이표·D.C.·D.S. 곡) — 없으면 선택한 절 수만큼 전곡 반복 */
 let FORM=[],PERF_LEN=0;
