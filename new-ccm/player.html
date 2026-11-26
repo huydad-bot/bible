@@ -2358,7 +2358,7 @@ $('lyrHtml').onclick=async()=>{
   {const h=doc.querySelector('#hPlay');if(h){h.classList.remove('on');h.textContent='▶ 시작';}}
   doc.querySelector('#pos').textContent='▶ 시작을 누르세요';
   {doc.querySelectorAll('.navbtn').forEach(x=>x.remove());const x=doc.querySelector('#plBtn');if(x)x.remove();const d=doc.querySelector('#plDlg');if(d)d.remove();const n=doc.querySelector('#plNext');if(n)n.remove();}
-  doc.querySelector('#lyrBox').remove();{const eb=doc.querySelector('#editBar');if(eb)eb.remove();const ebt=doc.querySelector('#editBtn');if(ebt)ebt.remove();}{const lb=doc.querySelector('#lyrBtn');if(lb)lb.remove();}doc.body.classList.remove('lyrOpen');   // 저장본에는 가사 입력창을 넣지 않음
+  doc.querySelector('#lyrBox').remove();{const eb=doc.querySelector('#editBar');if(eb)eb.remove();const ebt=doc.querySelector('#editBtn');if(ebt)ebt.remove();}{const lb=doc.querySelector('#lyrBtn');if(lb)lb.remove();}doc.querySelector('body').classList.remove('lyrOpen');   // 저장본에는 가사 입력창을 넣지 않음
   // 단독 파일: 곡 데이터를 파일 안에 넣고, 악보 라이브러리는 인터넷(CDN)에서 불러옴
   doc.querySelector('#loader').textContent='window.SONG_ID='+JSON.stringify(String(SONG.n))+';window.SONG='+JSON.stringify(SONG).replace(/</g,'\\u003c')+';';
   doc.querySelector('#abcjsLib').setAttribute('src','https://cdn.jsdelivr.net/npm/abcjs@6.7.2/dist/abcjs-basic-min.js');
