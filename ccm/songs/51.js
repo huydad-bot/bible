@@ -12,6 +12,7 @@ registerSong({
   tempoText: '',
   verses: 1,
   lineBreaks: [16, 32, 48, 64, 80, 96, 112],
+  intro: { l4: [[48, 64]], fl: [[0, 8], [56, 64]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   doubleBars: [32],
   barText: {64:'|]'},
   marks: {32:'!segno!', 61:'"_Fine"', 125:'"_D.S."'},

@@ -4,6 +4,7 @@
 registerSong({ n: 375, title: '나의 모습 나의 소유', composer: 'Claire Cloninger & Don Moen', key: 'F', meter: '4/4', pickup: 0, tempo: 80, tempoText: '', verses: 2,
   refrainAt: 34,
   lineBreaks: [16, 34, 46, 62, 82, 94, 106],
+  intro: { l4: [[62, 82]], fl: [[0, 8], [74, 82]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   bars: [4, 8, 12, 16, 20, 24, 28, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118],
   barText: { 74:'|1', 82:':|2', 86:'||' },
   marks: { 34:'!segno!', 78:'"_Fine"', 114:'"_D.S."' },

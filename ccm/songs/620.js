@@ -1,6 +1,7 @@
 /* CCM 620 — 찬송의 옷을 주셨네 (내 손을 주께 높이 듭니다) — 멜로디 1성부 — 끝에서 D.S.(𝄋) → Fine */
 registerSong({ n: 620, title: '찬송의 옷을 주셨네', tune: '내 손을 주께 높이 듭니다', composer: '박미래 & 이정승', key: 'G', meter: '4/4', pickup: .5, tempo: 80, tempoText: '', verses: 1,
   lineBreaks: [16, 32.5, 48.5],
+  intro: { l4: [[16, 32.5]], fl: [[0, 8.5], [24.5, 32.5]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   barText: { .5:'||', 32.5:'|]' },
   marks: { .5:'!segno!', 28.5:'!fine!', 64:'!D.S.!' },
   form: [[0,64.5,0,''],[.5,32.5,0,'D.S.']],

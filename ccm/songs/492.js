@@ -1,6 +1,7 @@
 /* CCM 492 — 모든 열방 주 볼 때까지 (내 눈 주의 영광을 보네) — 멜로디 1성부 — 𝄋 ~ Fine, 중간부 B♭조(조바꿈 표시) → D.S. */
 registerSong({ n: 492, title: '모든 열방 주 볼 때까지', tune: '내 눈 주의 영광을 보네', composer: '고형원', key: 'G', meter: '4/4', pickup: .5, tempo: 80, tempoText: '', verses: 1,
   lineBreaks: [16.5, 32, 48, 64.5, 79, 96, 107.5, 119.5],
+  intro: { l4: [[79, 96]], fl: [[0, 8.5], [88, 96]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   doubleBars: [64.5, 96.5, 124.5],
   barText: { 96:'|]' },
   keyChanges: { 96.5:'Bb', 124.5:'G' },

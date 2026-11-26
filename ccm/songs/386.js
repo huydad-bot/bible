@@ -3,6 +3,7 @@
 registerSong({ n: 386, title: '부르신 곳에서', composer: '김준영 & 송은정', key: 'F', meter: '4/4', pickup: 0, tempo: 80, tempoText: '', verses: 2,
   refrainAt: 32,
   lineBreaks: [16, 32, 48, 64, 80],
+  intro: { l4: [[48, 64]], fl: [[0, 8], [56, 64]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   barText: { 32:'||', 64:'|]' },
   marks: { 32:'!segno!', 63.5:'"_Fine"', 95.5:'"_D.S."' },
   form: [[0,32,0,'1절'],[0,32,1,'2절'],[32,96,1,'후렴'],[32,63.5,1,'D.S. (Fine)']],

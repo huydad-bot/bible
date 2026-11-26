@@ -1,9 +1,10 @@
 /* CCM 597 — 주님과 같이 (There is none like You) — 멜로디 1성부 — 끝에서 D.C. → Fine */
 registerSong({ n: 597, title: '주님과 같이', tune: 'There is none like You', composer: 'Lenny LeBlanc', key: 'G', meter: '4/4', pickup: 0, tempo: 72, tempoText: '', verses: 1,
   lineBreaks: [16, 31.5, 48],
+  intro: { l4: [[16, 31.5]], fl: [[0, 8], [23.5, 31.5]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   bars: [4, 8, 12, 16, 20, 24, 28, 31.5, 32, 36, 40, 44, 48, 52, 56, 60],
   barText: { 31.5:'|]' },
-  marks: { 29.5:'!fine!', 60:'!D.C.!' },
+  marks: { 29:'!fine!', 60:'!D.C.!' },
   form: [[0,64,0,''],[0,31.5,0,'D.C.']],
   melisma: [3.5, 4, 5, 10, 14, 18, 22, 24, 27.5, 27.75, 28, 29, 34, 37.75, 42, 43, 43.75, 50, 52, 53, 53.75],
   chords: { 0:'G', 2:'D/F#', 3:'C/E', 5:'G/D', 9:'C', 10.5:'G/B', 12:'Am', 14:'D7', 17:'G', 18.5:'D/F#', 20:'G/F', 21.5:'C/E', 24:'G/D', 26:'Dsus4', 28:'G', 32:'CM7', 33.5:'C/D', 36:'G', 38:'Em', 40:'Am', 42:'D/F#', 44:'G', 48:'CM7', 50:'C/D', 52:'G', 54:'Em', 57:'Am', 58:'C/G', 59:'D', 60:'D/F#' },

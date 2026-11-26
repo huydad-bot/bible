@@ -1,6 +1,7 @@
 /* CCM 381 — 들풀에 깃든 사랑 (오늘 피었다 지는) — 멜로디 1성부. 연주 순서: 처음~끝 → D.C. → Fine(2단 끝) */
 registerSong({ n: 381, title: '들풀에 깃든 사랑', composer: '노진규', key: 'F', meter: '4/4', pickup: 0, tempo: 80, tempoText: '', verses: 1,
   lineBreaks: [16, 32, 48, 63, 79],
+  intro: { l4: [[16, 32]], fl: [[0, 8], [24, 32]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   barText: { 32:'||' },
   marks: { 28:'"_Fine"', 92:'"_D.C."' },
   form: [[0,96,0,''],[0,32,0,'D.C. (Fine까지)']],

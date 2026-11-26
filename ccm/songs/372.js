@@ -2,6 +2,7 @@
    연주 순서(form): 절마다 처음~끝 → D.S.(폭풍구름/주님께서)~Fine */
 registerSong({ n: 372, title: '나 주의 믿음 갖고', composer: 'John W. Peterson', key: 'F', meter: '4/4', pickup: 3, tempo: 80, tempoText: '', verses: 2,
   lineBreaks: [16, 32, 48, 64, 80],
+  intro: { l4: [[48, 64]], fl: [[0, 11], [56, 64]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   barText: { 64:'|]' },
   marks: { 32:'!segno!', 63:'"_Fine"', 95:'"_D.S. al Fine"' },
   form: [[0,96,0,'1절'],[32,64,0,'D.S. (Fine까지)'],[0,96,1,'2절'],[32,64,1,'D.S. (Fine까지)']],

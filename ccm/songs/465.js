@@ -1,6 +1,7 @@
 /* CCM 465 — 나의 가는 길 (God will make a way) — 멜로디 1성부 — 되돌이(1·2번 괄호) + 브리지 → D.C. Fine */
 registerSong({ n: 465, title: '나의 가는 길', composer: 'Don Moen', key: 'G', meter: '2/2', pickup: 0, tempo: 80, tempoText: '', verses: 1,
   lineBreaks: [16, 32, 48, 64, 80, 96, 112, 128],
+  intro: { l4: [[48, 72]], fl: [[0, 8], [64, 72]] },   // 전주 = Fine 있는 줄 / 앞2+Fine 앞 2마디
   barText: { 72:'|1', 76:':|2', 80:'||' },
   marks: { 68:'"_Fine"', 142:'"_D.C."' },
   form: [[0,76,0,''],[0,72,0,'반복'],[76,144,0,'브리지'],[0,72,0,'D.C. (Fine)']],
