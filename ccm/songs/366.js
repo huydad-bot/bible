@@ -1,7 +1,7 @@
 /* CCM 366 — 거룩하신 하나님 (Give thanks) — 멜로디 1성부.
    앞부분 되돌이(가사 1·2줄)는 풀어서 적고, 뒷부분 되돌이는 form으로 반복 */
 registerSong({ n: 366, title: '거룩하신 하나님', composer: 'Henry Smith', key: 'F', meter: '4/4', pickup: 1, tempo: 80, tempoText: '', verses: 1,
-  lineBreaks: [17, 33, 49, 65, 81, 97],
+  lineBreaks: [16, 33, 48, 65, 80, 97],
   barText: { 33:'(반복)', 65:'|:', 93:'|1', 97:':|2' },
   form: [[0,97,0,''],[65,93,0,'반복'],[97,108,0,'끝']],
   melisma: [7, 15, 39, 47, 92.5, 105],

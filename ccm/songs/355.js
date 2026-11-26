@@ -1,7 +1,7 @@
 /* CCM 355 — 흙으로 사람을 — 멜로디 1성부, 2절(앞 3단) + 공통 후반 */
 registerSong({ n: 355, title: '흙으로 사람을', composer: '', key: 'E', meter: '3/4', pickup: 1, tempo: 80, tempoText: '', verses: 2,
   refrainAt: 48,
-  lineBreaks: [16, 31, 48, 64, 79],
+  lineBreaks: [15, 30, 48, 63, 78],
   melisma: [22, 46, 70, 94],
   verseMelisma: { 2: [15, 25.5, 34.75] },
   chords: { 1:'E', 4:'G#m', 7:'A', 10:'E', 16:'F#', 19:'B', 22:'B7', 25:'E', 28:'G#m', 31:'A', 34:'E', 40:'B7', 43:'E', 49:'E', 52:'G#m', 55:'A', 58:'E', 64:'F#7', 67:'B7', 73:'E', 76:'G#m', 79:'A', 82:'E', 85:'E', 88:'B7', 91:'E' },
