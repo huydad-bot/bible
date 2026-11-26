@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="ko">
 <head>
+<script>/* 주간/야간 모드: 이 기기에 기억 (app_theme) — 화면이 그려지기 전에 적용해 깜박이지 않게 */
+try{document.documentElement.classList.toggle('dark',localStorage.getItem('app_theme')==='dark');}catch(e){}</script>
+<style>/* 야간 모드: 화면 색을 뒤집어 어둡게 (색상은 그대로 유지) — 악보·가사·버튼 모두 적용, 인쇄는 원래 색 */
+html.dark{filter:invert(.9) hue-rotate(180deg)}
+html.dark body{min-height:100vh}
+html.dark img,html.dark video{filter:invert(1) hue-rotate(180deg)}
+@media print{html.dark{filter:none!important}}
+</style>
 <script>
 /* 연주 화면의 ☰ 목록으로 왔으면(list.html?auto=1) 고른 곡을 바로 연주 */
 const AUTO='&auto=1';   // 곡을 누르면 바로 연주 화면(맨 처음에서 대기)try{if(window.top===window)location.replace("index.html");}catch(e){}</script>
@@ -151,6 +159,18 @@ b.onclick=()=>{let n='';try{n=localStorage.getItem('hymn_last')||'';}catch(e){}
   if(!n){const a=document.querySelector('#list a');if(a)n=new URL(a.href).searchParams.get('n');}
   if(n)location.href='player.html?n='+encodeURIComponent(n)+'&set=1';};
 hb.appendChild(b);
+})();</script>
+<script>/* 주간/야간 전환 버튼 */
+(function(){
+const host=document.querySelector('.lbtns');if(!host||document.getElementById('themeBtn'))return;
+const b=document.createElement('button');b.id='themeBtn';b.className='lb';b.type='button';
+const lab=()=>{const d=document.documentElement.classList.contains('dark');b.textContent=d?'☀ 주간':'🌙 야간';b.title=d?'주간 모드(밝은 화면)로':'야간 모드(어두운 화면)로';};
+b.onclick=()=>{const d=!document.documentElement.classList.contains('dark');document.documentElement.classList.toggle('dark',d);
+  try{localStorage.setItem('app_theme',d?'dark':'light');}catch(e){}
+  try{if(window.top!==window&&top.setTheme)top.setTheme(d);}catch(e){}try{parent.postMessage({appTheme:d},'*');}catch(e){}
+  lab();b.blur();};
+addEventListener('storage',e=>{if(e.key==='app_theme'){document.documentElement.classList.toggle('dark',e.newValue==='dark');lab();}});
+lab();host.prepend(b);
 })();</script>
 </body>
 </html>

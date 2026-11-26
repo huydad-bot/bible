@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="ko">
 <head>
+<script>try{document.documentElement.classList.toggle('dark',localStorage.getItem('app_theme')==='dark');}catch(e){}</script>
+<style>html.dark,html.dark body,html.dark #app{background:#1c1c1e!important}</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -42,6 +44,11 @@ F.addEventListener('load',()=>{let w,d;try{w=F.contentWindow;d=w.document;}catch
   notify();try{w.focus();}catch(e){}
 });
 setInterval(()=>{try{const t=F.contentDocument.title;if(t&&document.title!==t)document.title=t;}catch(e){}},1000);
+</script>
+<script>/* 주간/야간: 안쪽 화면에서 바꾸면 틀 바탕색도 같이 */
+window.setTheme=d=>document.documentElement.classList.toggle('dark',!!d);
+addEventListener('message',e=>{if(e.data&&typeof e.data.appTheme==='boolean')setTheme(e.data.appTheme);});
+addEventListener('storage',e=>{if(e.key==='app_theme')setTheme(e.newValue==='dark');});
 </script>
 </body>
 </html>
