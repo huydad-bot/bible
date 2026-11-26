@@ -747,10 +747,10 @@ function lyricLinesFor(i){
     const has=a=>a.some(x=>x!==undefined&&x!=='_'&&x!=='\u200b'&&x!=='');
     const live=rows.filter(r=>has(r.arr));
     if(multi&&live.length===1&&rows.length>1){                 // 여러 절 곡에서 한 줄만 가사가 있는 단(공통 가사·후렴구): 절 번호 없이 가운데 줄에
-      const mid=(rows.length-1)/2,blank=live[0].arr.map(()=>'\u200b');
+      const mid=(rows.length-1)/2,blank=live[0].arr.map(()=>'\u200b'),mk=Math.max(0,live[0].arr.findIndex(x=>x!==undefined&&x!=='_'&&x!=='\u200b'&&x!==''));   // 표시용 자리 글자는 실제 가사가 있는 첫 음에(붙임줄 끝 음은 abcjs가 가사를 건너뜀)
       for(let r=0;r<Math.floor(mid);r++)out+=wLine(blank)+'\n';
       out+=wLine(live[0].arr)+'\n';
-      for(let r=Math.floor(mid)+1;r<rows.length;r++)out+=wLine(blank.map((x,k)=>k?x:'\u2219'))+'\n';   // 아래 빈 줄도 채워 다른 단과 같은 높이 확보
+      for(let r=Math.floor(mid)+1;r<rows.length;r++)out+=wLine(blank.map((x,k)=>k===mk?'\u2219':x))+'\n';   // 아래 빈 줄도 채워 다른 단과 같은 높이 확보
       if(mid%1)SHARED_HALF.add(i);                             // 절 수가 짝수면 반 줄 더 내림(렌더 뒤 위치 조정)
     }else{
       const num=multi&&!NUM_DONE&&live.length>1;if(num)NUM_DONE=true;   // 절 번호는 여러 절 가사가 처음 함께 나오는 단에만
