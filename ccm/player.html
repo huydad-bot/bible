@@ -314,6 +314,7 @@ body{transition:background-color .25s}
         <label class="inst" title="악보의 멜로디(주선율)를 자동 연주할 악기"><i class="dot"></i>멜로디 악기 <select autocomplete="off" data-k="S"></select></label>
         <label class="keybtn" title="이조 (조 바꾸기)">이조<select autocomplete="off" id="trans"></select></label>
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
+        <label class="accopt" title="여러 절 가사 앞에 1. 2. 3. 절 번호 붙이기">절 번호 <input id="vnChk" type="checkbox"></label>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
         <span class="pinfo" id="pInfo"></span><span class="pnav" id="pNav"><button id="pPrev" title="이전 곡">◀</button><button id="pList" title="곡 목록으로">☰ 곡선택</button><button id="pNext" title="다음 곡">▶</button></span><span class="pctl" id="pCtl"><label title="재생 — 몇 절까지 연주할지 (바꾸면 그 자리부터 새 범위로)">재생<select autocomplete="off" id="pVerses"></select></label><label title="이조 (조 바꾸기) — 바꾸면 그 자리부터 새 조로">이조<select autocomplete="off" id="pTrans"></select></label><label title="템포 (BPM) — 바꾸면 그 자리부터 새 빠르기로">템포<input id="pTempo" type="range" min="40" max="160"><input id="pTempoN" type="number" min="40" max="160" inputmode="numeric"></label><label title="멜로디 음량">멜로디<span class="vw"> 음량</span><input id="pMel" type="range" min="0" max="100"></label><label title="반주(코드) 음량">반주<span class="vw"> 음량</span><input id="pAcc" type="range" min="0" max="100"></label></span>
@@ -411,7 +412,7 @@ const mix=E1('mixRow');if(mix){const tl=mix.querySelector('.tl');if(tl)tl.remove
 // 3) 연주
 const r3=row('▶ 연주','빠르기·전주·엔딩·부를 절·조');
 const vl=lab(E1('verses'));if(vl)vl.childNodes.forEach(n=>{if(n.nodeType===3&&/선택|재생/.test(n.textContent))n.textContent='재생 ';});
-put(r3,lab(E1('tempo')),E1('fermBox'),lab(E1('intro')),lab(E1('ending')),vl,q('.parts .keybtn'),q('.parts .accopt'));
+put(r3,lab(E1('tempo')),E1('fermBox'),lab(E1('intro')),lab(E1('ending')),vl,q('.parts .keybtn'),...document.querySelectorAll('.parts .accopt'));
 // 4) MIDI
 const r4=row('🎹 MIDI','MIDI 악기(유선·블루투스)로 직접 연주');
 const mr=E1('midiRow');if(mr)[...mr.children].forEach(c=>put(r4,c));
@@ -753,7 +754,7 @@ function lyricLinesFor(i){
       for(let r=Math.floor(mid)+1;r<rows.length;r++)out+=wLine(blank.map((x,k)=>k===mk?'\u2219':x))+'\n';   // 아래 빈 줄도 채워 다른 단과 같은 높이 확보
       if(mid%1)SHARED_HALF.add(i);                             // 절 수가 짝수면 반 줄 더 내림(렌더 뒤 위치 조정)
     }else{
-      const num=multi&&!NUM_DONE&&live.length>1;if(num)NUM_DONE=true;   // 절 번호는 여러 절 가사가 처음 함께 나오는 단에만
+      const num=multi&&showVN&&SONG.verseNum!==false&&!NUM_DONE&&live.length>1;   // 절 번호는 설정에서 켤 때만if(num)NUM_DONE=true;   // 절 번호는 여러 절 가사가 처음 함께 나오는 단에만
       rows.forEach(({vi,arr})=>{
         if(num){const j=arr.findIndex(x=>x!==undefined&&x!=='\u200b');if(j>=0)arr[j]=(vi+1)+'.~'+arr[j];}
         out+=wLine(arr)+'\n';
@@ -795,6 +796,7 @@ function buildABC(){
 
 /* ===== 악보 렌더링 & 음표-시간 매핑 ===== */
 let lit=[];
+let showVN=false;try{showVN=localStorage.getItem('ccm_vn')==='1';}catch(e){}   // 절 번호 표시 (기본: 끔)
 let showAcc=false;try{showAcc=(localStorage.getItem('ccm_acc'))==='1';}catch(e){}
 let noteMap=[];               // {k,start,dur,els}
 let elemStart=new Map(),elemVoice=new Map();
@@ -2197,6 +2199,8 @@ $('accChk').onchange=()=>{
   try{localStorage.setItem('ccm_acc',showAcc?'1':'0');}catch(e){}
 };
 $('accChk').checked=showAcc;
+$('vnChk').checked=showVN;
+$('vnChk').onchange=()=>{showVN=$('vnChk').checked;try{localStorage.setItem('ccm_vn',showVN?'1':'0');}catch(e){}renderScore();};
 function restartIfPlaying(){if(playing)start(mode,Math.max(0,curBeat()));}
 Object.entries(INSTR).forEach(([id,o])=>{if(!o.hidden&&!o.bassOnly)$('accIns').add(new Option(o.name,id));});
 Object.entries(INSTR).filter(([id,o])=>o.bassOnly).reverse().forEach(([id,o])=>$('bassIns').add(new Option(o.name,id),$('bassIns').options[0]));
