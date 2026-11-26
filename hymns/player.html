@@ -327,6 +327,7 @@ body{transition:background-color .25s}
         <label class="accopt" title="선택한 파트는 크게, 다른 파트는 작게 들립니다">연습 모드 <input id="practice" type="checkbox"></label>
         <label class="keybtn" title="이조 (조 바꾸기)">이조<select autocomplete="off" id="trans"></select></label>
         <label class="accopt" title="조표에 따라 ♯이 붙는 음표는 붉은색, ♭이 붙는 음표는 푸른색으로 표시 (조표 자체는 검정색 유지)">조표색 적용 <input id="accChk" type="checkbox"></label>
+        <label class="accopt" title="여러 절 가사 앞에 1. 2. 3. 절 번호 붙이기">절 번호 <input id="vnChk" type="checkbox"></label>
         <span class="sp"></span>
         <button class="play" id="play" title="시작 / 정지">▶ 시작</button><button class="play" id="pExit" title="일시정지를 끝내고 처음 화면으로">■ 정지</button>
         <span class="ptitle" id="pTitle"><b id="pNum"></b><span id="pName"></span></span>
@@ -434,7 +435,7 @@ const r4=row('🌬 숨·쉼','회중이 따라 부르기 쉽게 숨 쉴 곳 다�
 put(r4,E1('restBox'),E1('brBox'),E1('vgapBox'));
 // 6) 화면
 const r5=row('👀 화면','연주 화면에서 보이는 가사·악보');
-put(r5,E1('lyrOneBox'),E1('viewBox'),lab(E1('accChk')));
+put(r5,E1('lyrOneBox'),E1('viewBox'),lab(E1('accChk')),lab(E1('vnChk')));
 // 7) MIDI
 const r6=row('🎹 MIDI','MIDI 악기(유선·블루투스)로 직접 연주');
 const mr=E1('midiRow');if(mr)[...mr.children].forEach(c=>put(r6,c));
@@ -843,7 +844,7 @@ function lyricLinesFor(i){
       const arr=line.flatMap(n=>n.t>=REFRAIN_AT?sylFor(n,useRef?rsy:[]):sylFor(n,sy));
       for(let i=0;i<arr.length&&arr[i]==='_';i++)arr[i]='\u200b';   // 줄 첫머리의 '_'(가사 없는 음)는 빈칸으로
       if(multi)for(let i=0;i<arr.length;i++)if(arr[i]==='_')arr[i]='\u200b';   // 여러 절: '_'는 abcjs 가 다른 절 글자를 그 줄로 끌어올리므로 빈 글자로 자리 유지
-      if(multi&&SYL_IDX.get(line[0])===0&&arr[0]!==undefined)arr[0]=(vi+1)+'.~'+arr[0];   // 가사가 두 절 이상일 때만 절 번호
+      if(multi&&showVN&&SYL_IDX.get(line[0])===0&&arr[0]!==undefined)arr[0]=(vi+1)+'.~'+arr[0];   // 가사가 두 절 이상일 때만 절 번호
       out+=wLine(arr)+'\n';
     });
   }
@@ -944,6 +945,7 @@ function buildABC(){
 
 /* ===== 악보 렌더링 & 음표-시간 매핑 ===== */
 let lit=[];
+let showVN=false;try{showVN=localStorage.getItem('hymn_vn')==='1';}catch(e){}   // 절 번호 표시 (기본: 끔)
 let showAcc=false;try{showAcc=(localStorage.getItem('hymn_acc')??localStorage.getItem('hymn143_acc'))==='1';}catch(e){}
 let noteMap=[];               // {k,start,dur,els}
 let elemStart=new Map(),elemVoice=new Map();
@@ -2108,6 +2110,8 @@ $('accChk').onchange=()=>{
   try{localStorage.setItem('hymn_acc',showAcc?'1':'0');}catch(e){}
 };
 $('accChk').checked=showAcc;
+$('vnChk').checked=showVN;
+$('vnChk').onchange=()=>{showVN=$('vnChk').checked;try{localStorage.setItem('hymn_vn',showVN?'1':'0');}catch(e){}renderScore();};
 function restartIfPlaying(){if(playing)start(mode,Math.max(0,curBeat()));}
 function saveTimbre(){try{localStorage.setItem('hymn_timbre',JSON.stringify(TIMBRE));}catch(e){}}
 document.querySelectorAll('#timbre select[data-k]').forEach(sel=>{
