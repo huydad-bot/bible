@@ -10,13 +10,7 @@ registerSong({
  "tempoText": "",
  "verses": 2,
  "refrainAt": 62.5,
- "lineBreaks": [
-  16.5,
-  32.5,
-  48.5,
-  62.5,
-  79.5
- ],
+ "lineBreaks": [16,32,48,62.5,79.5],
  "melisma": [
   77.5,
   83.5,
