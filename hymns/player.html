@@ -2,7 +2,20 @@
 <html lang="ko">
 <head>
 <script>/* 주간/야간 모드: 이 기기에 기억 (app_theme) — 화면이 그려지기 전에 적용해 깜박이지 않게 */
-try{document.documentElement.classList.toggle('dark',localStorage.getItem('app_theme')==='dark');}catch(e){}</script>
+(function(){   /* 주간/야간: 기본은 시각에 따라 자동(07~19시 주간, 그 외 야간). 버튼으로 바꾸면 다음 전환 시각(7시·19시)까지만 유지 */
+const DAY0=7,DAY1=19,K='app_theme_ovr';
+const autoDark=()=>{const h=new Date().getHours();return h<DAY0||h>=DAY1;};
+const nextEdge=()=>{const n=new Date(),t=new Date(n);const h=n.getHours();
+  if(h<DAY0)t.setHours(DAY0,0,0,0);else if(h<DAY1)t.setHours(DAY1,0,0,0);else{t.setDate(t.getDate()+1);t.setHours(DAY0,0,0,0);}return t.getTime();};
+const ovr=()=>{try{const o=JSON.parse(localStorage.getItem(K)||'null');if(o&&Date.now()<o.until)return o;localStorage.removeItem(K);}catch(e){}return null;};
+const cur=()=>{const o=ovr();return o?!!o.d:autoDark();};
+const apply=()=>{const d=cur();document.documentElement.classList.toggle('dark',d);return d;};
+window.THEME={cur,apply,isAuto:()=>!ovr(),autoDark,
+  set(d){try{if(d===autoDark())localStorage.removeItem(K);else localStorage.setItem(K,JSON.stringify({d,until:nextEdge()}));}catch(e){}return apply();}};
+try{localStorage.removeItem('app_theme');}catch(e){}   // 예전 방식(계속 고정) 설정은 지움
+apply();setInterval(apply,60000);   // 켜 둔 채 7시·19시가 지나면 저절로 바뀜
+addEventListener('storage',e=>{if(e.key===K)apply();});
+})();</script>
 <style>/* 야간 모드: 화면 색을 뒤집어 어둡게 (색상은 그대로 유지) — 악보·가사·버튼 모두 적용, 인쇄는 원래 색 */
 html.dark{filter:invert(.9) hue-rotate(180deg)}
 html.dark body{min-height:100vh}
@@ -3068,12 +3081,11 @@ body.playing #modeTag{display:none}
 (function(){
 const host=document.querySelector('.hbtns');if(!host||document.getElementById('themeBtn'))return;
 const b=document.createElement('button');b.id='themeBtn';b.className='setbtn';b.type='button';
-const lab=()=>{const d=document.documentElement.classList.contains('dark');b.textContent=d?'☀ 주간':'🌙 야간';b.title=d?'주간 모드(밝은 화면)로':'야간 모드(어두운 화면)로';};
-b.onclick=()=>{const d=!document.documentElement.classList.contains('dark');document.documentElement.classList.toggle('dark',d);
-  try{localStorage.setItem('app_theme',d?'dark':'light');}catch(e){}
+const lab=()=>{const d=document.documentElement.classList.contains('dark');b.textContent=d?'☀ 주간':'🌙 야간';b.title=(d?'주간 모드(밝은 화면)로 바꾸기':'야간 모드(어두운 화면)로 바꾸기')+' — 지금 '+(THEME.isAuto()?'자동(07~19시 주간)':'직접 고름: 다음 7시·19시에 자동으로 돌아감');};
+b.onclick=()=>{const d=THEME.set(!THEME.cur());
   try{if(window.top!==window&&top.setTheme)top.setTheme(d);}catch(e){}try{parent.postMessage({appTheme:d},'*');}catch(e){}
   lab();b.blur();};
-addEventListener('storage',e=>{if(e.key==='app_theme'){document.documentElement.classList.toggle('dark',e.newValue==='dark');lab();}});
+addEventListener('storage',e=>{if(e.key==='app_theme_ovr')setTimeout(lab,0);});setInterval(lab,60000);
 lab();const fb=document.getElementById('fontBtn');if(fb)fb.after(b);else host.appendChild(b);
 })();</script>
 </body>

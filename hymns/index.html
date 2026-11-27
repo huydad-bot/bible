@@ -1,7 +1,20 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<script>try{document.documentElement.classList.toggle('dark',localStorage.getItem('app_theme')==='dark');}catch(e){}</script>
+<script>(function(){   /* 주간/야간: 기본은 시각에 따라 자동(07~19시 주간, 그 외 야간). 버튼으로 바꾸면 다음 전환 시각(7시·19시)까지만 유지 */
+const DAY0=7,DAY1=19,K='app_theme_ovr';
+const autoDark=()=>{const h=new Date().getHours();return h<DAY0||h>=DAY1;};
+const nextEdge=()=>{const n=new Date(),t=new Date(n);const h=n.getHours();
+  if(h<DAY0)t.setHours(DAY0,0,0,0);else if(h<DAY1)t.setHours(DAY1,0,0,0);else{t.setDate(t.getDate()+1);t.setHours(DAY0,0,0,0);}return t.getTime();};
+const ovr=()=>{try{const o=JSON.parse(localStorage.getItem(K)||'null');if(o&&Date.now()<o.until)return o;localStorage.removeItem(K);}catch(e){}return null;};
+const cur=()=>{const o=ovr();return o?!!o.d:autoDark();};
+const apply=()=>{const d=cur();document.documentElement.classList.toggle('dark',d);return d;};
+window.THEME={cur,apply,isAuto:()=>!ovr(),autoDark,
+  set(d){try{if(d===autoDark())localStorage.removeItem(K);else localStorage.setItem(K,JSON.stringify({d,until:nextEdge()}));}catch(e){}return apply();}};
+try{localStorage.removeItem('app_theme');}catch(e){}   // 예전 방식(계속 고정) 설정은 지움
+apply();setInterval(apply,60000);   // 켜 둔 채 7시·19시가 지나면 저절로 바뀜
+addEventListener('storage',e=>{if(e.key===K)apply();});
+})();</script>
 <style>html.dark,html.dark body,html.dark #app{background:#1c1c1e!important}</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -48,7 +61,7 @@ setInterval(()=>{try{const t=F.contentDocument.title;if(t&&document.title!==t)do
 <script>/* 주간/야간: 안쪽 화면에서 바꾸면 틀 바탕색도 같이 */
 window.setTheme=d=>document.documentElement.classList.toggle('dark',!!d);
 addEventListener('message',e=>{if(e.data&&typeof e.data.appTheme==='boolean')setTheme(e.data.appTheme);});
-addEventListener('storage',e=>{if(e.key==='app_theme')setTheme(e.newValue==='dark');});
+
 </script>
 </body>
 </html>
